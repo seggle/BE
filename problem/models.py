@@ -6,11 +6,11 @@ from file.models import File
 # Create your models here.
 class Problem(models.Model):
     title = models.TextField()
-    # description = RichTextField()
+    description = models.TextField()
     created_time = models.DateTimeField()
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="student_id", db_column="created_user")
     data = models.ForeignKey(File, on_delete=models.CASCADE)
-    # data_description = RichTextField()
+    data_description = models.TextField()
     public = models.models.BooleanField(default=True)
     contests = models.ManyToManyField(Contest,through="Contest_problem")
 

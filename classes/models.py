@@ -4,7 +4,8 @@ from account.models import User
 # Create your models here.
 class Class(models.Model):
     name = models.TextField()
-    semester = models.TextField()
+    year = models.IntegerField()
+    semester = models.IntegerField()
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_name="created_user")
     users = models.ManyToManyField(User,through="Class_user")
 
