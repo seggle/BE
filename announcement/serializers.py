@@ -3,7 +3,7 @@ from announcement.models import Announcement
 
 
 class AnnouncementSerializer(serializers.Serializer):
-    _id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
     title = serializers.CharField()
     context = serializers.CharField()
     created_user = serializers.CharField()

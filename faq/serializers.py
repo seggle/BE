@@ -3,7 +3,7 @@ from faq.models import Faq
 
 
 class FaqSerializer(serializers.Serializer):
-    _id = serializers.IntegerField(read_only=True)
+    id = serializers.IntegerField(read_only=True)
     question = serializers.CharField()
     answer = serializers.CharField()
     created_user = serializers.CharField()
