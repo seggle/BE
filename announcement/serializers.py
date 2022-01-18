@@ -2,24 +2,22 @@ from rest_framework import serializers
 from announcement.models import Announcement
 
 
-class AnnouncementSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    title = serializers.CharField()
-    context = serializers.CharField()
-    created_user = serializers.CharField()
-    created_time = serializers.DateTimeField(read_only=True)
-    last_modified = serializers.DateTimeField(read_only=True)
+class AnnouncementSerializer (serializers.ModelSerializer):
+    # created_user =
+
+    class Meta:
+        model = Announcement
+        fields = "__all__"
+
+class CreateAnnouncementSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=64)
+    content = serializers.CharField(max_length=1024 * 1024 * 8)
     visible = serializers.BooleanField()
     important = serializers.BooleanField()
 
-    def create(self, validated_data):
-        print(validated_data)
-        return Announcement.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('title', instance.title)
-        instance.context = validated_data.get('context', instance.context)
-        instance.visible = validated_data.get('visible', instance.visible)
-        instance.important = validated_data.get('important', instance.important)
-        instance.save()
-        return instance
+class EditAnnouncementSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField(max_length=64)
+    context = serializers.CharField(max_length=1024 * 1024 * 8)
+    visible = serializers.BooleanField()
+    important = serializers.BooleanField()

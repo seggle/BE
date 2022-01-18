@@ -3,15 +3,14 @@ from contest.models import Contest
 from account.models import User
 from file.models import File
 
-# Create your models here.
 class Problem(models.Model):
     title = models.TextField()
     description = models.TextField()
-    created_time = models.DateTimeField()
-    created_user = models.ForeignKey(User, on_delete=models.CASCADE, to_field="student_id", db_column="created_user")
-    data = models.ForeignKey(File, on_delete=models.CASCADE)
+    created_time = models.DateTimeField(auto_now_add=True)
+    created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user")
+    data = models.ForeignKey(File, on_delete=models.CASCADE, db_column="data")
     data_description = models.TextField()
-    public = models.models.BooleanField(default=True)
+    public = models.BooleanField(default=True)
     contests = models.ManyToManyField(Contest,through="Contest_problem")
 
     class Meta:
@@ -19,7 +18,6 @@ class Problem(models.Model):
 
 #contest와 problem사이의 다대다 테이블
 class Contest_problem(models.Model):
-
     contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
     title = models.TextField()

@@ -45,10 +45,6 @@ INSTALLED_APPS = [
     # simple jwt
     'rest_framework_simplejwt',
 
-    # ckeditor
-    'ckeditor',
-    'ckeditor_uploader'
-
     # my app
     'account',
     'announcement',
@@ -147,11 +143,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # auth 유저 모델은 account의 User를 쓰겠다는 의미
 AUTH_USER_MODEL = 'account.User'
-
-# # ckeditor 업로드 폴더 설정
-# CKEDITOR_UPLOAD_PATH = 'uploads/'
-# MEDIA_URL = 'media/'
-# MEDIA_ROOT = 'media/'
 
 # rest_framework token 관련해서 추가
 REST_FRAMEWORK = {

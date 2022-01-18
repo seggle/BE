@@ -5,8 +5,8 @@ from account.models import User
 class Faq(models.Model):
     question = models.TextField()
     answer = models.TextField()
-    created_user = models.Foreignkey(User, on_delete=models.CASCADE, db_name="created_user")
-    created_time = models.DateTimeField()
+    created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user")
+    created_time = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     visible = models.BooleanField(default=True)
 
