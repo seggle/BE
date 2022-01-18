@@ -1,6 +1,9 @@
 from tokenize import Token
 from django.urls import path, include
+from account.views import UserRegister
 
+
+app_name = "account"
 urlpatterns = [
-   path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
 ]

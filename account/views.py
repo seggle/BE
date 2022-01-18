@@ -3,11 +3,22 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from ..models import User
+from . import serializers
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 class UserRegister(APIView):
     def post(self,request):
-        data = request.data
+        serializer = serializers.UserRegisterSerializer(data=request.data)
+        data = {}
+        if serializer.is_valid():
+            user = serializer.save()
+            data['response'] = "successfully registered a new user"
+            data['email'] = user.email
+            data['username'] = user.username
+        else:
+            data = serializer.errors
+        return Response(data)
 
 class UserLoginAPI(APIView):
     #@validate_serializer(UserLoginSerializer)
