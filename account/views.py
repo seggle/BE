@@ -2,11 +2,18 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from ..models import User
+from .models import User
 from . import serializers
 from rest_framework.permissions import IsAuthenticated
+from django.core.mail.message import EmailMessage
 
-# Create your views here.
+def send_email(request):
+    subject = "message"
+    to = ["id@gmail.com"]
+    from_email = "id@gmail.com"
+    message = "메지시 테스트"
+    EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
+
 class UserRegister(APIView):
     def post(self,request):
         serializer = serializers.UserRegisterSerializer(data=request.data)
@@ -54,3 +61,14 @@ class UserChangePasswordAPI(APIView):
             return self.success("Succeeded")
         else:
             return self.error("Invalid old password")
+
+class UserPasswordAPI(APIView):
+
+    # 비밀번호 찾기
+    def post(self, request):
+        pass
+
+    # 비밀번호 확인
+    @login_required
+    def put(self, request):
+        pass
