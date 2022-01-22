@@ -2,17 +2,21 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
+from rest_framework import status
 from .models import User
 from . import serializers
-from rest_framework.permissions import IsAuthenticated
-from django.core.mail.message import EmailMessage
 
+"""
+# 이메일 확인 완료
 def send_email(request):
     subject = "message"
-    to = ["id@gmail.com"]
-    from_email = "id@gmail.com"
+    to = ["seggle.sejong@gmail.com"]
+    from_email = "seggle.sejong@gmail.com"
     message = "메지시 테스트"
     EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
+"""
 
 class UserRegister(APIView):
     def post(self,request):
@@ -27,48 +31,24 @@ class UserRegister(APIView):
             data = serializer.errors
         return Response(data)
 
-class UserLoginAPI(APIView):
-    #@validate_serializer(UserLoginSerializer)
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
-        """
-        user login api
-        """
-        data = request.data
-        # 인증
+        try:
+            refresh_token = request.data["refresh_token"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception as e:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class UserLogoutAPI(APIView):
-    """
-    user logout api
-    """
-    def get(self, request):
-        auth.logout(request)
-        return self.success()
+class LogoutAllView(APIView):
+    permission_classes = (IsAuthenticated,)
 
-class UserChangePasswordAPI(APIView):
-    #@validate_serializer(UserChangePasswordSerializer)
-    @login_required
     def post(self, request):
-        """
-        user change password api
-        """
-        data = request.data
-        user_id = request.data.user_id
-        user = auth.authenticate(id=user_id, password=data["user_password"])
-        if user:
-            # 인증 확인 이후 코드 진행
-            user.set_password(data["new_password"])
-            user.save()
-            return self.success("Succeeded")
-        else:
-            return self.error("Invalid old password")
+        tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+        for token in tokens:
+            t, _ = BlacklistedToken.objects.get_or_create(token=token)
 
-class UserPasswordAPI(APIView):
-
-    # 비밀번호 찾기
-    def post(self, request):
-        pass
-
-    # 비밀번호 확인
-    @login_required
-    def put(self, request):
-        pass
+        return Response(status=status.HTTP_205_RESET_CONTENT)

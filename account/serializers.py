@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, ResetPassword
 
 class UserSerializer (serializers.ModelSerializer):
     class Meta:
@@ -33,3 +33,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+# password reset
+class ResetPasswordEmail(serializers.ModelSerializer):
+    class Meta:
+        model = ResetPassword
+        fields = (
+            'email',
+        )

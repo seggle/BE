@@ -57,11 +57,11 @@ INSTALLED_APPS = [
     'rest_framework',
     # simple jwt
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
 
     # my app
     'account',
     'announcement',
-    'admin',
     'classes',
     'competition',
     'contest',
@@ -155,11 +155,15 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+TIME_ZONE = 'Asia/Seoul'
+
 # auth 유저 모델은 account의 User를 쓰겠다는 의미
 AUTH_USER_MODEL = 'account.User'
 
 # rest_framework token 관련해서 추가
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated', ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
@@ -169,8 +173,17 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    """
+    ROTATE_REFRESH_TOKENS
+    : True로 설정하면 TokenRefreshView에 새로 고침 토큰이 제출되면서
+    새 액세스 토큰과 함께 새 새로 고침 토큰이 반환
+    BLACKLIST_AFTER_ROTATION
+    : True로 설정하면 Blacklist 앱이 사용 중이고
+    ROTATE_REFRESH_TOKENS 설정이 True로 설정된 경우
+    TokenRefreshView에 제출 된 새로 고침 토큰이 블랙리스트에 추가
+    """
     'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
 
     'ALGORITHM': 'HS256',
@@ -183,8 +196,8 @@ SIMPLE_JWT = {
 
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
+    'USER_ID_FIELD': 'username', # 수정
+    'USER_ID_CLAIM': 'user_id', # 잘 모르겠음
     'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
 
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
