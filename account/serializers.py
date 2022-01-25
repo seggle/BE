@@ -6,7 +6,6 @@ class UserSerializer (serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
-
 # 유저 회원가입
 class UserRegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style = {"input_type": "password"}, write_only = True)
@@ -40,3 +39,16 @@ class ResetPasswordEmail(serializers.ModelSerializer):
         fields = (
             'email',
         )
+
+# change password
+class ChangePasswordSerializer(serializers.Serializer):
+    model = User
+    current_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    new_password2 = serializers.CharField(required=True)
+
+#admin 00-00
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email','username','name','privilege','created_time']

@@ -15,14 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
-
-from account.views import (
-    UserRegister
-)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('account.urls')),
+    path('admin/users/', include('account.urls.admin')),
+    path('users/', include('account.urls.general')),
+    # path('admin/announcements/', include('announcement.urls.admin')),
+    path('announcements/', include('announcement.urls.general')),
+    path('api-auth/', include('rest_framework.urls')),
 ]
