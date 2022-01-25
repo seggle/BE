@@ -5,7 +5,8 @@ from account.views.admin import (
     AdminUserModifyAPI,
 )
 
+app_name = "admin_account"
 urlpatterns = [
-    path('admin/users/',ListUsersAPI.as_view() ),
+    path('',ListUsersAPI.as_view() ),
     path('admin/users/<user_id>/',AdminUserModifyAPI.as_view(),)
 ]

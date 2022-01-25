@@ -163,11 +163,11 @@ AUTH_USER_MODEL = 'account.User'
 
 # rest_framework token 관련해서 추가
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination', # pagenation 관련 설정
+    'PAGE_SIZE': 10,
 }
 
 # simple jwt
@@ -195,7 +195,7 @@ SIMPLE_JWT = {
     'JWK_URL': None,
     'LEEWAY': 0,
 
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    # 'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'USER_ID_FIELD': 'id', # 수정 # 토큰 include 함
     'USER_ID_CLAIM': 'user_id',

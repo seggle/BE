@@ -1,20 +1,25 @@
 from rest_framework import serializers
-from announcement.models import Announcement
+from .models import Announcement, User
+
+class UsernameSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ('id', 'username')
 
 class AnnouncementSerializer (serializers.ModelSerializer):
+    # created_user = UsernameSerializer(read_only=True)
+
     class Meta:
         model = Announcement
         fields = "__all__"
+        extra_kwargs = {'created_user': {'read_only':True}}
 
-class CreateAnnouncementSerializer(serializers.Serializer):
-    title = serializers.CharField(max_length=64)
-    content = serializers.CharField(max_length=1024 * 1024 * 8)
-    visible = serializers.BooleanField()
-    important = serializers.BooleanField()
+class AnnouncementInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = ['id', 'title', 'created_time', 'last_modified', 'visible', 'important']
 
-class EditAnnouncementSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    title = serializers.CharField(max_length=64)
-    context = serializers.CharField(max_length=1024 * 1024 * 8)
-    visible = serializers.BooleanField()
-    important = serializers.BooleanField()
+class AnnouncementCheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = ['visible', 'important']

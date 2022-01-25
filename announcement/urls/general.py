@@ -6,5 +6,5 @@ from announcement.views.general import (
 app_name = "announcement"
 urlpatterns = [
     path('', AnnouncementAPI.as_view(), name="announcement_api"),
-    path('<int:pk>', AnnouncementDetailAPI.as_view(), name="announcement_detail_api"),
+    path('/<int:pk>', AnnouncementDetailAPI.as_view(), name="announcement_detail_api"),
 ]

@@ -54,35 +54,3 @@ class LogoutAllView(APIView):
             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 
         return Response(status=status.HTTP_205_RESET_CONTENT)
-
-class ChangePasswordView(generics.UpdateAPIView):
-    serializer_class = serializers.ChangePasswordSerializer
-    model = User
-    permission_classes = (IsAuthenticated,)
-
-    def get_object(self, queryset=None):
-        obj = self.request.user
-        return obj
-
-    def patch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        serializer = self.get_serializer(data=request.data)
-
-        if serializer.is_valid():
-            # Check old password
-            if not self.object.check_password(serializer.data.get("current_password")):
-                return Response({"current_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            # set_password also hashes the password that the user will get
-            if serializer.data.get("new_password") != serializer.data.get("new_password2"):
-                return Response({"new_password2": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
-            }
-            return Response(response)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
