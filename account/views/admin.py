@@ -17,7 +17,7 @@ class AdminUserModifyAPI(APIView):
     # permission_classes = [IsAdminUser]
 
     def put(self,request,user_id,format = None):
-
+    #SMALL CHANGE
         data = request.data
         user = User.objects.get(username=user_id)
         user.email = data["user_email"]
