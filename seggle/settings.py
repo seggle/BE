@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os, json
+from pickle import APPEND
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 from datetime import timedelta
@@ -145,6 +146,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Auto Slash append falsed
+
+APPEND_SLASH = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/

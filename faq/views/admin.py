@@ -10,15 +10,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
 from django.http import JsonResponse
-from .models import Faq
-from . import serializers
+from ..models import Faq
+from .. import serializers
 
 # Create your views here.
 
-class FaqView(APIView):
+class FaqAdminView(APIView):
     def get_object(self, faq_id):
-        proposal = generics.get_object_or_404(Faq, id = faq_id)
-        return proposal
+        faq = generics.get_object_or_404(Faq, id = faq_id)
+        return faq
 
     def post(self,request):
         data = request.data
@@ -34,7 +34,7 @@ class FaqView(APIView):
 
     def get(self, request, **kwargs):
         if kwargs.get('faq_id') is None:
-            print(Faq.objects.values())
+            #print(Faq.objects.values())
             faq_list = Faq.objects.values('id', 'question', 'created_time', 'last_modified', 'visible')
             faq_list_serializer = serializers.FaqGetAllSerializer(faq_list, many=True)
             return Response(faq_list_serializer.data, status=status.HTTP_200_OK)
@@ -46,21 +46,25 @@ class FaqView(APIView):
             return Response(faq_list_serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, **kwargs):
-        if kwargs.get('faq_id') is None:
-            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        #if not 'id' in request.GET:
+        #    return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        #print(request.get)
+        print(kwargs)
+        faq_id = request.query_params('id')
+        print(faq_id)
+        #faq_id = id
+        faq = self.get_object(faq_id)
+        
+        data = request.data
+        user = Faq.objects.get(id=faq_id)
+        if user.created_user == request.user:
+            user.question = data["question"]
+            user.answer = data["answer"]
+            user.visible = data["visible"]
+            user.save(force_update=True)
+            return Response("Success", status=status.HTTP_200_OK)
         else:
-            faq_id = kwargs.get('faq_id')
-            faq = self.get_object(faq_id)
-            
-            data = request.data
-            user = Faq.objects.get(id=faq_id)
-            if user.created_user == request.user:
-                user.title = data["title"]
-                user.context = data["context"]
-                user.save(force_update=True)
-                return Response("Success", status=status.HTTP_200_OK)
-            else:
-                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, **kwargs):
         if kwargs.get('faq_id') is None:
@@ -76,4 +80,21 @@ class FaqView(APIView):
             else:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
 
- 
+class FaqCheckAdminView(APIView):
+    def get_object(self, faq_id):
+        faq = generics.get_object_or_404(Faq, id = faq_id)
+        return faq
+
+    def post(self,request):
+        data = request.data
+
+        faq_id = data['id']
+        faq = self.get_object(faq_id)
+        
+        user = Faq.objects.get(id=faq_id)
+        if user.created_user == request.user:
+            user.visible = not user.visible
+            user.save(force_update=True)
+            return Response("Success", status=status.HTTP_200_OK)
+        else:
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
