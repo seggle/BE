@@ -95,7 +95,7 @@ class ChangePasswordView(generics.UpdateAPIView):
             return Response(response)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#유저 정보
+#유저 정보.
 class UserInfoView(APIView):
     permission_classes = [AllowAny]
 
