@@ -6,18 +6,18 @@ from ..models import User
 from .. import serializers
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-class ListUsersAPI(APIView):
-    permission_classes = [IsAdminUser]
+class ListUsersView(APIView):
+    #permission_classes = [IsAdminUser]
     def get(self, request,format = None):
         users = User.objects.all()
         serializer = serializers.UserInfoSerializer(users,many = True)
         return Response(serializer.data)
 
-class AdminUserModifyAPI(APIView):
+class AdminUserModifyView(APIView):
     # permission_classes = [IsAdminUser]
 
     def put(self,request,user_id,format = None):
-    #SMALL CHANGE
+
         data = request.data
         user = User.objects.get(username=user_id)
         user.email = data["user_email"]

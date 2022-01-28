@@ -3,9 +3,10 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from django.http import JsonResponse
 from ..models import User
 from .. import serializers
@@ -20,8 +21,12 @@ def send_email(request):
     EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
 """
 
-class UserRegister(APIView):
-    def post(self,request):
+
+class UserRegisterView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = serializers.UserRegisterSerializer
+
+    def post(self, request):
         serializer = serializers.UserRegisterSerializer(data=request.data)
         data = {}
         if serializer.is_valid():
@@ -33,27 +38,30 @@ class UserRegister(APIView):
             data = serializer.errors
         return Response(data)
 
+
 class LogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         try:
-            refresh_token = request.data["refresh_token"]
-            token = RefreshToken(refresh_token)
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(token=refresh_token)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class LogoutAllView(APIView):
-    permission_classes = (IsAuthenticated,)
+
+# 아직 제대로 작동 안함
+"""class LogoutAllView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
         for token in tokens:
             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+        return Response(status=status.HTTP_205_RESET_CONTENT)"""
+
 
 class ChangePasswordView(generics.UpdateAPIView):
     serializer_class = serializers.ChangePasswordSerializer
@@ -86,3 +94,15 @@ class ChangePasswordView(generics.UpdateAPIView):
             }
             return Response(response)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#유저 정보
+class UserInfoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self,request,user_id,format=None):
+        try:
+            user = User.objects.get(username=user_id)
+            serializer = serializers.UserInfoSerializer(user)
+            return Response(serializer.data)
+        except:
+            raise ValidationError

@@ -6,9 +6,14 @@ class UserSerializer (serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
-# 유저 회원가입
+
+#logout
+# class UserLogoutSerializer(serializers.Serializer):
+
+# 회원가입
 class UserRegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(style = {"input_type": "password"}, write_only = True)
+    password = serializers.CharField(style={"input_type": "password"}, write_only=True)
 
     class Meta:
         model = User
@@ -32,7 +37,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-# password reset
+#비밀번호 초기화
 class ResetPasswordEmail(serializers.ModelSerializer):
     class Meta:
         model = ResetPassword
@@ -40,15 +45,16 @@ class ResetPasswordEmail(serializers.ModelSerializer):
             'email',
         )
 
-# change password
+#비밀번호 변경
 class ChangePasswordSerializer(serializers.Serializer):
     model = User
     current_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
     new_password2 = serializers.CharField(required=True)
 
-#admin 00-00
+#유저 정보
 class UserInfoSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
-        fields = ['email','username','name','privilege','created_time']
+        fields = ['email','username','name','privilege','date_joined']
