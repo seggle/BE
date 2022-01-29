@@ -15,6 +15,7 @@ class ListUsersAPI(APIView):
 
 class AdminUserModifyAPI(APIView):
     # permission_classes = [IsAdminUser]
+    permission_classes = (IsAdminUser, )
 
     def put(self,request,user_id,format = None):
         data = request.data
