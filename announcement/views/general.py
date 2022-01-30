@@ -3,46 +3,39 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
 from django.http import Http404
+from rest_framework.pagination import PageNumberPagination #pagination
+from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import Announcement
-from ..serializers import (
-    AnnouncementSerializer,
-    CreateAnnouncementSerializer,
-    EditAnnouncementSerializer
-)
-from announcement import serializers
+from .. import serializers
 
-class AnnouncementAPI(APIView):
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+
+class AnnouncementView(APIView, PaginationHandlerMixin):
+    # pagination
+    pagination_class = BasicPagination
+    serializer_class = serializers.AnnouncementInfoSerializer
+
+    # 04-01 공지 리스트 전체 조회
     def get(self, request):
-        announcements = Announcement.objects
+        announcements = Announcement.objects.exclude(visible=False)
+        keyword = request.GET.get('keyword', '')
+        if keyword:
+            announcements = announcements.filter(title__icontains=keyword)
+        page = self.paginate_queryset(announcements)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(announcements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-class AnnouncementAdminAPI(APIView):
-    def post(self, request): # 공지 생성
-        data = request.data
-        announcement = Announcement.objects.create(title=data["announcement_title"],
-                                                    context=data["announcement_context"],
-                                                    created_user=data["announcement_created_user"],
-                                                    visible=data["announcement_visible"],
-                                                    important=data["announcement_important"])
-        return self.success(AnnouncementSerializer(announcement).data)
-
-    def get(self, request):
-        page = request.GET.get("page")
-        announcements = Announcement.objects.all().order_by("-created_time")
-
-class AnnouncementDetailAPI(APIView):
+class AnnouncementDetailView(APIView):
     def get_object(self, pk): # 존재하는 인스턴스인지 판단
         announcement = get_object_or_404(Announcement, pk = pk)
         return announcement
 
+    # 04-02 announcement_id인 announcement 조회
     def get(self, request, pk):
         announcement = self.get_object(pk)
-        serializer = AnnouncementSerializer(announcement)
+        serializer = serializers.AnnouncementSerializer(announcement)
         return Response(serializer.data)
-
-    def put(self, request, pk):
-        announcement = self.get_object(pk)
-        serializer = AnnouncementSerializer(announcement, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

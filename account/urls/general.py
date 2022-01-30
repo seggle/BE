@@ -2,7 +2,7 @@ from tokenize import Token
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from account.views.general import (
-    ChangePasswordView, LogoutView, UserRegister, LogoutAllView
+    LogoutView, UserRegister, # LogoutAllView
 )
 
 #simple-jwt
@@ -17,6 +17,5 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
-    path('logout_all/', LogoutAllView.as_view(), name='auth_logout_all'),
-    path('change-password/', ChangePasswordView.as_view(), name='change password')
+    # path('logout_all/', LogoutAllView.as_view(), name='auth_logout_all'),
 ]
