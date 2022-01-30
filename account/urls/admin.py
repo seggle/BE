@@ -8,5 +8,5 @@ from account.views.admin import (
 app_name = "admin_account"
 urlpatterns = [
     path('',ListUsersAPI.as_view() ),
-    path('admin/users/<user_id>/',AdminUserModifyAPI.as_view(),)
+    path('<user_id>/',AdminUserModifyAPI.as_view(),)
 ]

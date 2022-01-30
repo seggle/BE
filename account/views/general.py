@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
 from django.http import JsonResponse
+
 from ..models import User
 from .. import serializers
 
@@ -45,12 +46,21 @@ class LogoutView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class LogoutAllView(APIView):
-    permission_classes = (IsAuthenticated,)
+# class LogoutAllView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     def post(self, request):
+#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+#         for token in tokens:
+#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
+#         return Response(status=status.HTTP_205_RESET_CONTENT)
 
-    def post(self, request):
-        tokens = OutstandingToken.objects.filter(user_id=request.user.username)
-        for token in tokens:
-            t, _ = BlacklistedToken.objects.get_or_create(token=token)
+class UserInfoView(APIView):
+    # permission_classes = [AllowAny]
 
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+    def get(self,request,user_id,format=None):
+        try:
+            user = User.objects.get(username=user_id)
+            serializer = serializers.UserInfoSerializer(user)
+            return Response(serializer.data)
+        except:
+            raise ValidationError

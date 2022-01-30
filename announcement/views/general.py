@@ -3,20 +3,33 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
 from django.http import Http404
+from rest_framework.pagination import PageNumberPagination #pagination
+from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import Announcement
 from .. import serializers
 
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
 
-class AnnouncementAPI(APIView):
+class AnnouncementView(APIView, PaginationHandlerMixin):
+    # pagination
+    pagination_class = BasicPagination
+    serializer_class = serializers.AnnouncementInfoSerializer
+
     # 04-01 공지 리스트 전체 조회
     def get(self, request):
-        announcements = Announcement.objects.all()
-        serializer = serializers.AnnouncementInfoSerializer(announcements, many=True)
-        return Response(serializer.data)
+        announcements = Announcement.objects.exclude(visible=False)
+        keyword = request.GET.get('keyword', '')
+        if keyword:
+            announcements = announcements.filter(title__icontains=keyword)
+        page = self.paginate_queryset(announcements)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        else:
+            serializer = self.serializer_class(announcements, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-class AnnouncementDetailAPI(APIView):
-
+class AnnouncementDetailView(APIView):
     def get_object(self, pk): # 존재하는 인스턴스인지 판단
         announcement = get_object_or_404(Announcement, pk = pk)
         return announcement
