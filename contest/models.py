@@ -14,8 +14,6 @@ class Contest(models.Model):
     class Meta:
         db_table = "contest"
 
-
-
 # user - contest(exam) 다대다 테이블
 class Exam(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
