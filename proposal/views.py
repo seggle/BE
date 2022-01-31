@@ -12,6 +12,7 @@ from rest_framework import status
 from django.http import JsonResponse
 from .models import Proposal
 from . import serializers
+from django.db.models import F
 
 # Create your views here.
 
@@ -36,10 +37,9 @@ class ProposalView(APIView):
 
     def get(self, request, **kwargs):
         if kwargs.get('proposal_id') is None:
-            print(Proposal.objects.values())
-            proposal_list = Proposal.objects.values('id', 'title', 'created_user_id', 'created_time')
-            proposal_list_serializer = serializers.ProposalGetAllSerializer(proposal_list, many=True)
-            return Response(proposal_list_serializer.data, status=status.HTTP_200_OK)
+            proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time')
+            
+            return Response(proposal_list, status=status.HTTP_200_OK)
         else:
             
             proposal_id = kwargs.get('proposal_id')

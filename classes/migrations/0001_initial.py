@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('is_show', models.BooleanField(default=True)),
                 ('privilege', models.IntegerField()),
                 ('class_id', models.ForeignKey(db_column='class_id', on_delete=django.db.models.deletion.CASCADE, to='classes.class')),
-                ('user_id', models.ForeignKey(db_column='user_id', on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('username', models.ForeignKey(db_column='username', on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'class_user',

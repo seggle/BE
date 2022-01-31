@@ -23,6 +23,7 @@ urlpatterns = [
     path('users/', include('account.urls.general')),
     # path('admin/announcements/', include('announcement.urls.admin')),
     path('announcements/', include('announcement.urls.general')),
+    path('class/', include('classes.urls')),
     path('faqs/', include('faq.urls.general')),
     path('proposals/', include('proposal.urls')),
     path('api-auth/', include('rest_framework.urls')),

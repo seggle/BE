@@ -38,8 +38,8 @@ class FaqAdminView(APIView):
         if kwargs.get('faq_id') is None:
             #print(Faq.objects.values())
             faq_list = Faq.objects.values('id', 'question', 'created_time', 'last_modified', 'visible')
-            faq_list_serializer = serializers.FaqGetAllSerializer(faq_list, many=True)
-            return Response(faq_list_serializer.data, status=status.HTTP_200_OK)
+            #faq_list_serializer = serializers.FaqGetAllSerializer(faq_list, many=True)
+            return Response(faq_list, status=status.HTTP_200_OK)
         else:
             faq_id = kwargs.get('faq_id')
             faq = self.get_object(faq_id)
