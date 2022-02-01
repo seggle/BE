@@ -6,3 +6,9 @@ class FaqSerializer(serializers.ModelSerializer):
         model = Faq
         fields = "__all__"
         #fields = ["id", "question", "answer", "created_user", "visible"]
+
+class FaqAllGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Faq
+        #fields = "__all__"
+        fields = ["id", "question", "created_time", "last_modified", "visible"]

@@ -1,3 +1,4 @@
+from curses import use_default_colors
 from multiprocessing import context
 from pickle import TRUE
 from django.shortcuts import render
@@ -11,12 +12,21 @@ from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, Blac
 from rest_framework import status
 from django.http import JsonResponse
 from .models import Proposal
+from rest_framework.pagination import PageNumberPagination #pagination
+from utils.pagination import PaginationHandlerMixin #pagination
 from . import serializers
 from django.db.models import F
 
 # Create your views here.
 
-class ProposalView(APIView):
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+
+class ProposalView(APIView, PaginationHandlerMixin):
+
+    # pagination
+    pagination_class = BasicPagination
+
     def get_object(self, proposal_id):
         proposal = generics.get_object_or_404(Proposal, id = proposal_id)
         return proposal
@@ -25,7 +35,9 @@ class ProposalView(APIView):
         data = request.data
         data._mutable = True
         data["created_user"] = request.user
+        #data._mutable = False
         #print(data)
+
         serializer = serializers.ProposalSerializer(data=data) #Request의 data를 UserSerializer로 변환
  
         if serializer.is_valid():
@@ -36,10 +48,17 @@ class ProposalView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, **kwargs):
+
         if kwargs.get('proposal_id') is None:
             proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time')
+            page = self.paginate_queryset(proposal_list)
             
-            return Response(proposal_list, status=status.HTTP_200_OK)
+            if page is not None:
+                serializer = self.get_paginated_response(page)
+            else:
+                serializer = self.serializer_class(proposal_list, many=True)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             
             proposal_id = kwargs.get('proposal_id')
