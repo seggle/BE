@@ -46,12 +46,23 @@ class LogoutView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class LogoutAllView(APIView):
-    permission_classes = (IsAuthenticated,)
+# class LogoutAllView(APIView):
+#     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
-        tokens = OutstandingToken.objects.filter(user_id=request.user.username)
-        for token in tokens:
-            t, _ = BlacklistedToken.objects.get_or_create(token=token)
+#     def post(self, request):
+#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+#         for token in tokens:
+#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+#         return Response(status=status.HTTP_205_RESET_CONTENT)
+
+class UserInfoView(APIView):
+    # permission_classes = [AllowAny]
+
+    def get(self,request,user_id,format=None):
+        try:
+            user = User.objects.get(username=user_id)
+            serializer = serializers.UserInfoSerializer(user)
+            return Response(serializer.data)
+        except:
+            raise ValidationError

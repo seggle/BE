@@ -12,7 +12,7 @@ class AnnouncementSerializer (serializers.ModelSerializer):
     class Meta:
         model = Announcement
         fields = "__all__"
-        extra_kwargs = {'created_user': {'read_only':True}}
+        # extra_kwargs = {'created_user': {'read_only':True}}
 
 class AnnouncementInfoSerializer(serializers.ModelSerializer):
     class Meta:

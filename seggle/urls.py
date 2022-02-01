@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/users/', include('account.urls.admin')),
     path('admin/faqs/', include('faq.urls.admin')),
     path('users/', include('account.urls.general')),
-    # path('admin/announcements/', include('announcement.urls.admin')),
+    path('admin/announcements/', include('announcement.urls.admin')),
     path('announcements/', include('announcement.urls.general')),
     path('class/', include('classes.urls')),
     path('faqs/', include('faq.urls.general')),
