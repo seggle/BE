@@ -56,7 +56,6 @@ class LogoutView(APIView):
 #         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 class UserInfoView(APIView):
-
     def get_object(self, username): # 존재하는 인스턴스인지 판단
         user = get_object_or_404(User, username = username)
         return user
@@ -76,17 +75,12 @@ class UserInfoView(APIView):
         data = request.data
         current_password = data["current_password"]
         user = self.get_object(username)
-        print("확인1")
         if check_password(current_password, user.password):
-            print("확인2")
             new_password = data["new_password"]
             password_confirm = data["new_password2"]
-            print("확인3")
             if new_password == password_confirm:
                 user.set_password(new_password)
-                print("확인4")
                 user.save()
-                print("확인5")
                 return Response({'success': "비밀번호 변경 완료"}, status=status.HTTP_200_OK)
             else:
                 return Response({'error': "새로운 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
