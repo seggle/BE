@@ -32,23 +32,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-# password reset
-class ResetPasswordEmail(serializers.ModelSerializer):
-    class Meta:
-        model = ResetPassword
-        fields = (
-            'email',
-        )
-
-# change password
-class ChangePasswordSerializer(serializers.Serializer):
-    model = User
-    current_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
-    new_password2 = serializers.CharField(required=True)
-
 #admin 00-00
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email','username','name','privilege','created_time']
+        fields = ['id', 'email','username','name','privilege', 'date_joined', 'is_active']
+
+class UserModifySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['privilege']

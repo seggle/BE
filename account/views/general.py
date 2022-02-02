@@ -1,12 +1,12 @@
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
-from django.http import JsonResponse
+from django.contrib.auth.hashers import check_password
 from ..models import User
 from .. import serializers
 
@@ -20,7 +20,9 @@ def send_email(request):
     EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
 """
 
-class UserRegister(APIView):
+class UserRegisterView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self,request):
         serializer = serializers.UserRegisterSerializer(data=request.data)
         data = {}
@@ -45,44 +47,53 @@ class LogoutView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-class LogoutAllView(APIView):
-    permission_classes = (IsAuthenticated,)
+# class LogoutAllView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     def post(self, request):
+#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+#         for token in tokens:
+#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
+#         return Response(status=status.HTTP_205_RESET_CONTENT)
 
-    def post(self, request):
-        tokens = OutstandingToken.objects.filter(user_id=request.user.username)
-        for token in tokens:
-            t, _ = BlacklistedToken.objects.get_or_create(token=token)
+class UserInfoView(APIView):
+    def get_object(self, username): # 존재하는 인스턴스인지 판단
+        user = get_object_or_404(User, username = username)
+        return user
 
-        return Response(status=status.HTTP_205_RESET_CONTENT)
+    # 01-07 유저 조회
+    # @login_required
+    def get(self, request, username, format=None):
+        user = self.get_object(username)
+        try:
+            serializer = serializers.UserInfoSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            raise Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
-class ChangePasswordView(generics.UpdateAPIView):
-    serializer_class = serializers.ChangePasswordSerializer
-    model = User
-    permission_classes = (IsAuthenticated,)
+    # 01-06 비밀번호 변경
+    def patch(self, request, username):
+        data = request.data
+        current_password = data["current_password"]
+        user = self.get_object(username)
+        if check_password(current_password, user.password):
+            new_password = data["new_password"]
+            password_confirm = data["new_password2"]
+            if new_password == password_confirm:
+                user.set_password(new_password)
+                user.save()
+                return Response({'success': "비밀번호 변경 완료"}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': "새로운 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error':"현재 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get_object(self, queryset=None):
-        obj = self.request.user
-        return obj
-
-    def patch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        serializer = self.get_serializer(data=request.data)
-
-        if serializer.is_valid():
-            # Check old password
-            if not self.object.check_password(serializer.data.get("current_password")):
-                return Response({"current_password": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-            # set_password also hashes the password that the user will get
-            if serializer.data.get("new_password") != serializer.data.get("new_password2"):
-                return Response({"new_password2": ["Wrong password."]}, status=status.HTTP_400_BAD_REQUEST)
-
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Password updated successfully',
-                'data': []
-            }
-            return Response(response)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # 01-08 회원탈퇴
+    def delete(self, request, username):
+        data = request.data
+        user = self.get_object(username)
+        if check_password(data["password"], user.password):
+            user.is_active = False
+            user.save()
+            return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error':"현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
