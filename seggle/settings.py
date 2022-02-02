@@ -163,8 +163,7 @@ AUTH_USER_MODEL = 'account.User'
 
 # rest_framework token 관련해서 추가
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated', ),
+
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )

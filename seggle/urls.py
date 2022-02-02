@@ -23,4 +23,5 @@ urlpatterns = [
     # path('admin/announcements/', include('announcement.urls.admin')),
     path('announcements/', include('announcement.urls.general')),
     path('api-auth/', include('rest_framework.urls')),
+    path('problems/',include('problem.urls.general'))
 ]
