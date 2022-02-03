@@ -5,7 +5,7 @@ class User(AbstractUser):
     username = models.TextField(max_length=20, unique=True)
     name = models.TextField(null=True)
     email = models.TextField(null=True)
-    privilege = models.IntegerField(null=True)
+    privilege = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []

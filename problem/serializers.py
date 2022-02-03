@@ -21,3 +21,20 @@ class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         fields = ["title","description","data_description","public"]
+###
+class ProblemFileSerializer(serializers.Serializer):
+    data = serializers.FileField()
+    data1 = serializers.FileField(required=False)
+    data2 = serializers.FileField(required=False)
+
+    def create(self,validated_data):
+        create = Problem(data = validated_data.get("data"))
+        create.save()
+        if validated_data.get("data1"):
+            create = Problem(data=validated_data.get("data1"))
+            create.save()
+        if validated_data.get("data2"):
+            create = Problem(data=validated_data.get("data2"))
+            create.save()
+
+        return create

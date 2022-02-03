@@ -1,9 +1,17 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemGenerateSerializer, ProblemSerializer, AllProblemSerializer, ProblemPatchSerializer
+from ..serializers import ProblemGenerateSerializer, ProblemSerializer, AllProblemSerializer, ProblemPatchSerializer,ProblemFileSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from rest_framework.parsers import MultiPartParser,JSONParser,FormParser
+from rest_framework.viewsets import ModelViewSet
+
+class PPView(APIView):
+    serializer_class = ProblemGenerateSerializer
+    parser_classes = [MultiPartParser]
+    def post(self,request,*args,**kwargs):
+        serializer = ProblemGenerateSerializer(data=request.data)
 
 
 class ProblemView(APIView):
@@ -77,3 +85,20 @@ class ProblemVisibilityView(APIView):
         problem.save()
         return Response(data=ProblemSerializer(problem).data)
 
+#############
+class ProblemUploadView(APIView):
+    permission_classes = [AllowAny]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def modify_input_for_multiple_files(id,file):
+        dict = {}
+        dict['id'] = id
+        dict['file'] = file
+        return dict
+
+    def post(self,request, *args,**kwargs):
+        files = dict((request.data).lists())['file']
+        flag = 1
+        arr = []
+        for file_name in files:
+            modified_data = modify_input_for_mul
