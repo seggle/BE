@@ -9,8 +9,8 @@ class ClassSerializer(serializers.ModelSerializer):
 class ClassGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Class
-        fields = "__all__"
-        #fields = ["name", "year", "semester", "created_user"]
+        #fields = "__all__"
+        fields = ["id", "name", "year", "semester"]
 
 class Class_user_Serializer(serializers.ModelSerializer):
     class Meta:
