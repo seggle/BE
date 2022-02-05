@@ -24,3 +24,5 @@ class Exam(models.Model):
 
     class Meta:
         db_table = "exam"
+
+
