@@ -2,6 +2,7 @@ from ipaddress import ip_address
 from django.db import models
 from account.models import User
 from classes.models import Class
+from problem.models import Contest_problem
 
 class Contest(models.Model):
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id")
@@ -9,7 +10,7 @@ class Contest(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_exam = models.BooleanField(default=False)
-    users = models.ManyToManyField(User,through="Exam")
+    problems = models.ManyToManyField(Contest_problem, related_name="contests")
 
     class Meta:
         db_table = "contest"

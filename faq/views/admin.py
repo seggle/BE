@@ -29,8 +29,8 @@ class FaqAdminView(APIView):
 
         if serializer.is_valid():
             serializer.save() #UserSerializer의 유효성 검사를 한 뒤 DB에 저장
-            #return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
-            return Response("Success", status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            #return Response("Success", status=status.HTTP_201_CREATED) #client에게 JSON response 전달
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -62,7 +62,8 @@ class FaqAdminView(APIView):
                 user.answer = data["answer"]
                 user.visible = data["visible"]
                 user.save(force_update=True)
-                return Response("Success", status=status.HTTP_200_OK)
+                serializer = serializers.FaqSerializer(Faq.objects.get(id=faq_id)) #Request의 data를 UserSerializer로 변환
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
 
@@ -97,6 +98,7 @@ class FaqCheckAdminView(APIView):
         if user.created_user == request.user:
             user.visible = not user.visible
             user.save(force_update=True)
-            return Response("Success", status=status.HTTP_200_OK)
+            serializer = serializers.FaqSerializer(Faq.objects.get(id=faq_id)) #Request의 data를 UserSerializer로 변환
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)

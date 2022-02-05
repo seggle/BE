@@ -121,11 +121,11 @@ class ClassInfoView(APIView):
             class_list_serializer = serializers.ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
             class_add_is_show["is_show"] = class_list.is_show
-            class_add['id'] = class_add_is_show['id']
-            class_add['name'] = class_add_is_show['name']
-            class_add['semester'] = str(class_add_is_show['year']) + '-' + str(class_add_is_show['semester']) + '학기'
-            class_add['is_show'] = class_add_is_show['is_show']
-            class_name_list.append(class_add)
+            # class_add['id'] = class_add_is_show['id']
+            # class_add['name'] = class_add_is_show['name']
+            # class_add['semester'] = str(class_add_is_show['year']) + '-' + str(class_add_is_show['semester']) + '학기'
+            # class_add['is_show'] = class_add_is_show['is_show']
+            class_name_list.append(class_add_is_show)
         return Response(class_name_list, status=status.HTTP_200_OK)
     
     def patch(self, request):
@@ -136,6 +136,7 @@ class ClassInfoView(APIView):
             class_user = Class_user.objects.filter(username=request.user).filter(class_id=data['class_id'])
             if class_user.count() == 0:
                 continue
+            
             user = class_user[0]
             user.is_show = not user.is_show
             user.save(force_update=True)
