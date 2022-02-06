@@ -14,7 +14,7 @@ class Problem(models.Model):
     solution = models.FileField(blank=True,null=True,upload_to="solution/")
     data_description = models.TextField()
     public = models.BooleanField(default=True)
-    contests = models.ManyToManyField(Contest, through="Contest_problem", null=True,blank=True)
+
 
     # 삭제되었는지
     is_deleted = models.BooleanField(default=False)
