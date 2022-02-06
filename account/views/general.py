@@ -10,7 +10,7 @@ from django.contrib.auth.hashers import check_password
 from ..models import User
 from .. import serializers
 from classes.models import Class, Class_user
-from classes import serializers
+from classes.serializers import ClassGetSerializer
 
 """
 # 이메일 확인 완료
@@ -118,7 +118,7 @@ class ClassInfoView(APIView):
             class_add_is_show = {}
             class_add = {}
 
-            class_list_serializer = serializers.ClassGetSerializer(class_list.class_id)
+            class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
             class_add_is_show["is_show"] = class_list.is_show
             # class_add['id'] = class_add_is_show['id']
@@ -127,7 +127,7 @@ class ClassInfoView(APIView):
             # class_add['is_show'] = class_add_is_show['is_show']
             class_name_list.append(class_add_is_show)
         return Response(class_name_list, status=status.HTTP_200_OK)
-    
+
     def patch(self, request):
         #class_id = kwargs.get('class_id')
         datas = request.data
@@ -136,7 +136,7 @@ class ClassInfoView(APIView):
             class_user = Class_user.objects.filter(username=request.user).filter(class_id=data['class_id'])
             if class_user.count() == 0:
                 continue
-            
+
             user = class_user[0]
             user.is_show = not user.is_show
             user.save(force_update=True)
