@@ -17,7 +17,7 @@ class Class(models.Model):
     year = models.IntegerField()
     semester = models.IntegerField()
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user", related_name='created_user', to_field="username")
-    users = models.ManyToManyField(Class_user, related_name="classes")
+    users = models.ManyToManyField(Class_user, related_name="classes", blank=True)
 
     class Meta:
         db_table = "class"

@@ -12,6 +12,12 @@ class ClassGetSerializer(serializers.ModelSerializer):
         #fields = "__all__"
         fields = ["id", "name", "year", "semester"]
 
+class ClassAdminGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Class
+        #fields = "__all__"
+        fields = ["id", "name", "year", "semester", "created_user"]
+
 class Class_user_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Class_user

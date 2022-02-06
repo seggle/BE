@@ -12,7 +12,7 @@ from rest_framework import status
 from django.http import JsonResponse
 from classes.models import Class, Class_user
 from account.models import User
-from .models import Contest, Exam
+from .models import Contest, Contest_problem, Exam
 from . import serializers
 
 # Create your views here.
@@ -24,90 +24,184 @@ class ContestView(APIView):
         classid = generics.get_object_or_404(Class, id = class_id)
         return classid
 
-    def post(self,request):
-        data = request.data
-        
-        Create_Class = Class(name=data['name'], year=data['year'], semester=data['semester'], created_user=request.user)
-        Create_Class.save()
-
-        print(Create_Class.id)
-        # 교수 본인 추가
-        data = {}
-        data['username'] = request.user
-        data['privilege'] = 2
-        data["is_show"] = True
-        data["class_id"] = Create_Class.id
-        serializer = serializers.Class_user_Serializer(data=data) #Request의 data를 UserSerializer로 변환
+    def post(self,request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            class_id = kwargs.get('class_id')
+            classid = self.get_object(class_id)
+            #class_list_serializer = serializers.ClassSerializer(Class.objects.get(id=class_id))
+            data = request.data
+            data['class_id'] = class_id
+            serializer = serializers.ContestSerializer(data=data)
             
-        if serializer.is_valid():
-            serializer.save() #UserSerializer의 유효성 검사를 한 뒤 DB에 저장
-            user = Class_user.objects.filter(username = request.user).filter(class_id = Create_Class.id)
-            Create_Class.users.add(user[0])
-
-        return Response(serializers.ClassSerializer(Create_Class).data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
-        
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    #비공개 관련 처리 필요함
     def get(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object(class_id)
-            class_list_serializer = serializers.ClassSerializer(Class.objects.get(id=class_id))
-            return Response(class_list_serializer.data, status=status.HTTP_200_OK)
+            contest = []
+            contest_lists = Contest.objects.filter(class_id=class_id)
+            for contest_list in contest_lists:
+                contest_list_serializer = serializers.ContestGetSerializer(contest_list)
+                contest.append(contest_list_serializer.data)
+            return Response(contest, status=status.HTTP_200_OK)
+    
+class ContestCheckView(APIView):
+    #permission_classes = [IsAdminUser]
+
+    def get_object_class(self, class_id):
+        classid = generics.get_object_or_404(Class, id = class_id)
+        return classid
+
+    def get_object_contest(self, contest_id):
+        contestid = generics.get_object_or_404(Contest, id = contest_id)
+        return contestid
+
+    def patch(self, request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            class_id = kwargs.get('class_id')
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
+                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
+
+                user = Contest.objects.get(id=contest_id)
+                user.visible = not user.visible
+                user.save(force_update=True)
+                serializer = serializers.ContestSerializer(Contest.objects.get(id=contest_id)) #Request의 data를 UserSerializer로 변환
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+                # if user.created_user == request.user:
+                #     user.visible = not user.visible
+                #     user.save(force_update=True)
+                #     serializer = serializers.FaqSerializer(Faq.objects.get(id=faq_id)) #Request의 data를 UserSerializer로 변환
+                #     return Response(serializer.data, status=status.HTTP_200_OK)
+                # else:
+                #     return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+
+class ContestProblemView(APIView):
+    #permission_classes = [IsAdminUser]
+
+    def get_object_class(self, class_id):
+        classid = generics.get_object_or_404(Class, id = class_id)
+        return classid
+
+    def get_object_contest(self, contest_id):
+        contestid = generics.get_object_or_404(Contest, id = contest_id)
+        return contestid
+
+    def post(self,request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            class_id = kwargs.get('class_id')
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
+                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
+
+                data = request.data
+                tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
+                if tilte_check != 0:
+                    return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+                order = Contest_problem.objects.filter(contest_id=contest_id).count() + 1
+
+                data['contest_id'] = contest_id
+                data['order'] = order
+                serializer = serializers.ContestProblemSerializer(data=data)
+                
+                if serializer.is_valid():
+                    serializer.save()
+                    problem = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title'])
+                    contest_problem_add = Contest.objects.get(id = contest_id)
+                    contest_problem_add.problems.add(problem[0])
+
+                    serializer = serializers.ContestSerializer(contest_problem_add)
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            class_id = kwargs.get('class_id')
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
+                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
+
+                contest_problem_lists = Contest_problem.objects.filter(contest_id=contest_id).order_by('order')
+                contest_problem = []
+                for contest_problem_list in contest_problem_lists:
+                    print(contest_problem_list)
+                    contest_problem.append(contest_problem_list)
+                
+                serializer = serializers.ContestProblemSerializer(contest_problem, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
     
     def patch(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
-            classid = self.get_object(class_id)
-
-            data = request.data
-            user = Class.objects.get(id=class_id)
-            if user.created_user == request.user:
-                user.name = data["name"]
-                user.year = data["year"]
-                user.semester = data["semester"]
-                user.save(force_update=True)
-                class_list_serializer = serializers.ClassSerializer(user)
-                return Response(class_list_serializer.data, status=status.HTTP_200_OK)
-            else:
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-    
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
+
+                data = request.data
+                contest = Contest.objects.get(id=contest_id)
+                contest.name = data["name"]
+                contest.start_time = data["start_time"]
+                contest.end_time = data["end_time"]
+                contest.is_exam = data["is_exam"]
+                contest.save(force_update=True)
+
+                contest_serializer = serializers.ContestSerializer(contest)
+                return Response(contest_serializer.data, status=status.HTTP_200_OK)
+                
     def delete(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
-            classid = self.get_object(class_id)
-
-            user = Class.objects.get(id=class_id)
-            if user.created_user == request.user:
-                user.delete()
-                return Response("Success", status=status.HTTP_200_OK)
-            else:
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
 
-
-class ContestProblemView(APIView):
-    #permission_classes = [IsAdminUser]
-
-    def get_object(self, class_id):
-        classid = generics.get_object_or_404(Class, id = class_id)
-        return classid
-
-    def get(self, request, **kwargs):
-        if kwargs.get('class_id') is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        else:
-            class_id = kwargs.get('class_id')
-            classid = self.get_object(class_id)
-            user = Class.objects.get(id=class_id)
-            datas = user.users.all()
-            #print(datas)
-            class_Userlist_serializer = serializers.Class_user_Get_Serializer(datas, many=True)
-            #return Response(data, status=status.HTTP_200_OK)
-            return Response(class_Userlist_serializer.data, status=status.HTTP_200_OK)
+                contest = Contest.objects.get(id=contest_id)
+                contest.delete()
+                return Response("Success", status=status.HTTP_200_OK)
+                
 
 class ContestProblemInfoView(APIView):
     #permission_classes = [IsAdminUser]
