@@ -27,5 +27,6 @@ urlpatterns = [
     path('class/', include('classes.urls.general')),
     path('faqs/', include('faq.urls.general')),
     path('proposals/', include('proposal.urls')),
+    path('problems/', include('problem.urls.general')),
     path('api-auth/', include('rest_framework.urls')),
 ]

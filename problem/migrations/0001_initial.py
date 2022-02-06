@@ -15,19 +15,21 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Announcement',
+            name='Problem',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.TextField()),
-                ('context', models.TextField()),
+                ('description', models.TextField()),
                 ('created_time', models.DateTimeField(auto_now_add=True)),
-                ('last_modified', models.DateTimeField(auto_now=True)),
-                ('visible', models.BooleanField(default=True)),
-                ('important', models.BooleanField(default=False)),
-                ('created_user', models.ForeignKey(db_column='created_user', on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, to_field='username')),
+                ('data', models.FileField(blank=True, null=True, upload_to='media/')),
+                ('solution', models.FileField(blank=True, null=True, upload_to='solution/')),
+                ('data_description', models.TextField()),
+                ('public', models.BooleanField(default=True)),
+                ('is_deleted', models.BooleanField(default=False)),
+                ('created_user', models.ForeignKey(blank=True, db_column='created_user', null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, to_field='username')),
             ],
             options={
-                'db_table': 'announcement',
+                'db_table': 'problem',
             },
         ),
     ]

@@ -24,15 +24,19 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
     def get(self, request):
         problems = Problem.objects.filter((Q(public=True) | Q(created_user=request.user))&Q(is_deleted=False))
-        keyword = request.GET.get('keyword', '')
-        if keyword:
-            problems = problems.filter(title__icontains=keyword)
-        page = self.paginate_queryset(problems)
-        if page is not None:
-            serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
+        if problems.count() != 0:
+            
+            keyword = request.GET.get('keyword', '')
+            if keyword:
+                problems = problems.filter(title__icontains=keyword)
+            page = self.paginate_queryset(problems)
+            if page is not None:
+                serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
+            else:
+                serializer = AllProblemSerializer(page, many=True)
+            return Response(serializer.data)
         else:
-            serializer = AllProblemSerializer(page, many=True)
-        return Response(serializer.data)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     """def modify_input_for_multiple_files(self, title, description, data,
                                         data_description, public, c_u):

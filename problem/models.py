@@ -1,5 +1,4 @@
 from django.db import models
-from contest.models import Contest
 from account.models import User
 from file.models import File
 
