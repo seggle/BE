@@ -15,7 +15,7 @@ class AllProblemSerializer(serializers.ModelSerializer):
 class ProblemGenerateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
-        exclude = ["created_time","contests"]
+        exclude = ["created_time"]
 
 class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
