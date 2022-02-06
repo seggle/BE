@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from ..models import Class, Class_user
 from account.models import User
 from .. import serializers
+#from utils.user_permission import user_perm, class_user_check
 
 # Create your views here.
 
@@ -21,29 +22,45 @@ class ClassView(APIView):
 
     def get_object(self, class_id):
         classid = generics.get_object_or_404(Class, id = class_id)
+        
         return classid
 
     def post(self,request):
+        
+        # result = user_perm(request.user, 1)
+        # if not result: return Response(status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data
         
-        Create_Class = Class(name=data['name'], year=data['year'], semester=data['semester'], created_user=request.user)
-        Create_Class.save()
-
-        print(Create_Class.id)
+        #Create_Class = Class(name=data['name'], year=data['year'], semester=data['semester'], created_user=request.user)
+        #Create_Class.save()
+        
+        data['created_user'] = request.user
+        serializer = serializers.ClassSerializer(data=data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            class_id = serializer.data['id']
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        #print(Create_Class.id)
         # 교수 본인 추가
         data = {}
         data['username'] = request.user
         data['privilege'] = 2
         data["is_show"] = True
-        data["class_id"] = Create_Class.id
+        data["class_id"] = class_id
         serializer = serializers.Class_user_Serializer(data=data) #Request의 data를 UserSerializer로 변환
             
         if serializer.is_valid():
             serializer.save() #UserSerializer의 유효성 검사를 한 뒤 DB에 저장
-            user = Class_user.objects.filter(username = request.user).filter(class_id = Create_Class.id)
-            Create_Class.users.add(user[0])
-
-        return Response(serializers.ClassSerializer(Create_Class).data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            user = Class_user.objects.filter(username = request.user).filter(class_id = class_id)
+            class_user_add = Class.objects.get(id = class_id)
+            class_user_add.users.add(user[0])
+        
+        serializer = serializers.ClassSerializer(class_user_add)
+        return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
         
     def get(self, request, **kwargs):
         if kwargs.get('class_id') is None:

@@ -116,7 +116,7 @@ class ClassInfoView(APIView):
         for class_list in class_lists:
             #print(class_list)
             class_add_is_show = {}
-            class_add = {}
+            #class_add = {}
 
             class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data

@@ -52,7 +52,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         if kwargs.get('proposal_id') is None:
             proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time')
             page = self.paginate_queryset(proposal_list)
-
+            
             if page is not None:
                 serializer = self.get_paginated_response(page)
             else:

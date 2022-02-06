@@ -3,7 +3,7 @@ from account.models import User
 from competition.models import Competition
 from problem.models import Problem
 from classes.models import Class
-from problem.models import Contest_problem
+from contest.models import Contest_problem
 from file.models import File
 
 # Create your models here.
