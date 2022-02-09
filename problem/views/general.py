@@ -25,7 +25,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
     def get(self, request):
         problems = Problem.objects.filter((Q(public=True) | Q(created_user=request.user))&Q(is_deleted=False))
         if problems.count() != 0:
-            
+
             keyword = request.GET.get('keyword', '')
             if keyword:
                 problems = problems.filter(title__icontains=keyword)
@@ -92,9 +92,9 @@ class ProblemDetailView(APIView):
         problem = self.get_object(problem_id)
         data = request.data
         obj = {"title": data["title"],
-               "description": data["description"],
-               "data_description": data["data_description"],
-               "public": data["public"]}
+            "description": data["description"],
+            "data_description": data["data_description"],
+            "public": data["public"]}
         if data['data']:
             obj['data'] = data['data']
         if data['solution']:

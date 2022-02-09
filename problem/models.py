@@ -2,8 +2,6 @@ from django.db import models
 from account.models import User
 from file.models import File
 
-
-
 class Problem(models.Model):
     title = models.TextField()
     description = models.TextField()
