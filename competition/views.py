@@ -1,9 +1,12 @@
-from competition.serializers import CompetitionDetailSerializer, CompetitionGenerateSerializer, CompetitionProblemCheckSerializer
+from competition.serializers import (
+    CompetitionDetailSerializer, CompetitionGenerateSerializer,
+    CompetitionProblemCheckSerializer, CompetitionPutSerializer,
+    CompetitionListSerializer,
+)
+from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
 from competition.models import Competition
-# problem의 view 내용
-from rest_framework.views import APIView
 from problem.models import Problem
-from problem.serializers import ProblemGenerateSerializer, ProblemSerializer, AllProblemSerializer, ProblemPatchSerializer
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -17,33 +20,41 @@ from utils.permission import CustomPermissionMixin
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
-
 class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
-    serializer_class = CompetitionGenerateSerializer
-    pagination_class = BasicPagination
     parser_classes = [MultiPartParser, JSONParser]
 
+    # pagination
+    pagination_class = BasicPagination
+    serializer_class = CompetitionListSerializer
+
+    # 06-00 대회 리스트 조회
     def get(self, request):
-        problems = Problem.objects.filter((Q(public=True) | Q(created_user=request.user))&Q(is_deleted=False))
-        if problems.count() != 0:
-            keyword = request.GET.get('keyword', '')
-            if keyword:
-                problems = problems.filter(title__icontains=keyword)
-            page = self.paginate_queryset(problems)
-            if page is not None:
-                serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
-            else:
-                serializer = AllProblemSerializer(page, many=True)
-            return Response(serializer.data)
+        competitions = Competition.objects.filter(problem_id__is_deleted=False)
+        keyword = request.GET.get('keyword', '')
+        if keyword:
+            competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
+        # print("competitions 출력", competitions)
+        obj_list = []
+        for competition in competitions:
+            obj = {}
+            obj["problem"] = Problem.objects.get(id=competition.problem_id.id)
+            obj["id"] = competition.id
+            obj["start_time"] = competition.start_time
+            obj["end_time"] = competition.end_time
+            obj_list.append(obj)
+        page = self.paginate_queryset(obj_list)
+        if page is not None:
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            serializer = self.serializer_class(competitions, many=True, problem=competitions.problem_id)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 06-01 대회 생성
     def post(self, request):
-        data = request.data
         # permission check
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 생성 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
         data['created_user'] = request.user
         check = CompetitionProblemCheckSerializer(data=data)
         if check.is_valid():
@@ -68,7 +79,8 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
         else:
             return Response(check.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CompetitionDetailView(APIView):
+class CompetitionDetailView(APIView, CustomPermissionMixin):
+    parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, competition_id):
         competition = get_object_or_404(Competition, id=competition_id)
@@ -90,4 +102,38 @@ class CompetitionDetailView(APIView):
 
     # 06-03 대회 개별 수정
     def put(self, request, competition_id):
+        # permission check
+        if self.check_student(request.user.privilege):
+            return Response({'error':'Competition 수정 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
         competition = self.get_object(competition_id=competition_id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id)
+        # problem 수정
+        obj = {"title": data["title"],
+            "description": data["description"],
+            "data_description": data["data_description"],
+            "public": data["public"]}
+        if data['data']:
+            obj['data'] = data['data']
+        if data['solution']:
+            obj['solution'] = data['solution']
+        problem_serializer = ProblemSerializer(problem, data=obj)
+        if problem_serializer.is_valid():
+            problem_obj = problem_serializer.save()
+        else:
+            return Response(problem_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        # competition 수정
+        competition_serializer = CompetitionPutSerializer(competition, data=data)
+        if competition_serializer.is_valid():
+            competition_obj = competition_serializer.save()
+        else:
+            return Response(competition_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        obj2 = {"problem":problem_obj,
+                "id":competition_obj.id,
+                "start_time":competition_obj.start_time,
+                "end_time":competition_obj.end_time}
+        serializer = CompetitionDetailSerializer(obj2)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class CompetitionUserView(APIView, CustomPermissionMixin):
+    pass

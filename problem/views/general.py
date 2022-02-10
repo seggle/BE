@@ -50,16 +50,16 @@ class ProblemView(APIView, PaginationHandlerMixin):
         return dict"""
 
     def post(self, request):
-        """title = request.data['title']
+        """
+        title = request.data['title']
         description = request.data['description']
         data_description = request.data['data_description']
         public = request.data['public']
         data = request.data['data']
         c_u = request.user
-
         modified_data = self.modify_input_for_multiple_files(title, description, data, data_description, public, c_u)
-"""
-        data = request.data
+        """
+        data = request.data.copy()
         data['created_user'] = request.user
         problem = ProblemGenerateSerializer(data=data)
         if problem.is_valid():
@@ -99,7 +99,7 @@ class ProblemDetailView(APIView):
             obj['data'] = data['data']
         if data['solution']:
             obj['solution'] = data['solution']
-        serializer = ProblemSerializer(problem,data=obj)
+        serializer = ProblemSerializer(problem, data=obj)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

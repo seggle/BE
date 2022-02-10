@@ -66,7 +66,6 @@ INSTALLED_APPS = [
     'competition',
     'contest',
     'faq',
-    'file',
     'problem',
     'proposal',
     'submission',
