@@ -121,23 +121,33 @@ class ClassInfoView(APIView):
             class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
             class_add_is_show["is_show"] = class_list.is_show
-            # class_add['id'] = class_add_is_show['id']
-            # class_add['name'] = class_add_is_show['name']
-            # class_add['semester'] = str(class_add_is_show['year']) + '-' + str(class_add_is_show['semester']) + '학기'
-            # class_add['is_show'] = class_add_is_show['is_show']
             class_name_list.append(class_add_is_show)
         return Response(class_name_list, status=status.HTTP_200_OK)
 
     def patch(self, request):
         #class_id = kwargs.get('class_id')
         datas = request.data
-        for data in datas:
-            classid = self.get_object(data['class_id'])
-            class_user = Class_user.objects.filter(username=request.user).filter(class_id=data['class_id'])
-            if class_user.count() == 0:
-                continue
-
-            user = class_user[0]
-            user.is_show = not user.is_show
+        
+        class_user_list = Class_user.objects.filter(username=request.user)
+        
+        for user in class_user_list:
+            user.is_show = False
             user.save(force_update=True)
-        return Response("Success", status=status.HTTP_200_OK)
+
+        does_not_exist = {}
+        does_not_exist['does_not_exist'] = []
+
+        for data in datas:
+            #classid = self.get_object(data['class_id'])
+            class_user = class_user_list.filter(class_id=data['class_id'])
+            if class_user.count() == 0:
+                does_not_exist['does_not_exist'].append(data['class_id'])
+                continue
+            
+            user = class_user[0]
+            user.is_show = True
+            user.save(force_update=True)
+        if len(does_not_exist['does_not_exist']) == 0:
+            return Response("Success", status=status.HTTP_200_OK)
+        else:
+            return Response(does_not_exist, status=status.HTTP_200_OK)
