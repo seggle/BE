@@ -21,5 +21,8 @@ class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         fields = ["title","description","data_description","public"]
-###
 
+class ProblemListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problem
+        fields = ["id", "title", "created_time", "created_user", "public"]

@@ -28,5 +28,6 @@ urlpatterns = [
     path('faqs/', include('faq.urls.general')),
     path('proposals/', include('proposal.urls')),
     path('problems/', include('problem.urls.general')),
+    path('competitions/', include('competition.urls')),
     path('api-auth/', include('rest_framework.urls')),
 ]
