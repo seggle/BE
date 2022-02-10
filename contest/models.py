@@ -10,7 +10,7 @@ class Contest(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_exam = models.BooleanField(default=False)
-    #problems = models.ManyToManyField('Contest_problem', related_name="contests", blank=True)
+    problems = models.ManyToManyField('Contest_problem', related_name="contests", blank=True)
     visible = models.BooleanField(default=True)
 
     class Meta:
@@ -21,8 +21,6 @@ class Contest_problem(models.Model):
     contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
     title = models.TextField()
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
     order = models.IntegerField()
 
     class Meta:

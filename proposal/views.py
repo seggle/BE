@@ -33,10 +33,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
     def post(self,request):
         data = request.data
-        data._mutable = True
         data["created_user"] = request.user
-        #data._mutable = False
-        #print(data)
 
         serializer = serializers.ProposalSerializer(data=data) #Request의 data를 UserSerializer로 변환
 
