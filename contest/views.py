@@ -224,6 +224,7 @@ class ContestProblemView(APIView):
                 contest.start_time = data["start_time"]
                 contest.end_time = data["end_time"]
                 contest.is_exam = data["is_exam"]
+                contest.visible = data["visible"]
                 contest.save(force_update=True)
 
                 contest_serializer = serializers.ContestSerializer(contest)
