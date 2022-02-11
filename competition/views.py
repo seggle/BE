@@ -33,7 +33,6 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
         keyword = request.GET.get('keyword', '')
         if keyword:
             competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
-        # print("competitions 출력", competitions)
         obj_list = []
         for competition in competitions:
             obj = {}
@@ -100,7 +99,7 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         serializer = CompetitionDetailSerializer(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 06-03 대회 개별 수정
+    # 06-03-01 대회 개별 수정
     def put(self, request, competition_id):
         # permission check
         if self.check_student(request.user.privilege):
@@ -134,6 +133,17 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
                 "end_time":competition_obj.end_time}
         serializer = CompetitionDetailSerializer(obj2)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 06-03-02 대회 삭제
+    def delete(self, request, competition_id):
+        # permission check
+        if self.check_student(request.user.privilege):
+            return Response({'error':'Competition 삭제 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
+        competition = self.get_object(competition_id=competition_id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id)
+        problem.is_deleted = True
+        problem.save()
+        return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
 class CompetitionUserView(APIView, CustomPermissionMixin):
     pass
