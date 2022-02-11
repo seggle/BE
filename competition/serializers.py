@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Competition
+from .models import Competition, Competition_user
 from problem.models import Problem
 from problem.serializers import ProblemSerializer, ProblemListSerializer
 
@@ -37,3 +37,8 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
     solution = serializers.FileField()
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
+
+class CompetitionUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition_user
+        fields = "__all__"
