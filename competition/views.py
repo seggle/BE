@@ -1,18 +1,16 @@
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionGenerateSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionListSerializer,
+    CompetitionListSerializer, CompetitionUserSerializer,
 )
 from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
-from competition.models import Competition
+from competition.models import Competition, Competition_user
 from problem.models import Problem
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
-from django.db.models import Q
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.permission import CustomPermissionMixin
@@ -33,7 +31,6 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
         keyword = request.GET.get('keyword', '')
         if keyword:
             competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
-        # print("competitions 출력", competitions)
         obj_list = []
         for competition in competitions:
             obj = {}
@@ -85,14 +82,17 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
     def get_object(self, competition_id):
         competition = get_object_or_404(Competition, id=competition_id)
         problem = get_object_or_404(Problem, id=competition.problem_id.id) # competition.problem_id -> Problem object (1)
-        if problem.is_deleted: # 삭제된 problem일 경우 불러올 수 없음.
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        return competition
+        if problem.is_deleted: # 삭제된 문제인 경우 False 반환
+            return False
+        else:
+            return competition
 
     # 06-02 대회 개별 조회
     def get(self, request, competition_id):
-        obj = {}
         competition = self.get_object(competition_id=competition_id)
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        obj = {}
         obj["problem"] = get_object_or_404(Problem, id=competition.problem_id.id)
         obj["id"] = competition.id
         obj["start_time"] = competition.start_time
@@ -100,14 +100,16 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         serializer = CompetitionDetailSerializer(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 06-03 대회 개별 수정
+    # 06-03-01 대회 개별 수정
     def put(self, request, competition_id):
         # permission check
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 수정 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
-        data = request.data
         competition = self.get_object(competition_id=competition_id)
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
+        data = request.data
         # problem 수정
         obj = {"title": data["title"],
             "description": data["description"],
@@ -135,5 +137,54 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         serializer = CompetitionDetailSerializer(obj2)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # 06-03-02 대회 삭제
+    def delete(self, request, competition_id):
+        # permission check
+        if self.check_student(request.user.privilege):
+            return Response({'error':'Competition 삭제 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
+        competition = self.get_object(competition_id=competition_id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id)
+        problem.is_deleted = True
+        problem.save()
+        return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
+
 class CompetitionUserView(APIView, CustomPermissionMixin):
-    pass
+
+    def get_object(self, competition_id):
+        competition = get_object_or_404(Competition, id=competition_id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id) # competition.problem_id -> Problem object (1)
+        if problem.is_deleted: # 삭제된 problem일 경우 불러올 수 없음.
+            return False
+        else:
+            return competition
+
+    # 06-05-01
+    def post(self, request, competition_id):
+        competition = self.get_object(competition_id)
+        # problem 삭제 확인
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        # competition_user에 username이 이미 존재하는지 체크
+        if Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id).count():
+            return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id)
+        data = {}
+        data["username"] = request.user.username
+        data["privilege"] = 0
+        data["competition_id"] = competition_id
+        serializer = CompetitionUserSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id)
+            competition.users.add(user[0])
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+
+    # 06-05-02
+    def get(self, request, competition_id):
+        competition = self.get_object(competition_id)
+        # problem 삭제 확인
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
