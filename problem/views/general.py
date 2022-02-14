@@ -11,14 +11,14 @@ from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 import os
-
+import shutil
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    # permission_classes = [AllowAny]
+    permission_classes = [AllowAny]
     pagination_class = BasicPagination
     parser_classes = [MultiPartParser, JSONParser]
 
@@ -72,7 +72,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 class ProblemDetailView(APIView):
 
-    # permission_classes = [AllowAny]
+    permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, problem_id):
@@ -116,8 +116,16 @@ class ProblemDetailView(APIView):
                "public": data["public"]}
 
         if data['data']:
+            if os.path.isfile(problem.data.path):
+                path = (problem.data.path).split("uploads/problem/")
+                path = path[1].split("/")
+                shutil.rmtree('./uploads/problem/' + path[0] + '/')
             obj['data'] = data['data']
         if data['solution']:
+            if os.path.isfile(problem.solution.path):
+                path = (problem.solution.path).split("uploads/solution/")
+                path = path[1].split("/")
+                shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
 
         serializer = ProblemSerializer(problem, data=obj)
