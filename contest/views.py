@@ -287,8 +287,6 @@ class ContestProblemTitleView(APIView):
                 error = {}
                 error['Error'] = []
                 error['Error_Contest_Problem_id'] = []
-                error['Error_Problem_id'] = []
-                error['Error_title_is_existed'] = []
 
                 for data in datas:
                     if Contest_problem.objects.filter(id=data['id']).count() == 0:
@@ -300,19 +298,20 @@ class ContestProblemTitleView(APIView):
                         error['Error'].append(data['id'])
                         continue
                     
-                    if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
-                        error['Error_Problem_id'].append(data['problem_id'])
-                        continue
+                    # if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
+                    #     error['Error_Problem_id'].append(data['problem_id'])
+                    #     continue
 
-                    tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
-                    if tilte_check != 0:
-                        error['Error_title_is_existed'].append(data['title'])
-                        continue
+                    # tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
+                    # if tilte_check != 0:
+                    #     error['Error_title_is_existed'].append(data['title'])
+                    #     continue
                         # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
                     contest_problem.title = data['title']
+                    contest_problem.order = data['order']
                     contest_problem.save(force_update=True)
 
-                if (len(error['Error']) != 0) or (len(error['Error_Contest_Problem_id']) != 0) or (len(error['Error_Problem_id']) != 0) or (len(error['Error_title_is_existed']) != 0):
+                if (len(error['Error']) != 0) or (len(error['Error_Contest_Problem_id']) != 0):
                     return Response(error, status=status.HTTP_200_OK)
                 else:
                     return Response("Success", status=status.HTTP_200_OK)
