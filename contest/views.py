@@ -17,7 +17,6 @@ from account.models import User
 from problem.models import Problem
 from .models import Contest, Contest_problem, Exam
 from . import serializers
-from django.contrib.sites.models import Site
 
 # Create your views here.
 
@@ -366,8 +365,9 @@ class ContestProblemInfoView(APIView):
                     problem = Problem.objects.get(id=contest_problem.problem_id.id)
                     
                     ip_addr = "3.37.186.158"
-                    path = str(problem.data.path).replace("uploads/", "")
+                    path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
                     url = "http://{0}/{1}" . format (ip_addr, path)
+
                     cp_json = {
                         "id": contest_problem.id,
                         "contest_id": contest_problem.contest_id.id,
