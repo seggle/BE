@@ -36,7 +36,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
                 serializer = AllProblemSerializer(page, many=True)
             return Response(serializer.data)
         else:
-            return Response([], status=status.HTTP_400_BAD_REQUEST)
+            return Response([], status=status.HTTP_200_OK)
 
     """def modify_input_for_multiple_files(self, title, description, data,
                                         data_description, public, c_u):
@@ -67,7 +67,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem.save()
             return Response(problem.data)
         else:
-            return Response(problem.errors, status=400)
+            return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProblemDetailView(APIView):
