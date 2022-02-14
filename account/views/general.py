@@ -120,6 +120,7 @@ class ClassInfoView(APIView):
 
             class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
+            class_add_is_show["privilege"] = class_list.privilege
             class_add_is_show["is_show"] = class_list.is_show
             class_name_list.append(class_add_is_show)
         return Response(class_name_list, status=status.HTTP_200_OK)
