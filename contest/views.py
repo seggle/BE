@@ -364,8 +364,10 @@ class ContestProblemInfoView(APIView):
                         return Response({'error': 'time error!'}, status=status.HTTP_400_BAD_REQUEST)
 
                     problem = Problem.objects.get(id=contest_problem.problem_id.id)
+                    
+                    ip_addr = "3.37.186.158"
                     path = str(problem.data.path).replace("uploads/", "")
-                    url = "http://{0}/{1}" . format (Site.objects.get_current().domain, path)
+                    url = "http://{0}/{1}" . format (ip_addr, path)
                     cp_json = {
                         "id": contest_problem.id,
                         "contest_id": contest_problem.contest_id.id,
