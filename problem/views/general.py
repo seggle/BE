@@ -18,7 +18,7 @@ class BasicPagination(PageNumberPagination):
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
     pagination_class = BasicPagination
     parser_classes = [MultiPartParser, JSONParser]
 
@@ -72,7 +72,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 class ProblemDetailView(APIView):
 
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
     parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, problem_id):
@@ -96,7 +96,7 @@ class ProblemDetailView(APIView):
             "title": problem.title,
             "description": problem.description,
             "created_time": problem.created_time,
-            "created_user": problem.created_user,
+            "created_user": problem.created_user.username,
             "data": url,
             "data_description": problem.data_description,
             "public": problem.public,
@@ -142,7 +142,7 @@ class ProblemDetailView(APIView):
 
 
 class ProblemVisibilityView(APIView):
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
 
     def get_object(self, problem_id):
         problem = get_object_or_404(Problem, id=problem_id)
