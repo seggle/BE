@@ -17,6 +17,7 @@ from account.models import User
 from problem.models import Problem
 from .models import Contest, Contest_problem, Exam
 from . import serializers
+from django.contrib.sites.models import Site
 
 # Create your views here.
 
@@ -363,6 +364,8 @@ class ContestProblemInfoView(APIView):
                         return Response({'error': 'time error!'}, status=status.HTTP_400_BAD_REQUEST)
 
                     problem = Problem.objects.get(id=contest_problem.problem_id.id)
+                    path = str(problem.data.path).replace("uploads/", "")
+                    url = "http://{0}/{1}" . format (Site.objects.get_current().domain, path)
                     cp_json = {
                         "id": contest_problem.id,
                         "contest_id": contest_problem.contest_id.id,
@@ -372,6 +375,7 @@ class ContestProblemInfoView(APIView):
                         "end_time": contest_problem.contest_id.end_time,
                         "problem_description": problem.description,
                         # "problem_data": problem.data.path,
+                        "problem_data": url,
                         "problem_data_description": problem.data_description,
                     }
 

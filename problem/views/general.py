@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemGenerateSerializer, ProblemSerializer, AllProblemSerializer, ProblemPatchSerializer
+from ..serializers import ProblemDetailSerializer, ProblemSerializer, AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -18,7 +18,6 @@ class BasicPagination(PageNumberPagination):
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    serializer_class = ProblemGenerateSerializer
     permission_classes = [AllowAny]
     pagination_class = BasicPagination
     parser_classes = [MultiPartParser, JSONParser]
@@ -37,7 +36,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
                 serializer = AllProblemSerializer(page, many=True)
             return Response(serializer.data)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response([], status=status.HTTP_400_BAD_REQUEST)
 
     """def modify_input_for_multiple_files(self, title, description, data,
                                         data_description, public, c_u):
@@ -87,7 +86,7 @@ class ProblemDetailView(APIView):
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ProblemSerializer(problem)
+        serializer = ProblemDetailSerializer(problem)
         return Response(serializer.data)
 
     def put(self, request, problem_id):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Competition, Competition_user
 from problem.models import Problem
-from problem.serializers import ProblemSerializer, ProblemListSerializer
+from problem.serializers import ProblemSerializer, AllProblemSerializer
 
 class CompetitionGenerateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -23,7 +23,7 @@ class CompetitionPutSerializer(serializers.ModelSerializer):
 class CompetitionListSerializer(serializers.ModelSerializer):
     # problem = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all())
     # problem = serializers.ModelSerializer.serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all())
-    problem = ProblemListSerializer()
+    problem = AllProblemSerializer()
     class Meta:
         model = Competition
         fields = ['problem', 'id', 'start_time', 'end_time']
