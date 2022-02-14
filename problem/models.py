@@ -11,9 +11,9 @@ class Problem(models.Model):
     solution = models.FileField(blank=True,null=True,upload_to="solution/")
     data_description = models.TextField()
     public = models.BooleanField(default=True)
-    evaluation = models.TextField(null = True,blank=True)
-    #어느 클래스에서 만들어 졌는지
-    class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class",blank=True,null=True)
+    # evaluation = models.TextField(null = True,blank=True)
+    # 어느 클래스에서 만들어 졌는지
+    # class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class",blank=True,null=True)
     # 삭제되었는지
     is_deleted = models.BooleanField(default=False)
 

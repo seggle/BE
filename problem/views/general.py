@@ -61,7 +61,9 @@ class ProblemView(APIView, PaginationHandlerMixin):
 """
         data = request.data
         data['created_user'] = request.user
-        problem = ProblemGenerateSerializer(data=data)
+        # problem = ProblemGenerateSerializer(data=data)
+        problem = ProblemSerializer(data=data)
+        
         if problem.is_valid():
             problem.save()
             return Response(problem.data)
