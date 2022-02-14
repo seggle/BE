@@ -20,4 +20,4 @@ class ProblemGenerateSerializer(serializers.ModelSerializer):
 class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
-        fields = ["title","description","data_description","public"]
+        fields = ["title","description","data_description","public","evaluation"]

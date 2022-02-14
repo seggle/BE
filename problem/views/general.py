@@ -18,9 +18,9 @@ class BasicPagination(PageNumberPagination):
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
     pagination_class = BasicPagination
-    parser_classes = [MultiPartParser, JSONParser]
+    # parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
         problems = Problem.objects.filter((Q(public=True) | Q(created_user=request.user)) & Q(is_deleted=False))
@@ -62,7 +62,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
         data['created_user'] = request.user
         # problem = ProblemGenerateSerializer(data=data)
         problem = ProblemSerializer(data=data)
-        
+
         if problem.is_valid():
             problem.save()
             return Response(problem.data)
@@ -72,8 +72,8 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 class ProblemDetailView(APIView):
 
-    permission_classes = [AllowAny]
-    parser_classes = [MultiPartParser, JSONParser]
+    # permission_classes = [AllowAny]
+    # parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, problem_id):
         problem = get_object_or_404(Problem, id=problem_id)
@@ -101,7 +101,7 @@ class ProblemDetailView(APIView):
             "data_description": problem.data_description,
             "public": problem.public,
         }
-        
+
         return Response(cp_json, status=status.HTTP_200_OK)
 
     def put(self, request, problem_id):
@@ -111,15 +111,16 @@ class ProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         obj = {"title": data["title"],
-               "description": data["description"],
-               "data_description": data["data_description"],
-               "public": data["public"]}
+            "description": data["description"],
+            "data_description": data["data_description"],
+            "public": data["public"]}
 
         if data['data']:
+            # 폴더 삭제
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
                 path = path[1].split("/")
-                shutil.rmtree('./uploads/problem/' + path[0] + '/')
+                shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
             if os.path.isfile(problem.solution.path):

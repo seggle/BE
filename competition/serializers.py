@@ -8,9 +8,13 @@ class CompetitionGenerateSerializer(serializers.ModelSerializer):
         model = Competition
         fields = ['problem_id', 'id', 'start_time', 'end_time']
 
-
 class CompetitionDetailSerializer(serializers.ModelSerializer):
-    problem = ProblemSerializer(read_only=True)
+    problem = ProblemSerializer()
+    ip_addr = "3.37.186.158"
+    path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+    url = "http://{0}/{1}" . format (ip_addr, path)
+    problem.data = url
+
     class Meta:
         model = Competition
         fields = ['problem', 'id', 'start_time', 'end_time']
@@ -35,6 +39,7 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
     data_description = serializers.CharField()
     data = serializers.FileField()
     solution = serializers.FileField()
+    evaluation = serializers.CharField()
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
 
