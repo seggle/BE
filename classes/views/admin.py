@@ -18,6 +18,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     # pagination
     pagination_class = BasicPagination
 
+    
     def get(self, request):
         uid = request.GET.get('uid', None)
         if uid is None:

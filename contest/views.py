@@ -176,14 +176,21 @@ class ContestProblemView(APIView):
                 contest_id = kwargs.get('contest_id')
                 contestid = self.get_object_contest(contest_id)
 
+                
+
                 contest_problem_lists = Contest_problem.objects.filter(contest_id=contest_id).order_by('order')
+                contest_problem = []
+                
+                if contest_problem_lists.count() == 0:
+                    return Response(contest_problem, status=status.HTTP_200_OK)
+                
                 if contest_problem_lists[0].contest_id.class_id.id != class_id:
                     return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
                 
                 start_time = contest_problem_lists[0].contest_id.start_time
                 end_time = contest_problem_lists[0].contest_id.end_time
                 #print(start_time)
-                contest_problem = []
+                
                 for contest_problem_list in contest_problem_lists:
                     #print(contest_problem_list)
                     cp_json = {
@@ -395,6 +402,13 @@ class ContestProblemInfoView(APIView):
                     if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
                         return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
                     
-                    contest_problem.delete()
-                    return Response("Success", status=status.HTTP_200_OK)
-                
+
+                    contest_problem_lists = Contest_problem.objects.filter(contest_id=contest_id).order_by('-order')
+                    
+                    for contest_problem_list in contest_problem_lists:
+                        if(contest_problem_list.order > contest_problem.order):
+                            contest_problem_list.order = contest_problem_list.order - 1
+                            contest_problem_list.save(force_update=True)
+                        else:
+                            contest_problem.delete()
+                            return Response("Success", status=status.HTTP_200_OK)
