@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemDetailSerializer, ProblemSerializer, AllProblemSerializer
+from ..serializers import ProblemSerializer, AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -86,8 +86,23 @@ class ProblemDetailView(APIView):
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        serializer = ProblemDetailSerializer(problem)
-        return Response(serializer.data)
+
+        ip_addr = "3.37.186.158"
+        path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        url = "http://{0}/{1}" . format (ip_addr, path)
+
+        cp_json = {
+            "id": problem.id,
+            "title": problem.title,
+            "description": problem.description,
+            "created_time": problem.created_time,
+            "created_user": problem.created_user,
+            "data": url,
+            "data_description": problem.data_description,
+            "public": problem.public,
+        }
+        
+        return Response(cp_json, status=status.HTTP_200_OK)
 
     def put(self, request, problem_id):
         problem = self.get_object(problem_id)
