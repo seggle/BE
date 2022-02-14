@@ -15,13 +15,13 @@ class AllProblemSerializer(serializers.ModelSerializer):
 class ProblemGenerateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
-        exclude = ["created_time"]
+        exclude = ["created_time","class_id"]
 
 class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         fields = ["title","description","data_description","public"]
-
+        
 class ProblemListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
