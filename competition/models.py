@@ -6,7 +6,7 @@ class Competition(models.Model):
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    users = models.ManyToManyField('Competition_user', related_name="competition", blank=True)
+    users = models.ManyToManyField('Competition_user', related_name="competition", blank=True, null=True)
 
     class Meta:
         db_table = "competition"

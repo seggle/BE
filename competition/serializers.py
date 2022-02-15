@@ -10,10 +10,6 @@ class CompetitionGenerateSerializer(serializers.ModelSerializer):
 
 class CompetitionDetailSerializer(serializers.ModelSerializer):
     problem = ProblemSerializer()
-    ip_addr = "3.37.186.158"
-    path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-    url = "http://{0}/{1}" . format (ip_addr, path)
-    problem.data = url
 
     class Meta:
         model = Competition
@@ -47,3 +43,8 @@ class CompetitionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition_user
         fields = "__all__"
+
+class CompetitionUserGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition_user
+        fields = ["username", "privilege"]

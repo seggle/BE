@@ -1,11 +1,12 @@
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionGenerateSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionListSerializer, CompetitionUserSerializer,
+    CompetitionListSerializer, CompetitionUserGetSerializer, CompetitionUserSerializer,
 )
 from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
 from competition.models import Competition, Competition_user
 from problem.models import Problem
+from account.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -73,19 +74,19 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
                 user_data["username"] = request.user.username
                 user_data["privilege"] = 2
                 user_data["competition_id"] = competition_obj.id
-                serializer = CompetitionUserSerializer(data=user_data)
-                if serializer.is_valid():
-                    serializer.save()
+                competition_user_serializer = CompetitionUserSerializer(data=user_data)
+                if competition_user_serializer.is_valid():
+                    competition_user_serializer.save()
                     user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_obj.id)
-                    competition.users.add(user[0])
+                    competition_obj.users.add(user[0])
                 # 대회 정보
                 obj = {}
                 obj["problem"] = problem_obj
                 obj["id"] = competition_obj.id
                 obj["start_time"] = competition_obj.start_time
                 obj["end_time"] = competition_obj.end_time
-                serializer = CompetitionDetailSerializer(obj)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                competition_detail_serializer = CompetitionDetailSerializer(obj)
+                return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(competition.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -108,7 +109,15 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         if competition is False:
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         obj = {}
-        obj["problem"] = get_object_or_404(Problem, id=competition.problem_id.id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id)
+
+        # url 설정
+        ip_addr = "3.37.186.158"
+        path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        url = "http://{0}/{1}" . format (ip_addr, path)
+        problem.data = url
+
+        obj["problem"] = problem
         obj["id"] = competition.id
         obj["start_time"] = competition.start_time
         obj["end_time"] = competition.end_time
@@ -210,4 +219,76 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         else:
             return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
+    # 06-05-03 대회 참가자 관리자 전체 조회
+    def get(self, request, competition_id):
+        competition = self.get_object(competition_id)
+        # problem 삭제 확인
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        datas = competition.users.all()
+        competition_Userlist_serializer = CompetitionUserGetSerializer(datas, many=True)
+        return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
+
+class CompetitionTaView(APIView, CustomPermissionMixin):
+
+    def get_object(self, competition_id):
+        competition = get_object_or_404(Competition, id=competition_id)
+        problem = get_object_or_404(Problem, id=competition.problem_id.id) # competition.problem_id -> Problem object (1)
+        if problem.is_deleted: # 삭제된 problem일 경우 불러올 수 없음.
+            return False
+        else:
+            return competition
+
+    # 06-05-02 대회 유저 참가
+    def post(self, request, competition_id):
+        competition = self.get_object(competition_id)
+        # problem 삭제 확인
+        if competition is False:
+            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 기존 TA 삭제
+        if (competition.problem_id.created_user == request.user) or request.user.privilege == 2: # 대회 담당 교수, admin인 경우에만
+            user_list = competition.users.all()
+            for users in user_list:
+                if users.privilege == 1:
+                    competition.users.remove(users.id)
+                    users.delete()
+        else:
+            return Response({'error':"추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # TA 추가
+        user_does_not_exist = {}
+        user_does_not_exist['does_not_exist'] = []
+        user_does_not_exist['is_existed'] = []
+        datas = request.data
+        for data in datas:
+            is_check_user = User.objects.filter(username = data['username']).count()
+            is_check_competition_user = Competition_user.objects.filter(username = data['username']).filter(competition_id = competition_id).count()
+            if is_check_user == 0:
+                user_does_not_exist['does_not_exist'].append(data['username'])
+                continue
+            if is_check_competition_user != 0:
+                user_does_not_exist['is_existed'].append(data['username'])
+                continue
+
+            data["is_show"] = True
+            data["privilege"] = 1
+            data["competition_id"] = competition_id
+
+            serializer = CompetitionUserSerializer(data=data)
+
+            if serializer.is_valid():
+                serializer.save()
+                user = Competition_user.objects.filter(username = data['username']).filter(competition_id = competition_id)
+                competition.users.add(user[0])
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 출력
+        if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
+            users_datas = competition.users.all()
+            competition_Userlist_serializer = CompetitionUserGetSerializer(users_datas, many=True)
+            return Response(competition_Userlist_serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 

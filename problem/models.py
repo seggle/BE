@@ -12,7 +12,7 @@ class Problem(models.Model):
     data = models.FileField(blank=True,null=True,upload_to=upload_to_data)
     solution = models.FileField(blank=True,null=True,upload_to=upload_to_solution)
     data_description = models.TextField()
-    public = models.BooleanField(default=True)
+    public = models.BooleanField(default=False)
     evaluation = models.TextField() # 평가 방식
     # 어느 클래스에서 만들어 졌는지
     class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True,null=True)

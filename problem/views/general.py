@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from ..models import Problem
+from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -57,9 +58,14 @@ class ProblemView(APIView, PaginationHandlerMixin):
         data = request.data['data']
         c_u = request.user
         modified_data = self.modify_input_for_multiple_files(title, description, data, data_description, public, c_u)
-"""
-        data = request.data
+        """
+        data = request.data.copy()
         data['created_user'] = request.user
+        print('Class.objects.filter(id = data["class_id"])', Class.objects.filter(id = data["class_id"]))
+        print('Class.objects.filter(id = data["class_id"]).count()', Class.objects.filter(id = data["class_id"]).count())
+        # 존재하는 class_id인지 확인
+        if (Class.objects.filter(id = data["class_id"]).count()) == 0:
+            return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
         # problem = ProblemGenerateSerializer(data=data)
         problem = ProblemSerializer(data=data)
 
@@ -99,6 +105,7 @@ class ProblemDetailView(APIView):
             "created_user": problem.created_user.username,
             "data": url,
             "data_description": problem.data_description,
+            "evaluation": problem.evaluation,
             "public": problem.public,
         }
 
@@ -113,6 +120,7 @@ class ProblemDetailView(APIView):
         obj = {"title": data["title"],
             "description": data["description"],
             "data_description": data["data_description"],
+            "evaluation": data["evaluation"],
             "public": data["public"]}
 
         if data['data']:
