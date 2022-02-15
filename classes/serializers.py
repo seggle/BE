@@ -27,3 +27,8 @@ class Class_user_Get_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Class_user
         fields = ["username", "privilege"]
+
+class ClassUserGetInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Class_user
+        fields = ["class_id", "privilege"]

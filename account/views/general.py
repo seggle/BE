@@ -11,6 +11,7 @@ from ..models import User
 from .. import serializers
 from classes.models import Class, Class_user
 from classes.serializers import ClassGetSerializer
+from competition.models import Competition_user
 
 """
 # 이메일 확인 완료
@@ -63,14 +64,24 @@ class UserInfoView(APIView):
         return user
 
     # 01-07 유저 조회
-    # @login_required
     def get(self, request, username, format=None):
         user = self.get_object(username)
-        try:
-            serializer = serializers.UserInfoSerializer(user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except:
-            raise Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        # permission check
+        if request.user.username != user.username:
+            return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+        competition = Competition_user.objects.filter(username=user.username)
+        classes = Class_user.objects.filter(username=user.username)
+        obj = {"id":user.id,
+                "email":user.email,
+                "username":user.username,
+                "name":user.name,
+                "privilege":user.privilege,
+                "dated_joined":user.date_joined,
+                "is_active":user.is_active}
+        obj["competition"] = competition
+        obj["classes"] = classes
+        serializer = serializers.UserInfoClassCompetitionSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 01-06 비밀번호 변경
     def patch(self, request, username):
@@ -128,9 +139,9 @@ class ClassInfoView(APIView):
     def patch(self, request):
         #class_id = kwargs.get('class_id')
         datas = request.data
-        
+
         class_user_list = Class_user.objects.filter(username=request.user)
-        
+
         for user in class_user_list:
             user.is_show = False
             user.save(force_update=True)
@@ -144,7 +155,7 @@ class ClassInfoView(APIView):
             if class_user.count() == 0:
                 does_not_exist['does_not_exist'].append(data['class_id'])
                 continue
-            
+
             user = class_user[0]
             user.is_show = True
             user.save(force_update=True)
