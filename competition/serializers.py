@@ -48,3 +48,8 @@ class CompetitionUserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition_user
         fields = ["username", "privilege"]
+
+class CompetitionUserGetInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition_user
+        fields = ["competition_id", "privilege"]

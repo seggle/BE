@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import User
+from classes.serializers import ClassUserGetInfoSerializer
+from competition.serializers import CompetitionUserGetInfoSerializer
 
 class UserSerializer (serializers.ModelSerializer):
     class Meta:
@@ -42,3 +44,11 @@ class UserModifySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['privilege']
+
+class UserInfoClassCompetitionSerializer(serializers.ModelSerializer):
+    classes = ClassUserGetInfoSerializer(many=True)
+    competition = CompetitionUserGetInfoSerializer(many=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email','username','name','privilege', 'date_joined', 'is_active', 'classes', 'competition']
