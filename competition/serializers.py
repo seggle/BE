@@ -8,9 +8,9 @@ class CompetitionGenerateSerializer(serializers.ModelSerializer):
         model = Competition
         fields = ['problem_id', 'id', 'start_time', 'end_time']
 
-
 class CompetitionDetailSerializer(serializers.ModelSerializer):
-    problem = ProblemSerializer(read_only=True)
+    problem = ProblemSerializer()
+
     class Meta:
         model = Competition
         fields = ['problem', 'id', 'start_time', 'end_time']
@@ -35,6 +35,7 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
     data_description = serializers.CharField()
     data = serializers.FileField()
     solution = serializers.FileField()
+    evaluation = serializers.CharField()
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
 
@@ -42,3 +43,8 @@ class CompetitionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition_user
         fields = "__all__"
+
+class CompetitionUserGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition_user
+        fields = ["username", "privilege"]
