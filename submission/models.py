@@ -7,15 +7,15 @@ from contest.models import Contest_problem
 
 # Create your models here.
 class Submission(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
-    competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id")
+    username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")
+    competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id", blank=True)
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
-    class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id")
-    c_p_id = models.ForeignKey(Contest_problem, on_delete=models.CASCADE, db_column="c_p_id")
-    status = models.IntegerField() # 0이면 문제 없음 , 1이면 에러 발생
+    class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id", blank=True)
+    c_p_id = models.ForeignKey(Contest_problem, on_delete=models.CASCADE, db_column="c_p_id", blank=True)
+    status = models.IntegerField(default=0) # 0이면 문제 없음 , 1이면 에러 발생
     score = models.FloatField()
-    # csv = models.ForeignKey(File, on_delete=models.CASCADE, db_column="csv", related_name='submission_csv')
-    # ipynb = models.ForeignKey(File, on_delete=models.CASCADE, db_column="ipynb", related_name='submission_ipynb')
+    csv = models.FileField(blank=True,null=True)
+    ipynb = models.FileField(blank=True,null=True)
     created_time = models.DateTimeField(auto_now_add=True)
-    ip_address = models.TextField()
-    on_leaderboard = models.BooleanField() # 1이면 leaderboard에 보이고 0이면 보이지 않음
+    ip_address = models.TextField(null=True)
+    on_leaderboard = models.BooleanField(default=False) # 1이면 leaderboard에 보이고 0이면 보이지 않음
