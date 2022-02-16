@@ -104,7 +104,12 @@ class UserInfoView(APIView):
     def delete(self, request, username):
         data = request.data
         user = self.get_object(username)
-        if check_password(data["password"], user.password):
+        # permission check
+        if request.user.username != user.username:
+            return Response({"error":"탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
+        # 비밀번호 일치 확인
+        current_password = data["password"]
+        if check_password(current_password, user.password):
             user.is_active = False
             user.save()
             return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)

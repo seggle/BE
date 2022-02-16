@@ -7,7 +7,7 @@ class CustomPermissionMixin(object):
         else:
             return False
 
-    # # user-privilege 학생 권한 확인
+    # user-privilege 학생 권한 확인
     def check_student(self, privilege):
         if privilege == 0:
             return True
