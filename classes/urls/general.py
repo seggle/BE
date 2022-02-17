@@ -6,6 +6,10 @@ from contest.views import (
     ContestView, ContestCheckView, ContestProblemView, ContestProblemTitleView, ContestProblemInfoView, 
 )
 
+from submission.views import (
+    SubmissionClassView, 
+)
+
 app_name = "class"
 urlpatterns = [
     #class
@@ -21,4 +25,5 @@ urlpatterns = [
     path('<int:class_id>/contests/<int:contest_id>/title', ContestProblemTitleView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/check', ContestCheckView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>', ContestProblemInfoView.as_view()), 
+    path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/<str:username>', SubmissionClassView.as_view()), 
 ]
