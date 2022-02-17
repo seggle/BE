@@ -14,10 +14,14 @@ def upload_to_solution(instance, filename):
     return "uploads/solution/{0}/{1}" . format (instance_slug, filename)
 
 def upload_to_submission(instance, filename):
-    instance_slug = getattr(instance,"slug",False)
-    if not instance_slug:
-        instance_slug = str(uuid.uuid4()).replace("-","")
-    return "uploads/submission/{0}/{1}" . format (instance_slug, filename)
+    return "uploads/submission/{0}/{1}" . format (instance.path.path, filename)
+
+# def upload_to_submission_competition(instance, filename):
+#     instance_slug = getattr(instance,"slug",False)
+#     if not instance_slug:
+#         instance_slug = str(uuid.uuid4()).replace("-","")
+#     return "uploads/competition/submission/{0}/{1}" . format (instance_slug, filename)
+
 
 # def upload_to(instance, filename):
 
