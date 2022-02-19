@@ -108,21 +108,26 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         competition = self.get_object(competition_id=competition_id)
         if competition is False:
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        obj = {}
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
 
         # url 설정
         ip_addr = "3.37.186.158"
-        path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        url = "http://{0}/{1}" . format (ip_addr, path)
-        problem.data = url
+        data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        data_url = "http://{0}/{1}" . format (ip_addr, data_path)
+        solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+        solution_url = "http://{0}/{1}" . format (ip_addr, solution_path)
 
-        obj["problem"] = problem
-        obj["id"] = competition.id
-        obj["start_time"] = competition.start_time
-        obj["end_time"] = competition.end_time
-        serializer = CompetitionDetailSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        obj = {"id":competition.id,
+                "problem_id":problem.id,
+                "title":problem.title,
+                "start_time":competition.start_time,
+                "end_time":competition.end_time,
+                "problem_description":problem.description,
+                "problem_data":data_url,
+                "problem_data_description":problem.data_description,
+                "problem_solution":solution_url}
+        # serializer = CompetitionDetailSerializer(obj)
+        return Response(obj, status=status.HTTP_200_OK)
 
     # 06-03-01 대회 개별 수정
     def put(self, request, competition_id):

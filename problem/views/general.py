@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
@@ -24,13 +25,13 @@ class ProblemView(APIView, PaginationHandlerMixin):
     # parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
-        problems = Problem.objects.filter((Q(public=True) | Q(created_user=request.user)) & Q(is_deleted=False))
+        problems = Problem.objects.filter((Q(public=True)|Q(created_user=request.user))&Q(is_deleted=False)&~Q(class_id=None))
         if problems.count() != 0:
 
             keyword = request.GET.get('keyword', '')
             if keyword:
                 problems = problems.filter(title__icontains=keyword)
-            
+
             new_problems = []
             for problem in problems:
                 ip_addr = "3.37.186.158"
@@ -46,8 +47,9 @@ class ProblemView(APIView, PaginationHandlerMixin):
                 problem_json['data'] = url
                 problem_json['solution'] = url2
                 problem_json['public'] = problem.public
+                problem_json['class_id'] = problem.class_id.id
                 new_problems.append(problem_json)
-            
+
             # page = self.paginate_queryset(problems)
             page = self.paginate_queryset(new_problems)
             if page is not None:
@@ -114,8 +116,10 @@ class ProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         ip_addr = "3.37.186.158"
-        path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        url = "http://{0}/{1}" . format (ip_addr, path)
+        data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        data_url = "http://{0}/{1}" . format (ip_addr, data_path)
+        solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+        solution_url = "http://{0}/{1}" . format (ip_addr, solution_path)
 
         cp_json = {
             "id": problem.id,
@@ -123,11 +127,14 @@ class ProblemDetailView(APIView):
             "description": problem.description,
             "created_time": problem.created_time,
             "created_user": problem.created_user.username,
-            "data": url,
+            "data": data_url,
             "data_description": problem.data_description,
+            "solution": solution_url,
             "evaluation": problem.evaluation,
             "public": problem.public,
+            "class_id": problem.class_id.id
         }
+        print("problem.class_id", problem.class_id)
 
         return Response(cp_json, status=status.HTTP_200_OK)
 

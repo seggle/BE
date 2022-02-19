@@ -15,7 +15,7 @@ class Problem(models.Model):
     public = models.BooleanField(default=False)
     evaluation = models.TextField() # 평가 방식
     # 어느 클래스에서 만들어 졌는지
-    class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True,null=True)
+    class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
     # 삭제되었는지
     is_deleted = models.BooleanField(default=False)
 
