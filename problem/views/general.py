@@ -30,9 +30,29 @@ class ProblemView(APIView, PaginationHandlerMixin):
             keyword = request.GET.get('keyword', '')
             if keyword:
                 problems = problems.filter(title__icontains=keyword)
-            page = self.paginate_queryset(problems)
+            
+            new_problems = []
+            for problem in problems:
+                ip_addr = "3.37.186.158"
+                path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+                url = "http://{0}/{1}" . format (ip_addr, path)
+                path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+                url2 = "http://{0}/{1}" . format (ip_addr, path2)
+                problem_json = {}
+                problem_json['id'] = problem.id
+                problem_json['title'] = problem.title
+                problem_json['created_time'] = problem.created_time
+                problem_json['created_user'] = problem.created_user.username
+                problem_json['data'] = url
+                problem_json['solution'] = url2
+                problem_json['public'] = problem.public
+                new_problems.append(problem_json)
+            
+            # page = self.paginate_queryset(problems)
+            page = self.paginate_queryset(new_problems)
             if page is not None:
-                serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
+                # serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
+                serializer = self.get_paginated_response(page)
             else:
                 serializer = AllProblemSerializer(page, many=True)
             return Response(serializer.data)
