@@ -16,3 +16,10 @@ class PathSerializer(serializers.ModelSerializer):
     class Meta:
         model = Path
         fields = "__all__"
+
+class PathCompetitionSerializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model = Path
+        fields = ["username", "competition_id",]

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from classes.models import Class
 from contest.models import Contest, Contest_problem
-from .serializers import SubmissionClassSerializer, PathSerializer, SubmissionCompetition
+from .serializers import SubmissionClassSerializer, PathSerializer, SubmissionCompetitionSerializer
 from competition.models import Competition, Competition_user
 from problem.models import Problem
 from account.models import User
@@ -106,10 +106,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         user = get_object_or_404(User, username=username)
         return user
 
-    def check_participation(self, **kwargs):
-        competition_id = kwargs.get('competition_id')
-        username = kwargs.get('username')
-
+    def check_participation(self, competition_id, username):
         user = self.get_user(username)
         if Competition_user.objects.filter(username = username).filter(competition_id = competition_id).count() == 0:
             return False
@@ -117,6 +114,11 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
     # 06-04 대회 유저 파일 제출
     def post(self, request, **kwargs):
+        if kwargs.get('competition_id') is None:
+            return Response({"error": "competition_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('username') is None:
+            return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+        print("post 시작")
         competition_id = kwargs.get('competition_id')
         username = kwargs.get('username')
 
@@ -151,19 +153,17 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         path_serializer = PathSerializer(data=path_json)
         if path_serializer.is_valid():
-            path = path_serializer.save()
-            submission_json["pass"] = path.id
-            submission_serializer = SubmissionClassSerializer(data=submission_json)
+            path_obj = path_serializer.save()
+            submission_json["path"] = path_obj.id
+            submission_serializer = SubmissionCompetitionSerializer(data=submission_json)
             if submission_serializer.is_valid():
                 submission = submission_serializer.save()
                 # return Response(submission_serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response(submission_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+                return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # evaluation
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
-        print("evaluate 전")
-        self.evaluate(path, problem.solution, submission.csv, problem.evaluation)
-        print("evaluate 후")
-        print("path.score", path.score)
-        print("path.status", path.status)
+        self.evaluate(path=path_obj, solution_csv=problem.solution, submission_csv=submission.csv, evaluation=problem.evaluation)
+
+        return Response({"success":"submission 성공"}, status=status.HTTP_200_OK)

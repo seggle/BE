@@ -15,5 +15,5 @@ urlpatterns = [
     path('<int:competition_id>/', CompetitionDetailView.as_view(), name="competition_detail"),
     path('<int:competition_id>/participation/', CompetitionUserView.as_view(), name='competition_user'),
     path('<int:competition_id>/participation/ta', CompetitionTaView.as_view(), name='competition_ta'),
-    path('<int:competition_id>/<str:username>/', SubmissionCompetitionView.as_view(), 'competition_submission'),
+    path('<int:competition_id>/<str:username>/', SubmissionCompetitionView.as_view(), name='competition_submission'),
 ]
