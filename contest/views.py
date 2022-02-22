@@ -15,7 +15,7 @@ from django.http import JsonResponse
 from classes.models import Class, Class_user
 from account.models import User
 from problem.models import Problem
-from .models import Contest, Contest_problem, Exam
+from .models import Contest, Contest_problem
 from . import serializers
 
 # Create your views here.
