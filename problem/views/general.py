@@ -82,8 +82,6 @@ class ProblemView(APIView, PaginationHandlerMixin):
         """
         data = request.data.copy()
         data['created_user'] = request.user
-        print('Class.objects.filter(id = data["class_id"])', Class.objects.filter(id = data["class_id"]))
-        print('Class.objects.filter(id = data["class_id"]).count()', Class.objects.filter(id = data["class_id"]).count())
         # 존재하는 class_id인지 확인
         if (Class.objects.filter(id = data["class_id"]).count()) == 0:
             return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
