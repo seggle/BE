@@ -12,6 +12,10 @@ from .. import serializers
 from classes.models import Class, Class_user
 from classes.serializers import ClassGetSerializer
 from competition.models import Competition_user
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 """
 # 이메일 확인 완료
@@ -57,6 +61,9 @@ class LogoutView(APIView):
 #         for token in tokens:
 #             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 #         return Response(status=status.HTTP_205_RESET_CONTENT)
+
+class RefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
 
 class UserInfoView(APIView):
     def get_object(self, username): # 존재하는 인스턴스인지 판단
