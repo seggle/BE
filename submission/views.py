@@ -1,17 +1,19 @@
 from rest_framework.views import APIView
 from classes.models import Class
 from contest.models import Contest, Contest_problem
-from .serializers import SubmissionClassSerializer, PathSerializer, SubmissionCompetitionSerializer
+from submission.models import SubmissionCompetition, Path
+from .serializers import SubmissionClassSerializer, PathSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from competition.models import Competition, Competition_user
 from problem.models import Problem
 from account.models import User
 from utils.evaluation import EvaluationMixin
+from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
 import uuid
 
-
+# submission-class 관련
 class SubmissionClassView(APIView):
     def get_object_class(self, class_id):
         classid = get_object_or_404(Class, id = class_id)
@@ -92,8 +94,8 @@ class SubmissionClassView(APIView):
                         else:
                             return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
-
     def get_competition(self, competition_id):
         competition = get_object_or_404(Competition, id=competition_id)
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
@@ -118,7 +120,6 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             return Response({"error": "competition_id"}, status=status.HTTP_400_BAD_REQUEST)
         if kwargs.get('username') is None:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
-        print("post 시작")
         competition_id = kwargs.get('competition_id')
         username = kwargs.get('username')
 
@@ -167,3 +168,41 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         self.evaluate(path=path_obj, solution_csv=problem.solution, submission_csv=submission.csv, evaluation=problem.evaluation)
 
         return Response({"success":"submission 성공"}, status=status.HTTP_200_OK)
+
+class SubmissionCompetitionListView(APIView):
+
+    # 06-07 유저 submission 내역 조회
+    def get(self, request, **kwargs):
+        competition_id = kwargs.get('competition_id')
+        username = request.GET.get('username', '')
+        # competition check
+        if Competition.objects.filter(id = competition_id).count() == 0:
+            return Response({"error":"존재 하지 않는 대회 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
+        # user check
+        # if User.objects.filter(username = username).count() == 0:
+        #     return Response({"error":"존재 하지 않는 유저 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
+
+        submission_comptition_list =SubmissionCompetition.objects.filter(competition_id = competition_id)
+        if username:
+            submission_comptition_list = submission_comptition_list.filter(username=username)
+        obj_list = []
+        ip_addr = "3.37.186.158"
+        for submission in submission_comptition_list:
+            path = Path.objects.get(id=submission.path.id)
+            csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
+            csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
+            ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
+            ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            obj = {
+                "id": submission.id,
+                "username": submission.username,
+                "score": path.score,
+                "csv": csv_url,
+                "ipynb": ipynb_url,
+                "created_time": path.created_time,
+                "status": path.status,
+                "on_leaderboard": path.on_leaderboard
+            }
+            obj_list.append(obj)
+        serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -122,10 +122,10 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
                 "title":problem.title,
                 "start_time":competition.start_time,
                 "end_time":competition.end_time,
-                "problem_description":problem.description,
-                "problem_data":data_url,
-                "problem_data_description":problem.data_description,
-                "problem_solution":solution_url}
+                "description":problem.description,
+                "data":data_url,
+                "data_description":problem.data_description,
+                "solution":solution_url}
         # serializer = CompetitionDetailSerializer(obj)
         return Response(obj, status=status.HTTP_200_OK)
 
