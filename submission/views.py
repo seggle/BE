@@ -104,21 +104,21 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회
-    def get(self, request, **kwargs):    
+    def get(self, request, **kwargs):
         # competition_id = kwargs.get('competition_id')
         username = request.GET.get('username', '')
         cpid = request.GET.get('cpid', '')
-        
+
         # user check
         # if User.objects.filter(username = username).count() == 0:
         #     return Response({"error":"존재 하지 않는 유저 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
         submission_class_list = SubmissionClass.objects.all()
-        
+
         if username:
             submission_class_list = submission_class_list.filter(username=username)
         if cpid:
             submission_class_list = submission_class_list.filter(c_p_id=cpid)
-        
+
         obj_list = []
         ip_addr = "3.37.186.158"
         for submission in submission_class_list:
@@ -176,16 +176,29 @@ class SubmissionClassCheckView(APIView):
         cpid = self.get_object_contest_problem(cp_id)
 
         data = request.data
-        submission = SubmissionClass.objects.get(id=data['id'])
+        class_submission = SubmissionClass.objects.get(id=data['id'])
 
-        if submission.username.username != request.user.username:
+        if class_submission.username.username != request.user.username:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
 
-        path = submission.path
-        path.on_leaderboard = not path.on_leaderboard
-        path.save()
+        # submission의 on_leaderboard를 True로 설정
+        class_path = class_submission.path
+        class_path.on_leaderboard = True
+        class_path.save()
+
+        # on_leaderboard를 True로 설정한 submission 외의 것의 on_leaderboard를 모두 False로 설정
+        submission_list = SubmissionClass.objects.filter(username = request.user.username)
+        submission_list = submission_list.filter(cp_id=cp_id)
+        for submission in submission_list:
+            if submission.id == class_submission.id:
+                continue
+            path = submission.path
+            path.on_leaderboard = False
+            path.save()
+            print("path.on_leaderboard", path.on_leaderboard)
+
         return Response({'success':'성공'}, status=status.HTTP_200_OK)
-        
+
 
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
@@ -299,3 +312,42 @@ class SubmissionCompetitionListView(APIView):
             obj_list.append(obj)
         serializer = SumissionCompetitionListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class SubmissionCompetitionCheckView(APIView):
+
+    def get_competition(self, competition_id):
+        competition = get_object_or_404(Competition, id=competition_id)
+        return competition
+
+    def get_submissionCompetition(self, id):
+        competition_submission = get_object_or_404(SubmissionCompetition, id=id)
+        return competition_submission
+
+    # 06-06 submission 리더보드 체크
+    def patch(self, request, competition_id):
+        competition = self.get_competition(competition_id)
+
+        data = request.data
+        competition_submission = self.get_submissionCompetition(id=data["id"])
+
+        if competition_submission.username.username != request.user.username:
+            return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # submission의 on_leaderboard를 True로 설정
+        competition_path = competition_submission.path
+        competition_path.on_leaderboard = True
+        competition_path.save()
+
+        # on_leaderboard를 True로 설정한 submission 외의 것의 on_leaderboard를 모두 False로 설정
+        submission_list = SubmissionCompetition.objects.filter(username = request.user.username)
+        submission_list = submission_list.filter(competition_id=competition.id)
+
+        for submission in submission_list:
+            if submission.id == competition_submission.id:
+                continue
+            path = submission.path
+            path.on_leaderboard = False
+            path.save()
+            print("path.on_leaderboard", path.on_leaderboard)
+
+        return Response({'success':'성공'}, status=status.HTTP_200_OK)
