@@ -147,6 +147,46 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
             serializer = SumissionClassListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class SubmissionClassCheckView(APIView):
+    def get_object_class(self, class_id):
+        classid = get_object_or_404(Class, id = class_id)
+        return classid
+
+    def get_object_contest(self, contest_id):
+        contestid = get_object_or_404(Contest, id = contest_id)
+        return contestid
+
+    def get_object_contest_problem(self, cp_id):
+        cpid = get_object_or_404(Contest_problem, id = cp_id)
+        return cpid
+
+    # 05-17
+    def patch(self, request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response({"error": "class_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('contest_id') is None:
+            return Response({"error": "contest_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('cp_id') is None:
+            return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
+        class_id = kwargs.get('class_id')
+        classid = self.get_object_class(class_id)
+        contest_id = kwargs.get('contest_id')
+        contestid = self.get_object_contest(contest_id)
+        cp_id = kwargs.get('cp_id')
+        cpid = self.get_object_contest_problem(cp_id)
+
+        data = request.data
+        submission = SubmissionClass.objects.get(id=data['id'])
+
+        if submission.username.username != request.user.username:
+            return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+
+        path = submission.path
+        path.on_leaderboard = not path.on_leaderboard
+        path.save()
+        return Response({'success':'성공'}, status=status.HTTP_200_OK)
+        
+
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
     def get_competition(self, competition_id):

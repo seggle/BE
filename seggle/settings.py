@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'proposal',
     'submission',
     'exam',
+    'leaderboard',
 ]
 
 MIDDLEWARE = [
