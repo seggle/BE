@@ -42,12 +42,14 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
             obj["start_time"] = competition.start_time
             obj["end_time"] = competition.end_time
             obj_list.append(obj)
-        page = self.paginate_queryset(obj_list)
-        if page is not None:
-            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
-        else:
-            serializer = self.serializer_class(competitions, many=True, problem=competitions.problem_id)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        competition_detail_serializer = CompetitionDetailSerializer(obj_list, many=True)
+        # page = self.paginate_queryset(obj_list)
+        # if page is not None:
+        #     serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+        # else:
+        #     serializer = self.serializer_class(competitions, many=True, problem=competitions.problem_id)
+        # return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
 
     # 06-01 대회 생성
     def post(self, request):
@@ -125,7 +127,8 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
                 "description":problem.description,
                 "data":data_url,
                 "data_description":problem.data_description,
-                "solution":solution_url}
+                "solution":solution_url,
+                "evaluation":problem.evaluation}
         # serializer = CompetitionDetailSerializer(obj)
         return Response(obj, status=status.HTTP_200_OK)
 
@@ -145,7 +148,7 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
             "description": data["description"],
             "data_description": data["data_description"],
             "evaluation":data["evaluation"],
-            "public": data["public"]}
+            "public": False}
         if data['data']:
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
