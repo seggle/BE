@@ -1,11 +1,13 @@
 from rest_framework.views import APIView
 from classes.models import Class
 from contest.models import Contest, Contest_problem
-from submission.models import SubmissionCompetition, Path
-from .serializers import SubmissionClassSerializer, PathSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
+from submission.models import SubmissionClass, SubmissionCompetition, Path
+from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from competition.models import Competition, Competition_user
 from problem.models import Problem
 from account.models import User
+from rest_framework.pagination import PageNumberPagination #pagination
+from utils.pagination import PaginationHandlerMixin #pagination
 from utils.evaluation import EvaluationMixin
 from django.db.models import Q
 from rest_framework.response import Response
@@ -14,7 +16,7 @@ from rest_framework import status
 import uuid
 
 # submission-class 관련
-class SubmissionClassView(APIView):
+class SubmissionClassView(APIView, EvaluationMixin):
     def get_object_class(self, class_id):
         classid = get_object_or_404(Class, id = class_id)
         return classid
@@ -31,68 +33,159 @@ class SubmissionClassView(APIView):
     def post(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response({"error": "class_id"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            class_id = kwargs.get('class_id')
-            classid = self.get_object_class(class_id)
+        if kwargs.get('contest_id') is None:
+            return Response({"error": "contest_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('cp_id') is None:
+            return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
+        class_id = kwargs.get('class_id')
+        classid = self.get_object_class(class_id)
+        contest_id = kwargs.get('contest_id')
+        contestid = self.get_object_contest(contest_id)
+        cp_id = kwargs.get('cp_id')
+        cpid = self.get_object_contest_problem(cp_id)
 
-            if kwargs.get('contest_id') is None:
-                return Response({"error": "contest_id"}, status=status.HTTP_400_BAD_REQUEST)
+        username = kwargs.get('username')
+
+        if username != request.user.username:
+            return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+
+        contest_problem_id = Contest_problem.objects.get(id=cp_id)
+
+        if (contest_problem_id.contest_id.id != contest_id) or (contest_problem_id.contest_id.class_id.id != class_id):
+            return Response({"error": "id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        #
+        # csv, ipynb file check
+        #
+
+        data = request.data.copy()
+
+        path_json = {}
+        temp = str(uuid.uuid4()).replace("-","")
+        path_json['username'] = request.user
+        path_json['path'] = temp
+        path_json['problem_id'] = contest_problem_id.id
+        path_json['score'] = None
+        path_json['ip_address'] = data['ip_address']
+        # path_json['on_leaderboard'] = request.user
+        # path_json['status'] = 0
+
+        submission_json = {}
+        submission_json['username'] = request.user
+        submission_json['class_id'] = contest_problem_id.contest_id.class_id.id
+        submission_json['contest_id'] = contest_problem_id.contest_id.id
+        submission_json['c_p_id'] = contest_problem_id.id
+        submission_json['csv'] = data['csv']
+        submission_json['ipynb'] = data['ipynb']
+
+
+        path_serializer = PathSerializer(data=path_json)
+        if path_serializer.is_valid():
+            path_obj = path_serializer.save()
+            submission_json['path'] = path_obj.id
+            submission_serializer = SubmissionClassSerializer(data=submission_json)
+
+            if submission_serializer.is_valid():
+                submission = submission_serializer.save()
+                # evaluation
+                problem = get_object_or_404(Problem, id=contest_problem_id.problem_id.id)
+                self.evaluate(path=path_obj, solution_csv=problem.solution, submission_csv=submission.csv, evaluation=problem.evaluation)
+
+                return Response(submission_serializer.data, status=status.HTTP_200_OK)
             else:
-                contest_id = kwargs.get('contest_id')
-                contestid = self.get_object_contest(contest_id)
+                return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-                if kwargs.get('cp_id') is None:
-                    return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    cp_id = kwargs.get('cp_id')
-                    cpid = self.get_object_contest_problem(cp_id)
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
 
-                    username = kwargs.get('username')
+class SubmissionClassListView(APIView, PaginationHandlerMixin):
+    # pagination
+    pagination_class = BasicPagination
 
-                    if username != request.user.username:
-                        return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+    # 07-00 유저 submission 내역 조회
+    def get(self, request, **kwargs):    
+        # competition_id = kwargs.get('competition_id')
+        username = request.GET.get('username', '')
+        cpid = request.GET.get('cpid', '')
+        
+        # user check
+        # if User.objects.filter(username = username).count() == 0:
+        #     return Response({"error":"존재 하지 않는 유저 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
+        submission_class_list = SubmissionClass.objects.all()
+        
+        if username:
+            submission_class_list = submission_class_list.filter(username=username)
+        if cpid:
+            submission_class_list = submission_class_list.filter(c_p_id=cpid)
+        
+        obj_list = []
+        ip_addr = "3.37.186.158"
+        for submission in submission_class_list:
+            path = Path.objects.get(id=submission.path.id)
+            csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
+            csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
+            ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
+            ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            obj = {
+                "id": submission.id,
+                "username": submission.username,
+                "score": path.score,
+                "csv": csv_url,
+                "ipynb": ipynb_url,
+                "created_time": path.created_time,
+                "status": path.status,
+                "on_leaderboard": path.on_leaderboard
+            }
+            obj_list.append(obj)
+        #serializer = SumissionClassListSerializer(obj_list, many=True)
 
-                    contest_problem_id = Contest_problem.objects.get(id=cp_id)
+        page = self.paginate_queryset(obj_list)
+        if page is not None:
+            serializer = self.get_paginated_response(SumissionClassListSerializer(page, many=True).data)
+        else:
+            serializer = SumissionClassListSerializer(obj_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-                    if (contest_problem_id.contest_id.id != contest_id) or (contest_problem_id.contest_id.class_id.id != class_id):
-                        return Response({"error": "id"}, status=status.HTTP_400_BAD_REQUEST)
+class SubmissionClassCheckView(APIView):
+    def get_object_class(self, class_id):
+        classid = get_object_or_404(Class, id = class_id)
+        return classid
 
-                    #
-                    # csv, ipynb file check
-                    #
+    def get_object_contest(self, contest_id):
+        contestid = get_object_or_404(Contest, id = contest_id)
+        return contestid
 
-                    data = request.data.copy()
+    def get_object_contest_problem(self, cp_id):
+        cpid = get_object_or_404(Contest_problem, id = cp_id)
+        return cpid
 
-                    path_json = {}
-                    temp = str(uuid.uuid4()).replace("-","")
-                    path_json['username'] = request.user
-                    path_json['path'] = temp
-                    path_json['problem_id'] = contest_problem_id.id
-                    path_json['score'] = None
-                    path_json['ip_address'] = data['ip_address']
-                    # path_json['on_leaderboard'] = request.user
-                    # path_json['status'] = 0
+    # 05-17
+    def patch(self, request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response({"error": "class_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('contest_id') is None:
+            return Response({"error": "contest_id"}, status=status.HTTP_400_BAD_REQUEST)
+        if kwargs.get('cp_id') is None:
+            return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
+        class_id = kwargs.get('class_id')
+        classid = self.get_object_class(class_id)
+        contest_id = kwargs.get('contest_id')
+        contestid = self.get_object_contest(contest_id)
+        cp_id = kwargs.get('cp_id')
+        cpid = self.get_object_contest_problem(cp_id)
 
-                    submission_json = {}
-                    submission_json['username'] = request.user
-                    submission_json['class_id'] = contest_problem_id.contest_id.class_id.id
-                    submission_json['contest_id'] = contest_problem_id.contest_id.id
-                    submission_json['c_p_id'] = contest_problem_id.id
-                    submission_json['csv'] = data['csv']
-                    submission_json['ipynb'] = data['ipynb']
+        data = request.data
+        submission = SubmissionClass.objects.get(id=data['id'])
 
+        if submission.username.username != request.user.username:
+            return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
 
-                    path_serializer = PathSerializer(data=path_json)
-                    if path_serializer.is_valid():
-                        path = path_serializer.save()
-                        submission_json['path'] = path.id
-                        submission_serializer = SubmissionClassSerializer(data=submission_json)
-
-                        if submission_serializer.is_valid():
-                            submission_serializer.save()
-                            return Response(submission_serializer.data, status=status.HTTP_200_OK)
-                        else:
-                            return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        path = submission.path
+        path.on_leaderboard = not path.on_leaderboard
+        path.save()
+        return Response({'success':'성공'}, status=status.HTTP_200_OK)
+        
 
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
