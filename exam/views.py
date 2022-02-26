@@ -65,7 +65,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
-        data['user'] = request.user.id
+        data['user'] = request.user
         data['contest'] = contest.id
 
         exam = self.get_object(contest_id=contest_id, user_id=request.user.id)
