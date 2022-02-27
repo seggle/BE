@@ -275,7 +275,10 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         return Response({"success":"submission 성공"}, status=status.HTTP_200_OK)
 
-class SubmissionCompetitionListView(APIView):
+class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
+
+    # pagination
+    pagination_class = BasicPagination
 
     # 06-07 유저 submission 내역 조회
     def get(self, request, **kwargs):
@@ -284,9 +287,6 @@ class SubmissionCompetitionListView(APIView):
         # competition check
         if Competition.objects.filter(id = competition_id).count() == 0:
             return Response({"error":"존재 하지 않는 대회 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
-        # user check
-        # if User.objects.filter(username = username).count() == 0:
-        #     return Response({"error":"존재 하지 않는 유저 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
 
         submission_comptition_list =SubmissionCompetition.objects.filter(competition_id = competition_id)
         if username:
@@ -310,7 +310,13 @@ class SubmissionCompetitionListView(APIView):
                 "on_leaderboard": path.on_leaderboard
             }
             obj_list.append(obj)
-        serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+        # serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+
+        page = self.paginate_queryset(obj_list)
+        if page is not None:
+            serializer = self.get_paginated_response(SumissionCompetitionListSerializer(page, many=True).data)
+        else:
+            serializer = SumissionCompetitionListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class SubmissionCompetitionCheckView(APIView):
