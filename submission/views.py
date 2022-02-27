@@ -188,7 +188,7 @@ class SubmissionClassCheckView(APIView):
 
         # on_leaderboard를 True로 설정한 submission 외의 것의 on_leaderboard를 모두 False로 설정
         submission_list = SubmissionClass.objects.filter(username = request.user.username)
-        submission_list = submission_list.filter(cp_id=cp_id)
+        submission_list = submission_list.filter(c_p_id=cp_id)
         for submission in submission_list:
             if submission.id == class_submission.id:
                 continue
