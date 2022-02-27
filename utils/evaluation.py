@@ -1,4 +1,9 @@
 import pandas as pd
+import numpy as np
+from sklearn.metrics import (
+    accuracy_score, log_loss, f1_score, mean_absolute_error,
+    mean_squared_error
+)
 class EvaluationMixin(object):
 
     # path - socre, status
@@ -10,29 +15,32 @@ class EvaluationMixin(object):
             solution = pd.read_csv(solution_csv)
             submission = pd.read_csv(submission_csv)
 
-            print("solution", solution)
-            print("submission", submission)
+            score = None
+            y_true = solution.iloc[:, -1].values.tolist()
+            y_pred = submission.iloc[:, -1].values.tolist()
 
             if evaluation == "F1-score":
-                path.score = 1
+                score = f1_score(y_true, y_pred, pos_label=1) # 높을수록 1등
 
-            if evaluation == "RMSE":
-                path.score = 1
+            if evaluation == "RMSE": # 낮을수록 1등
+                score = np.sqrt(mean_squared_error(y_true, y_pred))
 
             if evaluation == "mAP":
                 path.score = 1
 
             if evaluation == "MSE":
-                path.score = 1
+                score = mean_squared_error(y_true, y_pred) # 낮을수록 1등
 
             if evaluation == "MAE":
-                path.score = 1
+                score = mean_absolute_error(y_true, y_pred) # 낮을수록 1등
 
             if evaluation == "Log loss":
-                path.score = 1
+                score = log_loss(y_true, y_pred) # 낮을수록 1등
 
             if evaluation == "Accuracy":
-                path.score = 1
+                score = accuracy_score(y_true, y_pred) # 높을수록 1등
+
+            path.score = score
 
         except: # 에러 발생
             path.score = None
