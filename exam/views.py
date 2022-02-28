@@ -8,6 +8,7 @@ from rest_framework import status
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
+from utils.get_ip import GetIpAddr
 from contest.models import Contest
 
 
@@ -64,7 +65,9 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             message = {"error": "해당 contest는 시험이 아닙니다"}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data
+        # data = request.data
+        data = {}
+        data['ip_address'] = GetIpAddr(request)
         data['user'] = request.user
         data['contest'] = contest.id
 

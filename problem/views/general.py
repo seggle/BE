@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 import os
 import shutil
+import uuid
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -177,6 +178,8 @@ class ProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         else:
             problem.is_deleted = True
+            temp = str(uuid.uuid4()).replace("-","")
+            problem.title = problem.title + ' - ' + temp
             problem.save()
             message = {"success": "문제가 제거되었습니다."}
         return Response(data=message, status=status.HTTP_200_OK)
