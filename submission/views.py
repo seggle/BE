@@ -9,6 +9,7 @@ from account.models import User
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from utils.evaluation import EvaluationMixin
+from utils.get_ip import GetIpAddr
 from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -66,7 +67,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
         path_json['path'] = temp
         path_json['problem_id'] = contest_problem_id.id
         path_json['score'] = None
-        path_json['ip_address'] = data['ip_address']
+        # path_json['ip_address'] = data['ip_address']
+        path_json['ip_address'] = GetIpAddr(request)
         # path_json['on_leaderboard'] = request.user
         # path_json['status'] = 0
 
@@ -243,13 +245,13 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         data = request.data.copy()
         temp = str(uuid.uuid4()).replace("-","")
-
+        
         path_json = {
             "username":request.user,
             "path":temp,
             "problem_id":competition.problem_id.id,
             "score":None,
-            "ip_address":data["ip_address"]
+            "ip_address":GetIpAddr(request)
         }
         submission_json = {
             "username": request.user,

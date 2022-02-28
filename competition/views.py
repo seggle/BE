@@ -17,6 +17,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.permission import CustomPermissionMixin
 import os
 import shutil
+import uuid
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -190,6 +191,8 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
         problem.is_deleted = True
+        temp = str(uuid.uuid4()).replace("-","")
+        problem.title = problem.title + ' - ' + temp
         problem.save()
         return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
