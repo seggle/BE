@@ -33,4 +33,5 @@ urlpatterns = [
     path('leaderboards/', include('leaderboard.urls')),
     path('api-auth/', include('rest_framework.urls')),
     path('class/<int:class_id>/contests/<int:contest_id>/exam/',include('exam.urls')),
+    path('admin/problems/',include('problem.urls.admin')),
 ]

@@ -1,3 +1,5 @@
+from rest_framework import permissions
+
 class CustomPermissionMixin(object):
 
     # user-privilege 교수 권한 확인
@@ -13,3 +15,13 @@ class CustomPermissionMixin(object):
             return True
         else:
             return False
+
+####
+class Is_Admin(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        privilege = request.user.privilege
+        return privilege == 2
+
+class Is_Prof(permissions.BasePermission):
+    pass
