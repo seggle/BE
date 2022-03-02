@@ -86,7 +86,6 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         # ip중복체크 후 중복된것이 없다면 새로 만들고, 중복이라면 거절한다.
 
         if exam == Http404: #기존 제출내역이 없다면
-            print("기존내역 off")
             try:
                 exams = Exam.objects.filter(ip_address=data['ip_address'])
             except Exam.DoesNotExist:
@@ -106,7 +105,6 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
                 else:
                     return Response(serializer.errors)
         else: #기존 제출내역이 있다면
-            print("기존내역 on")
             if exam.exception:
                 exam.exception = False
                 serializer = ExamGenerateSerializer(exam, data=data)
