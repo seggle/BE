@@ -11,4 +11,9 @@ class ExamSerializer(serializers.ModelSerializer):
 class ExamGenerateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Exam
+        exclude = ["start_time", "exception","is_duplicated"]
+
+class ExamIDGenerateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exam
         exclude = ["start_time", "exception"]

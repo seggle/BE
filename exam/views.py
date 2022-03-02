@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from .models import Exam
-from .serializer import ExamSerializer, ExamGenerateSerializer
+from .serializer import ExamSerializer, ExamGenerateSerializer , ExamIDGenerateSerializer
 from rest_framework.generics import get_object_or_404
 from django.http import Http404, HttpResponse
 from rest_framework.response import Response
@@ -18,10 +18,19 @@ class BasicPagination(PageNumberPagination):
 
 class ExamParticipateView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
-
-    def get_object(self, contest_id, user_id):
+    def get_contest(self,contest_id):
         try:
-            exam = Exam.objects.get(contest=contest_id, user=user_id)
+            contest = Contest.objects.get(id=contest_id)
+        except:
+            contest = Http404
+        return contest
+    def get_object(self, contest_id, user_id):
+        contest = self.get_contest(contest_id = contest_id)
+        try:
+            if contest == Http404:
+                exam = Http404
+            else:
+                exam = Exam.objects.get(contest=contest, user=user_id)
         except:
             exam = Http404
         return exam
@@ -71,34 +80,37 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         data['user'] = request.user
         data['contest'] = contest.id
 
-        exam = self.get_object(contest_id=contest_id, user_id=request.user.id)
+        exam = self.get_object(contest_id=contest_id, user_id=request.user.username)
 
         # 기존 ip제출 내역이 없다면
         # ip중복체크 후 중복된것이 없다면 새로 만들고, 중복이라면 거절한다.
-        if exam == Http404:
 
+        if exam == Http404: #기존 제출내역이 없다면
+            print("기존내역 off")
             try:
                 exams = Exam.objects.filter(ip_address=data['ip_address'])
             except Exam.DoesNotExist:
                 exams = None
 
-            if exams:
-                message = {"error": "ip중복 입니다."}
-                return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+            if exams: #ip중복인경우
+                data['is_duplicated'] = True
+                serializer = ExamIDGenerateSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(data=serializer.data)
             else:
-
                 serializer = ExamGenerateSerializer(data=data)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(data=serializer.data)
                 else:
                     return Response(serializer.errors)
-        else:
+        else: #기존 제출내역이 있다면
+            print("기존내역 on")
             if exam.exception:
                 exam.exception = False
                 serializer = ExamGenerateSerializer(exam, data=data)
                 if serializer.is_valid():
-
                     serializer.save()
                     return Response(data=serializer.data)
                 else:
