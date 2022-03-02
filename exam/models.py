@@ -9,6 +9,7 @@ class Exam(models.Model):
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest")
     exception = models.BooleanField(null=True, blank=True, default=False)
     start_time = models.DateTimeField(auto_now_add=True)
+    is_duplicated = models.BooleanField(default = False)
 
     class Meta:
         db_table = "exam"
