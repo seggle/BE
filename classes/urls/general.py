@@ -3,7 +3,7 @@ from classes.views.general import (
     ClassView, ClassUserInfoView, ClassStdView, ClassTaView, 
 )
 from contest.views import (
-    ContestView, ContestCheckView, ContestProblemView, ContestProblemTitleView, ContestProblemInfoView, 
+    ContestView, ContestCheckView, ContestProblemView, ContestProblemOrderView, ContestProblemTitleDescptView, ContestProblemInfoView, 
 )
 
 from submission.views import (
@@ -22,7 +22,8 @@ urlpatterns = [
     #contest
     path('<int:class_id>/contests', ContestView.as_view(), name="contest_api"),
     path('<int:class_id>/contests/<int:contest_id>', ContestProblemView.as_view()),
-    path('<int:class_id>/contests/<int:contest_id>/title', ContestProblemTitleView.as_view()),
+    path('<int:class_id>/contests/<int:contest_id>/order', ContestProblemOrderView.as_view()),
+    path('<int:class_id>/contests/<int:contest_id>/description', ContestProblemTitleDescptView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/check', ContestCheckView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>', ContestProblemInfoView.as_view()), 
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/check', SubmissionClassCheckView.as_view()), 

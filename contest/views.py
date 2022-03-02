@@ -150,6 +150,8 @@ class ContestProblemView(APIView):
                     problem_data['contest_id'] = contest_id
                     problem_data['order'] = order
                     problem_data['title'] = problem.title
+                    problem_data['description'] = problem.description
+                    problem_data['data_description'] = problem.data_description
                     serializer = serializers.ContestProblemSerializer(data=problem_data)
                     
                     if serializer.is_valid():
@@ -258,7 +260,7 @@ class ContestProblemView(APIView):
                 contest.delete()
                 return Response("Success", status=status.HTTP_200_OK)
                 
-class ContestProblemTitleView(APIView):
+class ContestProblemOrderView(APIView):
     #permission_classes = [IsAdminUser]
 
     def get_object_class(self, class_id):
@@ -307,8 +309,66 @@ class ContestProblemTitleView(APIView):
                     #     error['Error_title_is_existed'].append(data['title'])
                     #     continue
                         # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
-                    contest_problem.title = data['title']
                     contest_problem.order = data['order']
+                    contest_problem.save(force_update=True)
+
+                if (len(error['Error']) != 0) or (len(error['Error_Contest_Problem_id']) != 0):
+                    return Response(error, status=status.HTTP_200_OK)
+                else:
+                    return Response("Success", status=status.HTTP_200_OK)
+
+class ContestProblemTitleDescptView(APIView):
+    #permission_classes = [IsAdminUser]
+
+    def get_object_class(self, class_id):
+        classid = generics.get_object_or_404(Class, id = class_id)
+        return classid
+
+    def get_object_contest(self, contest_id):
+        contestid = generics.get_object_or_404(Contest, id = contest_id)
+        return contestid
+
+    #05-13-03
+    def patch(self, request, **kwargs):
+        if kwargs.get('class_id') is None:
+            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            class_id = kwargs.get('class_id')
+            classid = self.get_object_class(class_id)
+            
+            if kwargs.get('contest_id') is None:
+                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                contest_id = kwargs.get('contest_id')
+                contestid = self.get_object_contest(contest_id)
+
+                datas = request.data
+                error = {}
+                error['Error'] = []
+                error['Error_Contest_Problem_id'] = []
+
+                for data in datas:
+                    if Contest_problem.objects.filter(id=data['id']).count() == 0:
+                        error['Error_Contest_Problem_id'].append(data['id'])
+                        continue
+                    contest_problem = Contest_problem.objects.get(id=data['id'])
+                    
+                    if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
+                        error['Error'].append(data['id'])
+                        continue
+                    
+                    # if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
+                    #     error['Error_Problem_id'].append(data['problem_id'])
+                    #     continue
+
+                    # tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
+                    # if tilte_check != 0:
+                    #     error['Error_title_is_existed'].append(data['title'])
+                    #     continue
+                        # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                    contest_problem.title = data['title']
+                    contest_problem.description = data['description']
+                    contest_problem.data_description = data['data_description']
                     contest_problem.save(force_update=True)
 
                 if (len(error['Error']) != 0) or (len(error['Error_Contest_Problem_id']) != 0):
@@ -372,12 +432,12 @@ class ContestProblemInfoView(APIView):
                         "contest_id": contest_problem.contest_id.id,
                         "problem_id": contest_problem.problem_id.id,
                         "title": contest_problem.title,
+                        "description": contest_problem.description,
+                        "data_description": contest_problem.data_description,
                         "start_time": contest_problem.contest_id.start_time,
                         "end_time": contest_problem.contest_id.end_time,
-                        "problem_description": problem.description,
                         # "problem_data": problem.data.path,
                         "problem_data": url,
-                        "problem_data_description": problem.data_description,
                     }
 
                     #serializer = serializers.ContestProblemSerializer(contest_problem, many=True)
