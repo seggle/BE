@@ -23,6 +23,8 @@ class Contest_problem(models.Model):
     contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
     title = models.TextField()
+    description = models.TextField()
+    data_description = models.TextField()
     order = models.IntegerField()
 
     class Meta:
