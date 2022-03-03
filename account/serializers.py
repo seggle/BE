@@ -52,3 +52,7 @@ class UserInfoClassCompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email','username','name','privilege', 'date_joined', 'is_active', 'classes', 'competition']
+
+class ContributionsSerializer(serializers.Serializer):
+    data = serializers.CharField()
+    count = serializers.IntegerField()
