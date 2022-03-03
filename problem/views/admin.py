@@ -26,46 +26,44 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
     def get(self, request):
         problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None))
-        if problems.count() != 0:
 
-            keyword = request.GET.get('keyword', '')
-            if keyword:
-                problems = problems.filter(title__icontains=keyword)
+        keyword = request.GET.get('keyword', '')
+        if keyword:
+            problems = problems.filter(title__icontains=keyword)
 
-            new_problems = []
-            for problem in problems:
-                ip_addr = "3.37.186.158"
-                try:
-                    path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-                except ValueError:
-                    path = ""
-                url = "http://{0}/{1}".format(ip_addr, path)
-                try:
-                    path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-                except ValueError:
-                    path2 = ""
-                url2 = "http://{0}/{1}".format(ip_addr, path2)
-                problem_json = {}
-                problem_json['id'] = problem.id
-                problem_json['title'] = problem.title
-                problem_json['created_time'] = problem.created_time
-                problem_json['created_user'] = problem.created_user.username
-                problem_json['data'] = url
-                problem_json['solution'] = url2
-                problem_json['public'] = problem.public
-                problem_json['class_id'] = problem.class_id.id
-                new_problems.append(problem_json)
+        new_problems = []
+        for problem in problems:
+            ip_addr = "3.37.186.158"
+            try:
+                path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+            except ValueError:
+                path = ""
+            url = "http://{0}/{1}".format(ip_addr, path)
+            try:
+                path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+            except ValueError:
+                path2 = ""
+            url2 = "http://{0}/{1}".format(ip_addr, path2)
+            problem_json = {}
+            problem_json['id'] = problem.id
+            problem_json['title'] = problem.title
+            problem_json['created_time'] = problem.created_time
+            problem_json['created_user'] = problem.created_user.username
+            problem_json['data'] = url
+            problem_json['solution'] = url2
+            problem_json['public'] = problem.public
+            problem_json['class_id'] = problem.class_id.id
+            new_problems.append(problem_json)
 
-            # page = self.paginate_queryset(problems)
-            page = self.paginate_queryset(new_problems)
-            if page is not None:
-                # serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
-                serializer = self.get_paginated_response(page)
-            else:
-                serializer = AllProblemSerializer(page, many=True)
-            return Response(serializer.data)
+        # page = self.paginate_queryset(problems)
+        page = self.paginate_queryset(new_problems)
+        if page is not None:
+            # serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
+            serializer = self.get_paginated_response(page)
         else:
-            return Response([], status=status.HTTP_200_OK)
+            serializer = AllProblemSerializer(page, many=True)
+        return Response(serializer.data)
+
 
 
 class AdminProblemDetailView(APIView):

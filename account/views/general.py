@@ -17,6 +17,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from utils import permission
+
 
 """
 # 이메일 확인 완료
