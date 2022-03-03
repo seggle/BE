@@ -21,7 +21,7 @@ class BasicPagination(PageNumberPagination):
 
 
 class AdminProblemView(APIView,PaginationHandlerMixin):
-    permission_classes = [permission.Is_Admin]
+    permission_classes = [permission.IsAdmin]
     pagination_class = BasicPagination
 
     def get(self, request):
@@ -67,7 +67,7 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
 
 class AdminProblemDetailView(APIView):
-    permission_classes = [permission.Is_Admin]
+    permission_classes = [permission.IsAdmin]
 
     # parser_classes = [MultiPartParser, JSONParser]
 
