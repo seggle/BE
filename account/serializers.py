@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+from competition.models import Competition
 from classes.serializers import ClassUserGetInfoSerializer
 from competition.serializers import CompetitionUserGetInfoSerializer
 
@@ -56,3 +57,12 @@ class UserInfoClassCompetitionSerializer(serializers.ModelSerializer):
 class ContributionsSerializer(serializers.Serializer):
     data = serializers.CharField()
     count = serializers.IntegerField()
+
+class UserCompetitionSerializer(serializers.ModelSerializer):
+    title = serializers.CharField()
+    user_total = serializers.IntegerField()
+    rank = serializers.IntegerField()
+
+    class Meta:
+        model = Competition
+        fields = ['id', "problem_id", "title", "start_time", "end_time", "user_total", "rank"]

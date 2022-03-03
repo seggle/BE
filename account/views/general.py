@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from rest_framework.generics import get_object_or_404
@@ -8,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, Blac
 from rest_framework import status, generics
 from django.contrib.auth.hashers import check_password
 from ..models import User
-from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer
+from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, UserCompetitionSerializer
 from classes.models import Class, Class_user
 from classes.serializers import ClassGetSerializer
 from competition.models import Competition_user
@@ -18,8 +19,6 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from utils import permission
-
-
 """
 # 이메일 확인 완료
 def send_email(request):
@@ -207,13 +206,12 @@ class ContributionsView(APIView):
                 date = str(submission.path.created_time).split(' ')[0]
                 date_list.append(date)
         date_list.sort()
-        sort_dict = {}
 
+        sort_dict = {}
         for i in date_list:
             try: sort_dict[i] += 1
             except: sort_dict[i] = 1
 
-        print("sort_list", sort_dict)
         sort_list = []
         for key, val in sort_dict.items():
             temp = {}
@@ -222,7 +220,6 @@ class ContributionsView(APIView):
             sort_list.append(temp)
 
         serializer = ContributionsSerializer(sort_list, many=True)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserCompetitionInfoView(APIView):
@@ -230,11 +227,44 @@ class UserCompetitionInfoView(APIView):
     def get_object(self, username): # 존재하는 인스턴스인지 판단
         user = get_object_or_404(User, username = username)
         return user
+
+    # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
         user = self.get_object(username)
-
         # permission check
         if request.user.username != user.username:
             return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
 
+        competition_list = Competition_user.objects.filter(username=user.username)
 
+        if competition_list.count() == 0:
+            return Response({"error":"참가 중인 대회가 없습니다."}, status=status.HTTP_200_OK)
+
+        obj_list = []
+        for competition in competition_list:
+            obj = {
+                "id": competition.competition_id.id,
+                "problem_id": competition.competition_id.problem_id,
+                "title": competition.competition_id.problem_id.title,
+                "start_time": competition.competition_id.start_time,
+                "end_time": competition.competition_id.end_time,
+            }
+            leaderboard_list = SubmissionCompetition.objects.filter(Q(competition_id=competition.competition_id.id)&Q(path__on_leaderboard=True))
+            obj["user_total"] = leaderboard_list.count()
+            obj["rank"] = None
+
+            if leaderboard_list.filter(username=username).count() != 0: # submission 내역이 있다면
+                # 정렬
+                if competition.competition_id.problem_id.evaluation in ["F1-score", "Accuracy"]: # 내림차순
+                    leaderboard_list = leaderboard_list.order_by('-path__score')
+                else:
+                    leaderboard_list = leaderboard_list.order_by('path__score')
+                temp_list = []
+                for temp in leaderboard_list:
+                    temp_list.append(temp.username.username)
+                obj["rank"] = temp_list.index(username)+1
+
+            obj_list.append(obj)
+
+        serializer = UserCompetitionSerializer(obj_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

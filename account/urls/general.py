@@ -2,7 +2,8 @@ from tokenize import Token
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from account.views.general import (
-    LogoutView, UserRegisterView, UserInfoView, ClassInfoView, RefreshView, ContributionsView
+    LogoutView, UserCompetitionInfoView, UserRegisterView,
+    UserInfoView, ClassInfoView, RefreshView, ContributionsView
 )
 
 
@@ -21,5 +22,6 @@ urlpatterns = [
     path('<str:username>/', UserInfoView.as_view(), name='user_info_api'),
     path('class', ClassInfoView.as_view()),
     path('<str:username>/contributions', ContributionsView.as_view(), name="user_contributions"),
+    path('<str:username>/competitions', UserCompetitionInfoView.as_view(), name='user_competition_info'),
     # path('logout_all/', LogoutAllView.as_view(), name='auth_logout_all'),
 ]
