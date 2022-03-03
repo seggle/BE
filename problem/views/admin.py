@@ -25,7 +25,7 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request):
-        problems = Problem.objects.filter(Q(is_deleted=False))
+        problems = Problem.objects.filter(Q(is_deleted=False)&Q(class_id=None))
         if problems.count() != 0:
 
             keyword = request.GET.get('keyword', '')
