@@ -245,7 +245,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         data = request.data.copy()
         temp = str(uuid.uuid4()).replace("-","")
-        
+
         path_json = {
             "username":request.user,
             "path":temp,

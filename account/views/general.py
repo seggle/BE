@@ -8,10 +8,11 @@ from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, Blac
 from rest_framework import status, generics
 from django.contrib.auth.hashers import check_password
 from ..models import User
-from .. import serializers
+from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer
 from classes.models import Class, Class_user
 from classes.serializers import ClassGetSerializer
 from competition.models import Competition_user
+from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -31,7 +32,7 @@ class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self,request):
-        serializer = serializers.UserRegisterSerializer(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
         data = {}
         if serializer.is_valid():
             user = serializer.save()
@@ -87,7 +88,7 @@ class UserInfoView(APIView):
                 "is_active":user.is_active}
         obj["competition"] = competition
         obj["classes"] = classes
-        serializer = serializers.UserInfoClassCompetitionSerializer(obj)
+        serializer = UserInfoClassCompetitionSerializer(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 01-06 비밀번호 변경
@@ -121,7 +122,7 @@ class UserInfoView(APIView):
             user.save()
             return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error':"현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ClassInfoView(APIView):
@@ -175,3 +176,63 @@ class ClassInfoView(APIView):
             return Response("Success", status=status.HTTP_200_OK)
         else:
             return Response(does_not_exist, status=status.HTTP_200_OK)
+
+class ContributionsView(APIView):
+
+    def get_user(self, username): # 존재하는 인스턴스인지 판단
+        user = get_object_or_404(User, username = username)
+        return user
+
+    # 01-12 유저 잔디밭 조회
+    def get(self, request, username):
+        user = self.get_user(username)
+
+        # permission check
+        if request.user.username != user.username:
+            return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+        submission_class = SubmissionClass.objects.filter(username=username)
+        submission_competition = SubmissionCompetition.objects.filter(username=username)
+        date_list = []
+
+        if submission_class.count() != 0:
+            for submission in submission_class:
+                date = str(submission.path.created_time).split(' ')[0]
+                date_list.append(date)
+
+        if submission_competition.count() != 0:
+            for submission in submission_competition:
+                date = str(submission.path.created_time).split(' ')[0]
+                date_list.append(date)
+        date_list.sort()
+        sort_dict = {}
+
+        for i in date_list:
+            try: sort_dict[i] += 1
+            except: sort_dict[i] = 1
+
+        print("sort_list", sort_dict)
+        sort_list = []
+        for key, val in sort_dict.items():
+            temp = {}
+            temp["data"] = key
+            temp["count"] = val
+            sort_list.append(temp)
+
+        serializer = ContributionsSerializer(sort_list, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserCompetitionInfoView(APIView):
+
+    def get_object(self, username): # 존재하는 인스턴스인지 판단
+        user = get_object_or_404(User, username = username)
+        return user
+    def get(self, request, username):
+        user = self.get_object(username)
+
+        # permission check
+        if request.user.username != user.username:
+            return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+
+
