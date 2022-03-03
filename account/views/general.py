@@ -69,6 +69,9 @@ class RefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
 
 class UserInfoView(APIView):
+
+    permission_classes = [permission.IsRightUser]
+
     def get_object(self, username): # 존재하는 인스턴스인지 판단
         user = get_object_or_404(User, username = username)
         return user

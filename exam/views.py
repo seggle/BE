@@ -107,8 +107,10 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         else: #기존 제출내역이 있다면
             if exam.exception:
                 exam.exception = False
+                exam.is_duplicated = False
                 serializer = ExamGenerateSerializer(exam, data=data)
                 if serializer.is_valid():
+                    exam.delete()
                     serializer.save()
                     return Response(data=serializer.data)
                 else:
