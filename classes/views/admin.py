@@ -1,5 +1,5 @@
 from django.contrib import auth
-from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,15 +18,13 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     # pagination
     pagination_class = BasicPagination
 
-    
     def get(self, request):
         uid = request.GET.get('uid', None)
         if uid is None:
             keyword = request.GET.get('keyword', '')
-            
             class_list = Class.objects.values('id', 'name', 'year', 'semester', 'created_user')
             if keyword:
-                class_list = class_list.filter(name__icontains=keyword)
+                class_list = class_list.filter(Q(name__icontains=keyword)|Q(created_user__icontains=keyword))
             page = self.paginate_queryset(class_list)
             if page is not None:
                 #serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
