@@ -425,7 +425,8 @@ class ContestProblemInfoView(APIView):
                     
                     ip_addr = "3.37.186.158"
                     path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-                    url = "http://{0}/{1}" . format (ip_addr, path)
+                    path_s = path.split('/', 2)
+                    url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path_s[0], path_s[1], path_s[2])
 
                     cp_json = {
                         "id": contest_problem.id,
