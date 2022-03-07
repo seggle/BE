@@ -34,9 +34,13 @@ class ProblemView(APIView, PaginationHandlerMixin):
         for problem in problems:
             ip_addr = "3.37.186.158"
             path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-            url = "http://{0}/{1}".format(ip_addr, path)
+            path_s = path.split('/', 2)
+            url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path_s[0], path_s[1], path_s[2])
+
             path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-            url2 = "http://{0}/{1}".format(ip_addr, path2)
+            path2_s = path2.split('/', 2)
+            url2 = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path2_s[0], path2_s[1], path2_s[2])
+
             problem_json = {}
             problem_json['id'] = problem.id
             problem_json['title'] = problem.title
@@ -112,9 +116,11 @@ class ProblemDetailView(APIView):
 
         ip_addr = "3.37.186.158"
         data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        data_url = "http://{0}/{1}" . format (ip_addr, data_path)
+        data_path_s = data_path.split('/', 2)
+        data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, data_path_s[0], data_path_s[1], data_path_s[2])
         solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-        solution_url = "http://{0}/{1}" . format (ip_addr, solution_path)
+        solution_path_s = solution_path.split('/', 2)
+        solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
 
         cp_json = {
             "id": problem.id,

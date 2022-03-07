@@ -116,9 +116,11 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         # url 설정
         ip_addr = "3.37.186.158"
         data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        data_url = "http://{0}/{1}" . format (ip_addr, data_path)
+        data_path_s = data_path.split('/', 2)
+        data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, data_path_s[0], data_path_s[1], data_path_s[2])
         solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-        solution_url = "http://{0}/{1}" . format (ip_addr, solution_path)
+        solution_path_s = solution_path.split('/', 2)
+        solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
 
         obj = {"id":competition.id,
                 "problem_id":problem.id,

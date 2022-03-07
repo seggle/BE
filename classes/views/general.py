@@ -55,12 +55,13 @@ class ClassView(APIView):
 
         if serializer.is_valid():
             serializer.save() #UserSerializer의 유효성 검사를 한 뒤 DB에 저장
-            user = Class_user.objects.filter(username = request.user).filter(class_id = class_id)
-            class_user_add = Class.objects.get(id = class_id)
-            class_user_add.users.add(user[0])
+            # user = Class_user.objects.filter(username = request.user).filter(class_id = class_id)
+            # class_user_add = Class.objects.get(id = class_id)
+            # class_user_add.users.add(user[0])
 
-        serializer = serializers.ClassSerializer(class_user_add)
-        return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            # serializer = serializers.ClassSerializer(class_user_add)
+            return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, **kwargs):
         if kwargs.get('class_id') is None:
@@ -168,14 +169,15 @@ class ClassStdView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                user = Class_user.objects.filter(username = data['username']).filter(class_id = class_id)
-                user_add.users.add(user[0])
+                # user = Class_user.objects.filter(username = data['username']).filter(class_id = class_id)
+                # user_add.users.add(user[0])
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            users_datas = user_add.users.all()
+            # users_datas = user_add.users.all()
+            users_datas = Class_user.objects.all()
             class_Userlist_serializer = serializers.Class_user_Get_Serializer(users_datas, many=True)
             return Response(class_Userlist_serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -224,14 +226,15 @@ class ClassTaView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                user = Class_user.objects.filter(username = data['username']).filter(class_id = class_id)
-                user_add.users.add(user[0])
+                # user = Class_user.objects.filter(username = data['username']).filter(class_id = class_id)
+                # user_add.users.add(user[0])
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            users_datas = user_add.users.all()
+            # users_datas = user_add.users.all()
+            users_datas = Class_user.objects.all()
             class_Userlist_serializer = serializers.Class_user_Get_Serializer(users_datas, many=True)
             return Response(class_Userlist_serializer.data, status=status.HTTP_201_CREATED)
         else:
