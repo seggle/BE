@@ -217,8 +217,7 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         # competition_user에 username이 이미 존재하는지 체크
         if Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id).count():
             return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id)
+
         data = {}
         data["username"] = request.user.username
         data["privilege"] = 0
@@ -226,8 +225,6 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         serializer = CompetitionUserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id)
-            competition.users.add(user[0])
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
@@ -238,8 +235,8 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         # problem 삭제 확인
         if competition is False:
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        datas = competition.users.all()
-        competition_Userlist_serializer = CompetitionUserGetSerializer(datas, many=True)
+        user_list = Competition_user.objects.filter(competition_id = competition.id)
+        competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
         return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
 
 class CompetitionTaView(APIView, CustomPermissionMixin):
@@ -261,10 +258,9 @@ class CompetitionTaView(APIView, CustomPermissionMixin):
 
         # 기존 TA 삭제
         if (competition.problem_id.created_user == request.user) or request.user.privilege == 2: # 대회 담당 교수, admin인 경우에만
-            user_list = competition.users.all()
+            user_list = Competition_user.objects.filter(competition_id=competition.id)
             for users in user_list:
                 if users.privilege == 1:
-                    competition.users.remove(users.id)
                     users.delete()
         else:
             return Response({'error':"추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -292,14 +288,12 @@ class CompetitionTaView(APIView, CustomPermissionMixin):
 
             if serializer.is_valid():
                 serializer.save()
-                user = Competition_user.objects.filter(username = data['username']).filter(competition_id = competition_id)
-                competition.users.add(user[0])
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            users_datas = competition.users.all()
+            users_datas = Competition_user.objects.filter(competition_id=competition.id)
             competition_Userlist_serializer = CompetitionUserGetSerializer(users_datas, many=True)
             return Response(competition_Userlist_serializer.data, status=status.HTTP_201_CREATED)
         else:

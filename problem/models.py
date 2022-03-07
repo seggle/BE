@@ -9,8 +9,8 @@ class Problem(models.Model):
     created_time = models.DateTimeField(auto_now_add=True)
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user",to_field="username",related_name="problem")
     # data = models.FileField(blank=True,null=True,upload_to="media/")
-    data = models.FileField(blank=True,null=True,upload_to=upload_to_data)
-    solution = models.FileField(blank=True,null=True,upload_to=upload_to_solution)
+    data = models.FileField(blank=True,upload_to=upload_to_data)
+    solution = models.FileField(blank=True,upload_to=upload_to_solution)
     data_description = models.TextField()
     public = models.BooleanField(default=False)
     evaluation = models.TextField() # 평가 방식
