@@ -24,7 +24,8 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             keyword = request.GET.get('keyword', '')
             class_list = Class.objects.values('id', 'name', 'year', 'semester', 'created_user')
             if keyword:
-                class_list = class_list.filter(Q(name__icontains=keyword)|Q(created_user__icontains=keyword))
+                class_list = class_list.filter(Q(name__icontains=keyword) | Q(created_user__username__icontains=keyword))
+                # class_list = class_list.filter(Q(created_user__username__icontains=keyword))
             page = self.paginate_queryset(class_list)
             if page is not None:
                 #serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
