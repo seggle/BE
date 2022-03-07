@@ -119,8 +119,8 @@ class ClassUserInfoView(APIView):
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object(class_id)
-            user = Class.objects.get(id=class_id)
-            datas = user.users.all()
+            # user = Class.objects.get(id=class_id)
+            datas = Class_user.objects.filter(class_id=class_id)
             #print(datas)
             class_Userlist_serializer = serializers.Class_user_Get_Serializer(datas, many=True)
             #return Response(data, status=status.HTTP_200_OK)
@@ -139,10 +139,10 @@ class ClassStdView(APIView):
         # 기존 std 삭제
         user = Class.objects.get(id=class_id)
         if user.created_user == request.user:
-            user_list = user.users.all()
+            user_list = Class_user.objects.filter(class_id=class_id)
             for users in user_list:
                 if users.privilege == 0:
-                    user.users.remove(users.id)
+                    # user.users.remove(users.id)
                     users.delete()
 
         # std 추가
@@ -196,10 +196,10 @@ class ClassTaView(APIView):
         # 기존 ta 삭제
         user = Class.objects.get(id=class_id)
         if user.created_user == request.user:
-            user_list = user.users.all()
+            user_list = Class_user.objects.filter(class_id=class_id)
             for users in user_list:
                 if users.privilege == 1:
-                    user.users.remove(users.id)
+                    # user.users.remove(users.id)
                     users.delete()
 
         # ta 추가
