@@ -75,6 +75,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
         data = request.data['data']
         c_u = request.user
         modified_data = self.modify_input_for_multiple_files(title, description, data, data_description, public, c_u)
+        professor = request.data['professor']
         """
         data = request.data.copy()
         data['created_user'] = request.user
@@ -82,6 +83,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
         if (Class.objects.filter(id = data["class_id"]).count()) == 0:
             return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
         # problem = ProblemGenerateSerializer(data=data)
+        data['professor'] = Class.objects.get(id=data['class_id']).created_user
         problem = ProblemSerializer(data=data)
 
         if problem.is_valid():
