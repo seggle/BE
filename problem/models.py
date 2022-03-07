@@ -18,7 +18,7 @@ class Problem(models.Model):
     class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
     # 삭제되었는지
     is_deleted = models.BooleanField(default=False)
-    professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor")
+    professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor", blank=True, null=True)
 
     class Meta:
         db_table = "problem"

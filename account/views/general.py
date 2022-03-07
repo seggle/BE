@@ -218,7 +218,7 @@ class ContributionsView(APIView):
         sort_list = []
         for key, val in sort_dict.items():
             temp = {}
-            temp["data"] = key
+            temp["date"] = key
             temp["count"] = val
             sort_list.append(temp)
 
@@ -252,10 +252,10 @@ class UserCompetitionInfoView(APIView):
                 "start_time": competition.competition_id.start_time,
                 "end_time": competition.competition_id.end_time,
             }
-            leaderboard_list = SubmissionCompetition.objects.filter(Q(competition_id=competition.competition_id.id)&Q(path__on_leaderboard=True))
-            obj["user_total"] = leaderboard_list.count()
+            obj["user_total"] = Competition_user.objects.filter(Q(competition_id=competition.competition_id.id)&Q(privilege=0)).count()
             obj["rank"] = None
 
+            leaderboard_list = SubmissionCompetition.objects.filter(Q(competition_id=competition.competition_id.id)&Q(path__on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0: # submission 내역이 있다면
                 # 정렬
                 if competition.competition_id.problem_id.evaluation in ["F1-score", "Accuracy"]: # 내림차순
