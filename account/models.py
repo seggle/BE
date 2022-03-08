@@ -49,6 +49,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False) # 유저 모델의 필수 필드
     is_superuser = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    reset_password_token = models.CharField(max_length=50, null=True)
+    reset_password_token_expire_time = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'name']
