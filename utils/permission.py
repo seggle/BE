@@ -34,7 +34,7 @@ class IsAdmin(permissions.BasePermission):
 class IsProf(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        privilege = request.user.privilge
+        privilege = request.user.privilege
         return privilege == 1
 
 
