@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
+
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -15,17 +15,25 @@ import os
 import shutil
 import uuid
 
+# permission import
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from utils.permission import IsRightUser,IsProf,IsTA , IsProblemOwnerOrReadOnly
+
+
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    # permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated & (IsProf | IsTA)]
     pagination_class = BasicPagination
     # parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
-        problems = Problem.objects.filter((Q(public=True)|Q(created_user=request.user))&Q(is_deleted=False)&~Q(class_id=None))
+        if request.user.privilege == 0:
+            problems = Problem.objects.filter(Q(created_user=request.user)&Q(is_deleted=False))
+        else:
+            problems = Problem.objects.filter((Q(public=True)|Q(professor=request.user))&Q(is_deleted=False)&~Q(class_id=None))
         keyword = request.GET.get('keyword', '')
         if keyword:
             problems = problems.filter(title__icontains=keyword)
@@ -98,8 +106,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 
 class ProblemDetailView(APIView):
-
-    # permission_classes = [AllowAny]
+    permission_classes = [IsProblemOwnerOrReadOnly]
     # parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, problem_id):
