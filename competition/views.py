@@ -81,7 +81,6 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
                 if competition_user_serializer.is_valid():
                     competition_user_serializer.save()
                     user = Competition_user.objects.filter(username = request.user).filter(competition_id = competition_obj.id)
-                    competition_obj.users.add(user[0])
                 # 대회 정보
                 obj = {}
                 obj["problem"] = problem_obj
