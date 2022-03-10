@@ -16,8 +16,8 @@ import shutil
 import uuid
 
 # permission import
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from utils.permission import IsRightUser,IsProf,IsTA , IsProblemOwnerOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from utils.permission import IsRightUser, IsProf, IsTA, IsProblemOwnerOrReadOnly, IsAdmin
 
 
 class BasicPagination(PageNumberPagination):
@@ -25,15 +25,17 @@ class BasicPagination(PageNumberPagination):
 
 
 class ProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsAuthenticated & (IsProf | IsTA)]
+    permission_classes = [(IsAuthenticated & (IsProf | IsTA)) | IsAdmin]
     pagination_class = BasicPagination
+
     # parser_classes = [MultiPartParser, JSONParser]
 
     def get(self, request):
         if request.user.privilege == 0:
-            problems = Problem.objects.filter(Q(created_user=request.user)&Q(is_deleted=False))
+            problems = Problem.objects.filter(Q(created_user=request.user) & Q(is_deleted=False))
         else:
-            problems = Problem.objects.filter((Q(public=True)|Q(professor=request.user))&Q(is_deleted=False)&~Q(class_id=None))
+            problems = Problem.objects.filter(
+                (Q(public=True) | Q(professor=request.user)) & Q(is_deleted=False) & ~Q(class_id=None))
         keyword = request.GET.get('keyword', '')
         if keyword:
             problems = problems.filter(title__icontains=keyword)
@@ -43,11 +45,12 @@ class ProblemView(APIView, PaginationHandlerMixin):
             ip_addr = "3.37.186.158"
             path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
             path_s = path.split('/', 2)
-            url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path_s[0], path_s[1], path_s[2])
+            url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, path_s[0], path_s[1], path_s[2])
 
             path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
             path2_s = path2.split('/', 2)
-            url2 = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path2_s[0], path2_s[1], path2_s[2])
+            url2 = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, path2_s[0], path2_s[1],
+                                                                               path2_s[2])
 
             problem_json = {}
             problem_json['id'] = problem.id
@@ -68,6 +71,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
         else:
             serializer = AllProblemSerializer(page, many=True)
         return Response(serializer.data)
+
     """def modify_input_for_multiple_files(self, title, description, data,
                                         data_description, public, c_u):
         dict = {}
@@ -92,7 +96,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
         data = request.data.copy()
         data['created_user'] = request.user
         # 존재하는 class_id인지 확인
-        if (Class.objects.filter(id = data["class_id"]).count()) == 0:
+        if (Class.objects.filter(id=data["class_id"]).count()) == 0:
             return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
         # problem = ProblemGenerateSerializer(data=data)
         data['professor'] = Class.objects.get(id=data['class_id']).created_user
@@ -106,7 +110,8 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 
 class ProblemDetailView(APIView):
-    permission_classes = [IsProblemOwnerOrReadOnly]
+    permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
+
     # parser_classes = [MultiPartParser, JSONParser]
 
     def get_object(self, problem_id):
@@ -124,10 +129,13 @@ class ProblemDetailView(APIView):
         ip_addr = "3.37.186.158"
         data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
         data_path_s = data_path.split('/', 2)
-        data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, data_path_s[0], data_path_s[1], data_path_s[2])
+        data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, data_path_s[0], data_path_s[1],
+                                                                               data_path_s[2])
         solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
         solution_path_s = solution_path.split('/', 2)
-        solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
+        solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, solution_path_s[0],
+                                                                                   solution_path_s[1],
+                                                                                   solution_path_s[2])
 
         cp_json = {
             "id": problem.id,
@@ -153,17 +161,17 @@ class ProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
         obj = {"title": data["title"],
-            "description": data["description"],
-            "data_description": data["data_description"],
-            "evaluation": data["evaluation"],
-            "public": data["public"]}
+               "description": data["description"],
+               "data_description": data["data_description"],
+               "evaluation": data["evaluation"],
+               "public": data["public"]}
 
         if data['data']:
             # 폴더 삭제
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
                 path = path[1].split("/")
-                shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
+                shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
             if os.path.isfile(problem.solution.path):
@@ -188,7 +196,7 @@ class ProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         else:
             problem.is_deleted = True
-            temp = str(uuid.uuid4()).replace("-","")
+            temp = str(uuid.uuid4()).replace("-", "")
             problem.title = problem.title + ' - ' + temp
             problem.save()
             message = {"success": "문제가 제거되었습니다."}
