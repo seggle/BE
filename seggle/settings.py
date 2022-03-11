@@ -109,8 +109,12 @@ WSGI_APPLICATION = 'seggle.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'seggle_pg_database', # 데이터 베이스 name
+        'USER': 'segglepg', # postgres에 계정 생성 후 사용
+        'PASSWORD': 'segglesegglepg',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
