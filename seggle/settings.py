@@ -113,7 +113,7 @@ DATABASES = {
         'NAME': 'seggle_pg_database', # 데이터 베이스 name
         'USER': 'segglepg', # postgres에 계정 생성 후 사용
         'PASSWORD': 'segglesegglepg',
-        'HOST': 'localhost',
+        'HOST': 'postgres',
         'PORT': '5432',
     }
 }
