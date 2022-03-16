@@ -6,8 +6,6 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
 from datetime import datetime
 from django.utils import timezone
@@ -28,6 +26,7 @@ class ContestView(APIView):
         return classid
     #05-08
     def post(self,request, **kwargs):
+        # 0315
         if kwargs.get('class_id') is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -36,16 +35,16 @@ class ContestView(APIView):
             #class_list_serializer = serializers.ClassSerializer(Class.objects.get(id=class_id))
             data = request.data
             data['class_id'] = class_id
-            serializer = serializers.ContestSerializer(data=data)
-            
+            serializer = serializers.ContestSerializer(data=data) # 0315
+
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    #05-07
-    #비공개 관련 처리 필요함
+
+    # 05-07
+    # 비공개 관련 처리 필요함
     def get(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -58,7 +57,7 @@ class ContestView(APIView):
                 contest_list_serializer = serializers.ContestGetSerializer(contest_list)
                 contest.append(contest_list_serializer.data)
             return Response(contest, status=status.HTTP_200_OK)
-    
+
 class ContestCheckView(APIView):
     #permission_classes = [IsAdminUser]
 
@@ -72,12 +71,13 @@ class ContestCheckView(APIView):
 
     #05-09
     def patch(self, request, **kwargs):
+        # 0315 permission
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -88,7 +88,7 @@ class ContestCheckView(APIView):
 
                 if user.class_id.id != class_id:
                     return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                
+
                 user.visible = not user.visible
                 user.save(force_update=True)
                 serializer = serializers.ContestSerializer(Contest.objects.get(id=contest_id)) #Request의 data를 UserSerializer로 변환
@@ -113,14 +113,15 @@ class ContestProblemView(APIView):
         contestid = generics.get_object_or_404(Contest, id = contest_id)
         return contestid
 
-    #05-13-01
+    # 05-13-01
     def post(self,request, **kwargs):
+        # 0315
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -143,58 +144,58 @@ class ContestProblemView(APIView):
 
                     order = Contest_problem.objects.filter(contest_id=contest_id).count() + 1
                     problem = Problem.objects.get(id=data['problem_id'])
+                    # 0315
                     if (problem.public != 1) or (problem.is_deleted != 0):
                         error['Error_problem_id'].append(data['problem_id'])
                         continue
-                    
+
+                    # 0315
                     problem_data['contest_id'] = contest_id
                     problem_data['order'] = order
                     problem_data['title'] = problem.title
                     problem_data['description'] = problem.description
                     problem_data['data_description'] = problem.data_description
                     serializer = serializers.ContestProblemSerializer(data=problem_data)
-                    
+
                     if serializer.is_valid():
                         serializer.save()
+                        # 0315
                         problem = Contest_problem.objects.filter(contest_id = contest_id).filter(title = problem_data['title'])
                         contest_problem_add = Contest.objects.get(id = contest_id)
                         contest_problem_add.problems.add(problem[0])
                 if(len(error['Error_problem_id'])) == 0:
-                    return Response("Success", status=status.HTTP_201_CREATED)
+                    return Response("Success", status=status.HTTP_201_CREATED) # 0315
                 else:
-                    return Response(error, status=status.HTTP_201_CREATED)
+                    return Response(error, status=status.HTTP_201_CREATED) # 0315
 
     #05-11
+    # 0315
     def get(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
                 contest_id = kwargs.get('contest_id')
                 contestid = self.get_object_contest(contest_id)
 
-                
-
                 contest_problem_lists = Contest_problem.objects.filter(contest_id=contest_id).order_by('order')
                 contest_problem = []
-                
+
                 if contest_problem_lists.count() == 0:
                     return Response(contest_problem, status=status.HTTP_200_OK)
-                
+
                 if contest_problem_lists[0].contest_id.class_id.id != class_id:
-                    return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                
+                    return Response("Fail", status=status.HTTP_400_BAD_REQUEST) # 0315
+
                 start_time = contest_problem_lists[0].contest_id.start_time
                 end_time = contest_problem_lists[0].contest_id.end_time
-                #print(start_time)
-                
+
                 for contest_problem_list in contest_problem_lists:
-                    #print(contest_problem_list)
                     cp_json = {
                         "id": contest_problem_list.id,
                         "contest_id": contest_problem_list.contest_id.id,
@@ -205,18 +206,20 @@ class ContestProblemView(APIView):
                         "order": contest_problem_list.order
                     }
                     contest_problem.append(cp_json)
-                
+
+                # 0315 serializers
                 #serializer = serializers.ContestProblemSerializer(contest_problem, many=True)
                 return Response(contest_problem, status=status.HTTP_200_OK)
-    
+
     #05-10
     def patch(self, request, **kwargs):
+        # 0315
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -228,7 +231,7 @@ class ContestProblemView(APIView):
 
                 if contest.class_id.id != class_id:
                     return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                
+                # 0315
                 contest.name = data["name"]
                 contest.start_time = data["start_time"]
                 contest.end_time = data["end_time"]
@@ -239,14 +242,14 @@ class ContestProblemView(APIView):
                 contest_serializer = serializers.ContestSerializer(contest)
                 return Response(contest_serializer.data, status=status.HTTP_200_OK)
 
-    #05-12    
+    # 05-12 # 0315
     def delete(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -256,10 +259,10 @@ class ContestProblemView(APIView):
                 contest = Contest.objects.get(id=contest_id)
                 if contest.class_id.id != class_id:
                     return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                
+                # 0315
                 contest.delete()
                 return Response("Success", status=status.HTTP_200_OK)
-                
+
 class ContestProblemOrderView(APIView):
     #permission_classes = [IsAdminUser]
 
@@ -278,7 +281,7 @@ class ContestProblemOrderView(APIView):
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -295,11 +298,11 @@ class ContestProblemOrderView(APIView):
                         error['Error_Contest_Problem_id'].append(data['id'])
                         continue
                     contest_problem = Contest_problem.objects.get(id=data['id'])
-                    
+
                     if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
                         error['Error'].append(data['id'])
                         continue
-                    
+
                     # if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
                     #     error['Error_Problem_id'].append(data['problem_id'])
                     #     continue
@@ -309,6 +312,8 @@ class ContestProblemOrderView(APIView):
                     #     error['Error_title_is_existed'].append(data['title'])
                     #     continue
                         # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+                    # 0315
                     contest_problem.order = data['order']
                     contest_problem.save(force_update=True)
 
@@ -330,12 +335,13 @@ class ContestProblemTitleDescptView(APIView):
 
     #05-13-03
     def patch(self, request, **kwargs):
+        # 0315
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -352,11 +358,11 @@ class ContestProblemTitleDescptView(APIView):
                         error['Error_Contest_Problem_id'].append(data['id'])
                         continue
                     contest_problem = Contest_problem.objects.get(id=data['id'])
-                    
+
                     if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
                         error['Error'].append(data['id'])
                         continue
-                    
+
                     # if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
                     #     error['Error_Problem_id'].append(data['problem_id'])
                     #     continue
@@ -366,6 +372,8 @@ class ContestProblemTitleDescptView(APIView):
                     #     error['Error_title_is_existed'].append(data['title'])
                     #     continue
                         # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+                    # 0315 json, serializer
                     contest_problem.title = data['title']
                     contest_problem.description = data['description']
                     contest_problem.data_description = data['data_description']
@@ -398,7 +406,7 @@ class ContestProblemInfoView(APIView):
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -415,14 +423,14 @@ class ContestProblemInfoView(APIView):
 
                     if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
                         return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                    
+
                     # print(timezone.now())
                     time_check = timezone.now()
                     if (contest_problem.contest_id.start_time > time_check) or (contest_problem.contest_id.end_time < time_check):
                         return Response({'error': 'time error!'}, status=status.HTTP_400_BAD_REQUEST)
 
                     problem = Problem.objects.get(id=contest_problem.problem_id.id)
-                    
+
                     ip_addr = "3.37.186.158"
                     path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
                     path_s = path.split('/', 2)
@@ -443,15 +451,16 @@ class ContestProblemInfoView(APIView):
 
                     #serializer = serializers.ContestProblemSerializer(contest_problem, many=True)
                     return Response(cp_json, status=status.HTTP_200_OK)
-    
+
     #05-15
+    # 0315
     def delete(self, request, **kwargs):
         if kwargs.get('class_id') is None:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             class_id = kwargs.get('class_id')
             classid = self.get_object_class(class_id)
-            
+
             if kwargs.get('contest_id') is None:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -463,18 +472,17 @@ class ContestProblemInfoView(APIView):
                 else:
                     cp_id = kwargs.get('cp_id')
                     cpid = self.get_object_contest_problem(cp_id)
-                    
+
                     contest_problem = Contest_problem.objects.get(id=cp_id)
                     if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
                         return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-                    
 
                     contest_problem_lists = Contest_problem.objects.filter(contest_id=contest_id).order_by('-order')
-                    
+
                     for contest_problem_list in contest_problem_lists:
                         if(contest_problem_list.order > contest_problem.order):
                             contest_problem_list.order = contest_problem_list.order - 1
                             contest_problem_list.save(force_update=True)
                         else:
-                            contest_problem.delete()
+                            contest_problem.delete() # 0315
                             return Response("Success", status=status.HTTP_200_OK)

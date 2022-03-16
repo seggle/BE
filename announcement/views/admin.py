@@ -12,7 +12,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class AnnouncementAdminView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser] # 0315
 
     # pagination
     pagination_class = BasicPagination
@@ -37,6 +37,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
 
     # 00-08 공지 생성
     def post(self, request):
+        # 0315
         data = request.data
         announcement = {}
         announcement["title"] = data["title"]
@@ -51,9 +52,9 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AnnouncementDetailAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminUser] # 0315
 
-    def get_object(self, pk): # 존재하는 인스턴스인지 판단
+    def get_object(self, pk): # 존재하는 인스턴스인지 판단 # 0315
         announcement = get_object_or_404(Announcement, pk = pk)
         return announcement
 
@@ -61,29 +62,30 @@ class AnnouncementDetailAdminView(APIView):
     def get(self, request, pk):
         announcement = self.get_object(pk)
         serializer = serializers.AnnouncementSerializer(announcement)
-        return Response(serializer.data)
+        return Response(serializer.data) # 0315
 
     # 00-09 announcement_id인 announcement 수정
     def put(self, request, pk):
         announcement = self.get_object(pk)
         data = request.data
+        # 0315
         obj = {}
         obj["title"] = data["title"]
         obj["context"] = data["context"]
         obj["visible"] = data["visible"]
         obj["important"] = data["important"]
         obj["created_user"] = announcement.created_user
-        serializer = serializers.AnnouncementSerializer(announcement, data=obj)
+        serializer = serializers.AnnouncementSerializer(announcement, data=obj) # 0315
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data) # 0315
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 00-10 announcement 삭제
     def delete(self, request, pk):
         announcement = self.get_object(pk)
         announcement.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT) # 0315
 
 class AnnouncementCheckAdminView(APIView):
     permission_classes = [IsAdminUser]
@@ -96,11 +98,11 @@ class AnnouncementCheckAdminView(APIView):
     def put(self, request, pk):
         announcement = self.get_object(pk)
         data = request.data
-        obj = {}
+        obj = {} # 0315
         obj["visible"] = data["visible"]
         obj["important"] = data["important"]
         serializer = serializers.AnnouncementCheckSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data) # 0315
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

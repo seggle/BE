@@ -19,16 +19,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from utils import permission
-"""
-# 이메일 확인 완료
-def send_email(request):
-    subject = "message"
-    to = ["seggle.sejong@gmail.com"]
-    from_email = "seggle.sejong@gmail.com"
-    message = "메지시 테스트"
-    EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
-"""
 
+# 0315 serializer에서 view로 다 옮길 것인지 고민중
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -42,10 +34,10 @@ class UserRegisterView(APIView):
             data['username'] = user.username
         else:
             data = serializer.errors
-        return Response(data)
+        return Response(data) # 0315
 
 class LogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,) # 0315
 
     def post(self, request):
         try:
@@ -56,6 +48,7 @@ class LogoutView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+# 0315 구현은 해야 함 근데 이 코드는 작동 안함
 # class LogoutAllView(APIView):
 #     permission_classes = (IsAuthenticated,)
 #     def post(self, request):
@@ -71,6 +64,7 @@ class UserInfoView(APIView):
 
     permission_classes = [permission.IsRightUser]
 
+    # 0315
     def get_object(self, username): # 존재하는 인스턴스인지 판단
         user = get_object_or_404(User, username = username)
         return user
@@ -116,7 +110,7 @@ class UserInfoView(APIView):
     def delete(self, request, username):
         data = request.data
         user = self.get_object(username)
-        # permission check
+        # permission check # 0315
         if request.user.username != user.username:
             return Response({"error":"탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
         # 비밀번호 일치 확인
@@ -153,7 +147,8 @@ class ClassInfoView(APIView):
             class_name_list.append(class_add_is_show)
         return Response(class_name_list, status=status.HTTP_200_OK)
 
-    def patch(self, request):
+    # 0315
+    def patch(self, request): # 0315
         #class_id = kwargs.get('class_id')
         datas = request.data
 
@@ -191,6 +186,7 @@ class ContributionsView(APIView):
     def get(self, request, username):
         user = self.get_user(username)
 
+        # 0315
         # permission check
         if request.user.username != user.username:
             return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
@@ -254,6 +250,7 @@ class UserCompetitionInfoView(APIView):
             }
             obj["user_total"] = Competition_user.objects.filter(Q(competition_id=competition.competition_id.id)&Q(privilege=0)).count()
             obj["rank"] = None
+            # 0315
 
             leaderboard_list = SubmissionCompetition.objects.filter(Q(competition_id=competition.competition_id.id)&Q(path__on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0: # submission 내역이 있다면

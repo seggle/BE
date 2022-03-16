@@ -31,7 +31,6 @@ class CompetitionListSerializer(serializers.ModelSerializer):
 class CompetitionProblemCheckSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
-    # public = serializers.BooleanField()
     data_description = serializers.CharField()
     data = serializers.FileField()
     solution = serializers.FileField()

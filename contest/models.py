@@ -11,14 +11,16 @@ class Contest(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_exam = models.BooleanField(default=False)
+    # 0315
     problems = models.ManyToManyField('Contest_problem', related_name="contests", blank=True)
     visible = models.BooleanField(default=True)
+    # 0315 is_deleted 추가
 
     class Meta:
         db_table = "contest"
 
-
 # contest와 problem사이의 다대다 테이블
+# 0315
 class Contest_problem(models.Model):
     contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
     problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
@@ -26,6 +28,7 @@ class Contest_problem(models.Model):
     description = models.TextField()
     data_description = models.TextField()
     order = models.IntegerField()
+    # 0315 is_deleted 추가
 
     class Meta:
         db_table = "contest_problem"

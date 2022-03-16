@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
-
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -30,8 +29,6 @@ class ProblemView(APIView, PaginationHandlerMixin):
     permission_classes = [(IsAuthenticated & (IsProf | IsTA)) | IsAdmin]
     pagination_class = BasicPagination
 
-    # parser_classes = [MultiPartParser, JSONParser]
-
     def get(self, request):
         if request.user.privilege == 0:
             problems = Problem.objects.filter(Q(created_user=request.user) & Q(is_deleted=False))
@@ -54,6 +51,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
             url2 = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, path2_s[0], path2_s[1],
                                                                                path2_s[2])
 
+            # 0315
             problem_json = {}
             problem_json['id'] = problem.id
             problem_json['title'] = problem.title
@@ -97,16 +95,17 @@ class ProblemView(APIView, PaginationHandlerMixin):
         """
         data = request.data.copy()
         data['created_user'] = request.user
+
         # 존재하는 class_id인지 확인
         if (Class.objects.filter(id=data["class_id"]).count()) == 0:
             return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        # problem = ProblemGenerateSerializer(data=data)
+
         data['professor'] = Class.objects.get(id=data['class_id']).created_user
         problem = ProblemSerializer(data=data)
 
         if problem.is_valid():
             problem.save()
-            return Response(problem.data)
+            return Response(problem.data) # 0315
         else:
             return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,6 +115,7 @@ class ProblemDetailView(APIView):
 
     # parser_classes = [MultiPartParser, JSONParser]
 
+    # 0315
     def get_object(self, problem_id):
         problem = get_object_or_404(Problem, id=problem_id)
         if problem.is_deleted:
@@ -224,8 +224,9 @@ class ProblemVisibilityView(APIView):
         else:
             problem.public = True
         problem.save()
-        return Response(data=ProblemSerializer(problem).data)
+        return Response(data=ProblemSerializer(problem).data) # 0315
 
+# 0315
 class ProblemDataDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 

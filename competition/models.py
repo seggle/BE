@@ -10,7 +10,7 @@ class Competition(models.Model):
     class Meta:
         db_table = "competition"
 
-class Competition_user(models.Model):
+class Competition_user(models.Model): # 0315
     competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id")
     username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")
     is_show = models.BooleanField(default=True)

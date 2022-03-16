@@ -23,7 +23,6 @@ class CustomPermissionMixin(object):
             return False
 
 
-####
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):

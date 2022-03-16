@@ -18,27 +18,24 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     # pagination
     pagination_class = BasicPagination
 
+    # 0315
     def get(self, request):
         uid = request.GET.get('uid', None)
         if uid is None:
             keyword = request.GET.get('keyword', '')
-            class_list = Class.objects.values('id', 'name', 'year', 'semester', 'created_user')
+            class_list = Class.objects.values('id', 'name', 'year', 'semester', 'created_user') # 0315 all로 바꿉시다
             if keyword:
                 class_list = class_list.filter(Q(name__icontains=keyword) | Q(created_user__username__icontains=keyword))
-                # class_list = class_list.filter(Q(created_user__username__icontains=keyword))
             page = self.paginate_queryset(class_list)
             if page is not None:
-                #serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
                 serializer = self.get_paginated_response(page)
             else:
-                serializer = serializers.ClassAdminGetSerializer(class_list)
+                serializer = serializers.ClassAdminGetSerializer(class_list) # 0315
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-
             class_name_list = []
             class_lists = Class_user.objects.filter(username=uid)
-            for class_list in class_lists:
-                class_add = {}
+            for class_list in class_lists: # 0315
                 class_list_serializer = serializers.ClassAdminGetSerializer(class_list.class_id)
                 class_add = class_list_serializer.data
                 class_add["privilege"] = class_list.privilege

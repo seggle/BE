@@ -14,7 +14,7 @@ class BasicPagination(PageNumberPagination):
 class AnnouncementView(APIView, PaginationHandlerMixin):
     # pagination
     pagination_class = BasicPagination
-    serializer_class = serializers.AnnouncementInfoSerializer
+    serializer_class = serializers.AnnouncementInfoSerializer # 0315
 
     # 04-01 공지 리스트 전체 조회
     def get(self, request):
@@ -24,7 +24,7 @@ class AnnouncementView(APIView, PaginationHandlerMixin):
             announcements = announcements.filter(title__icontains=keyword)
         page = self.paginate_queryset(announcements)
         if page is not None:
-            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data) # 0315
         else:
             serializer = self.serializer_class(announcements, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -38,4 +38,4 @@ class AnnouncementDetailView(APIView):
     def get(self, request, pk):
         announcement = self.get_object(pk)
         serializer = serializers.AnnouncementSerializer(announcement)
-        return Response(serializer.data)
+        return Response(serializer.data) # 0315

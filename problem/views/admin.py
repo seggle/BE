@@ -154,6 +154,6 @@ class AdminProblemDetailView(APIView):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         else:
             problem.is_deleted = True
-            problem.save()
+            problem.save() # 0315
             message = {"success": "문제가 제거되었습니다."}
         return Response(data=message, status=status.HTTP_200_OK)

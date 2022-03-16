@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 class UserManager(BaseUserManager):
-
     use_in_migrations = True # 모델 관리자 마이그레이션
 
     def create_user (self, username, email, name, password=None): # user 생성

@@ -223,21 +223,24 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         return user
 
     # 06-04 대회 유저 파일 제출
-    def post(self, request, **kwargs):
+    def post(self, request, **kwargs): # 0315
         if kwargs.get('competition_id') is None:
             return Response({"error": "competition_id"}, status=status.HTTP_400_BAD_REQUEST)
         if kwargs.get('username') is None:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+        # 0315
         competition_id = kwargs.get('competition_id')
         username = kwargs.get('username')
 
         # username check
         if username != request.user.username:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
+
         # problem check
         competition = self.get_competition(competition_id=competition_id)
         if competition is False:
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
         # permission check - 대회에 참가한 학생만 제출 가능
         user = self.check_participation(username=username, competition_id=competition_id)
         if user is False:

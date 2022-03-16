@@ -7,15 +7,6 @@ from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
 
-def order(evaluation, obj_list):
-    if evaluation in ["F1-score", "Accuracy"]:
-        # 내림차순 (User.object.order_by('-name'))
-        pass
-    else:
-        # 올림차순
-        pass
-    return obj_list
-
 class LeaderboardClassView(APIView):
     def get_object_contest_problem(self, cp_id):
         cpid = get_object_or_404(Contest_problem, id = cp_id)
@@ -23,13 +14,14 @@ class LeaderboardClassView(APIView):
 
     def get(self, request, **kwargs):
         # competition_id = kwargs.get('competition_id')
+        # 0315 None, get.get
         if kwargs.get('cp_id') is None:
             return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
         cp_id = kwargs.get('cp_id')
         cpid = self.get_object_contest_problem(cp_id)
         submission_class_list = SubmissionClass.objects.filter(c_p_id=cp_id)
 
-        # 정렬
+        # 정렬 # 0315
         if cpid.problem_id.evaluation in ["F1-score", "Accuracy"]: # 내림차순
             submission_class_list = submission_class_list.order_by('path__score')
         else:

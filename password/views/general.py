@@ -19,12 +19,12 @@ def rand_str(length=10, type="lower_hex"):
     else:
         return random.choice("123456789") + get_random_string(length - 1, allowed_chars="0123456789")
 
-
+# 0315 끝에 API 때고 view 넣기
 class ApplyResetPasswordAPI(APIView):
     permission_classes = [AllowAny]
+    # 11-00
     def post(self, request):
         email = request.data.get('email', '')
-        # if User.objects.filter(email=email).exists():
         try:
             user = User.objects.get(email=email)
         except:
@@ -34,23 +34,18 @@ class ApplyResetPasswordAPI(APIView):
         user.reset_password_token = rand_str()
         user.reset_password_token_expire_time = now() + timedelta(minutes=5)
         user.save()
+        # 0315 문구 좀 더 멋있게
         email_body = f"{user.username}님 비밀번호 리셋 인증 번호입니다.\n{user.reset_password_token}\n까먹지마세요"
         EmailMessage(subject="Reset your passsword", body=email_body, to=[user.email], from_email="seggle.sejong@gmail.com").send()
         return Response({'success': 'We have sent you a mail to reset your password'}, status=status.HTTP_200_OK)
-        # return Response({'error': 'user email does not exist'}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# 0315 끝에 API 때고 view 넣기
 class ResetPasswordAPI(APIView):
     permission_classes = [AllowAny]
+    # 11-02
     def post(self, request):
         data = request.data
-        # print(data)
-        # try:
         user = User.objects.get(reset_password_token=data["token"])
-        # except:
-            # return Response({'error': "Token does not exist"}, status=status.HTTP_400_BAD_REQUEST) # self.error("Token does not exist")
-        # if user.reset_password_token_expire_time < now():
-        #     return Response({'error': 'Token has expired'}, status=status.HTTP_400_BAD_REQUEST) #self.error("Token has expired")
 
         if data["password1"] == data["password2"]:
             user.set_password(data["password1"])
@@ -60,15 +55,16 @@ class ResetPasswordAPI(APIView):
         else:
             return Response({'error': "password1, password2 not same"}, status=status.HTTP_400_BAD_REQUEST)
 
-
+# 0315 끝에 view 넣기
 class ResetPasswordToken(APIView):
     permission_classes = [AllowAny]
+    # 11-01
     def post(self, request):
         data = request.data
         try:
             user = User.objects.get(reset_password_token=data["token"])
         except:
-            return Response({'error': "Token does not exist"}, status=status.HTTP_400_BAD_REQUEST)# self.error("Token does not exist")
+            return Response({'error': "Token does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         if user.reset_password_token_expire_time < now():
             return Response({'error': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({'success': "token valid"}, status=status.HTTP_200_OK)

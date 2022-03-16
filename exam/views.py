@@ -18,12 +18,17 @@ class BasicPagination(PageNumberPagination):
 
 class ExamParticipateView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
+
+
+        #0315
     def get_contest(self,contest_id):
         try:
             contest = Contest.objects.get(id=contest_id)
         except:
             contest = Http404
         return contest
+
+        #0315
     def get_object(self, contest_id, user_id):
         contest = self.get_contest(contest_id = contest_id)
         try:
@@ -37,7 +42,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
 
     def get(self, request, class_id, contest_id):
         # 권한체크
-        # 해당 수업에 속해있는지 아닌지
+        #0315        # 해당 수업에 속해있는지 아닌지
         # 만약 속해있다면 해당 수업의 privilege가 0 인지 아닌지
 
         try:
@@ -61,6 +66,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
     def post(self, request, contest_id, class_id):
         # 권한 체크
         # 그 class에 등록되어 있는 사람인지 아닌지
+        # 0315
         try:
             if request.user.class_user_set.get(class_id=class_id):
                 pass
@@ -75,6 +81,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         # data = request.data
+        # 0315
         data = {}
         data['ip_address'] = GetIpAddr(request)
         data['user'] = request.user
@@ -85,7 +92,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         # 기존 ip제출 내역이 없다면
         # ip중복체크 후 중복된것이 없다면 새로 만들고, 중복이라면 거절한다.
 
-        if exam == Http404: #기존 제출내역이 없다면
+        if exam == Http404: #기존 제출내역이 없다면 # 0315
             try:
                 exams = Exam.objects.filter(ip_address=data['ip_address'])
             except Exam.DoesNotExist:
@@ -110,13 +117,14 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
                 exam.is_duplicated = False
                 serializer = ExamGenerateSerializer(exam, data=data)
                 if serializer.is_valid():
+                    # 0315 log
                     exam.delete()
                     serializer.save()
                     return Response(data=serializer.data)
                 else:
                     return Response(serializer.errors)
             else:
-                message = {"error": "이미 제출된 내역이 있습니다."}
+                message = {"error": "이미 제출된 내역이 있습니다."} # 0315
                 return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         message = {"error": "처리해야합니다"}
         return Response(data=message)
@@ -151,6 +159,7 @@ class ExamResetView(APIView):
             message = {'error': '해당하는 제출 내역이 없습니다.'}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         else:
+            # 0315 log
             exam.delete()
             message = {'success': '해당 사용자의 제출 내역이 리셋되었습니다.'}
             return Response(data=message, status=status.HTTP_200_OK)
