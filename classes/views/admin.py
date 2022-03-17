@@ -9,7 +9,7 @@ from rest_framework import status, generics
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import Class, Class_user
-from .. import serializers
+from ..serializers import ClassAdminGetSerializer
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -30,13 +30,13 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             if page is not None:
                 serializer = self.get_paginated_response(page)
             else:
-                serializer = serializers.ClassAdminGetSerializer(class_list) # 0315
+                serializer = ClassAdminGetSerializer(class_list)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             class_name_list = []
             class_lists = Class_user.objects.filter(username=uid)
             for class_list in class_lists: # 0315
-                class_list_serializer = serializers.ClassAdminGetSerializer(class_list.class_id)
+                class_list_serializer = ClassAdminGetSerializer(class_list.class_id)
                 class_add = class_list_serializer.data
                 class_add["privilege"] = class_list.privilege
                 class_add["is_show"] = class_list.is_show

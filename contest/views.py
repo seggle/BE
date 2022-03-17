@@ -14,7 +14,7 @@ from classes.models import Class, Class_user
 from account.models import User
 from problem.models import Problem
 from .models import Contest, Contest_problem
-from . import serializers
+from serializers import ContestSerializer, ContestGetSerializer, ContestProblemSerializer
 
 # Create your views here.
 
@@ -35,7 +35,7 @@ class ContestView(APIView):
             #class_list_serializer = serializers.ClassSerializer(Class.objects.get(id=class_id))
             data = request.data
             data['class_id'] = class_id
-            serializer = serializers.ContestSerializer(data=data) # 0315
+            serializer = ContestSerializer(data=data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -54,7 +54,7 @@ class ContestView(APIView):
             contest = []
             contest_lists = Contest.objects.filter(class_id=class_id)
             for contest_list in contest_lists:
-                contest_list_serializer = serializers.ContestGetSerializer(contest_list)
+                contest_list_serializer = ContestGetSerializer(contest_list)
                 contest.append(contest_list_serializer.data)
             return Response(contest, status=status.HTTP_200_OK)
 
@@ -91,7 +91,7 @@ class ContestCheckView(APIView):
 
                 user.visible = not user.visible
                 user.save(force_update=True)
-                serializer = serializers.ContestSerializer(Contest.objects.get(id=contest_id)) #Request의 data를 UserSerializer로 변환
+                serializer = ContestSerializer(Contest.objects.get(id=contest_id)) #Request의 data를 UserSerializer로 변환
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
                 # if user.created_user == request.user:
@@ -155,7 +155,7 @@ class ContestProblemView(APIView):
                     problem_data['title'] = problem.title
                     problem_data['description'] = problem.description
                     problem_data['data_description'] = problem.data_description
-                    serializer = serializers.ContestProblemSerializer(data=problem_data)
+                    serializer = ContestProblemSerializer(data=problem_data)
 
                     if serializer.is_valid():
                         serializer.save()
@@ -239,7 +239,7 @@ class ContestProblemView(APIView):
                 contest.visible = data["visible"]
                 contest.save(force_update=True)
 
-                contest_serializer = serializers.ContestSerializer(contest)
+                contest_serializer = ContestSerializer(contest)
                 return Response(contest_serializer.data, status=status.HTTP_200_OK)
 
     # 05-12 # 0315

@@ -12,7 +12,7 @@ from rest_framework import status
 from django.http import JsonResponse
 from ..models import Class, Class_user
 from account.models import User
-from .. import serializers
+from ..serializers import ClassSerializer, Class_user_Serializer, Class_user_Get_Serializer
 #from utils.user_permission import user_perm, class_user_check
 
 # Create your views here.
@@ -36,7 +36,7 @@ class ClassView(APIView):
         #Create_Class.save()
 
         data['created_user'] = request.user
-        serializer = serializers.ClassSerializer(data=data) # 0315
+        serializer = ClassSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -53,7 +53,7 @@ class ClassView(APIView):
         data["is_show"] = True
         data["class_id"] = class_id
         # 0315
-        serializer = serializers.Class_user_Serializer(data=data) #Request의 data를 UserSerializer로 변환
+        serializer = Class_user_Serializer(data=data) #Request의 data를 UserSerializer로 변환
 
         if serializer.is_valid():
             serializer.save()
@@ -67,7 +67,7 @@ class ClassView(APIView):
         class_id = kwargs.get('class_id')
         classid = self.get_object(class_id)
         # 0315
-        class_list_serializer = serializers.ClassSerializer(Class.objects.get(id=class_id)) # 0315
+        class_list_serializer = ClassSerializer(Class.objects.get(id=class_id))
         return Response(class_list_serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, **kwargs): # 0315
@@ -85,7 +85,7 @@ class ClassView(APIView):
                 user.year = data["year"]
                 user.semester = data["semester"]
                 user.save(force_update=True)
-                class_list_serializer = serializers.ClassSerializer(user)
+                class_list_serializer = ClassSerializer(user)
                 return Response(class_list_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response("Fail", status=status.HTTP_400_BAD_REQUEST) # 0315
@@ -121,7 +121,7 @@ class ClassUserInfoView(APIView):
             # user = Class.objects.get(id=class_id)
             datas = Class_user.objects.filter(class_id=class_id)
             #print(datas)
-            class_Userlist_serializer = serializers.Class_user_Get_Serializer(datas, many=True) # 0315
+            class_Userlist_serializer = Class_user_Get_Serializer(datas, many=True)
             #return Response(data, status=status.HTTP_200_OK)
             return Response(class_Userlist_serializer.data, status=status.HTTP_200_OK)
 
@@ -165,7 +165,7 @@ class ClassStdView(APIView):
             data["privilege"] = 0
             data["class_id"] = class_id
 
-            serializer = serializers.Class_user_Serializer(data=data) # 0315
+            serializer = Class_user_Serializer(data=data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -175,7 +175,7 @@ class ClassStdView(APIView):
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
             users_datas = Class_user.objects.all()
-            class_Userlist_serializer = serializers.Class_user_Get_Serializer(users_datas, many=True)
+            class_Userlist_serializer = Class_user_Get_Serializer(users_datas, many=True)
             return Response(class_Userlist_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
@@ -219,7 +219,7 @@ class ClassTaView(APIView):
             data["privilege"] = 1
             data["class_id"] = class_id
 
-            serializer = serializers.Class_user_Serializer(data=data)
+            serializer = Class_user_Serializer(data=data)
 
             if serializer.is_valid():
                 serializer.save()
@@ -232,7 +232,7 @@ class ClassTaView(APIView):
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
             # users_datas = user_add.users.all()
             users_datas = Class_user.objects.all()
-            class_Userlist_serializer = serializers.Class_user_Get_Serializer(users_datas, many=True)
+            class_Userlist_serializer = Class_user_Get_Serializer(users_datas, many=True)
             return Response(class_Userlist_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)

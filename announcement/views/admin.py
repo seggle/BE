@@ -6,7 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import Announcement, User
-from .. import serializers
+from ..serializers import AnnouncementSerializer, AnnouncementInfoSerializer, AnnouncementCheckSerializer
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -16,7 +16,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
 
     # pagination
     pagination_class = BasicPagination
-    serializer_class = serializers.AnnouncementInfoSerializer
+    serializer_class = AnnouncementInfoSerializer
 
     # 00-07 공지 리스트 조회
     def get(self, request):
@@ -45,7 +45,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
         announcement["visible"] = data["visible"]
         announcement["important"] = data["important"]
         announcement["created_user"] = request.user
-        serializer = serializers.AnnouncementSerializer(data=announcement)
+        serializer = AnnouncementSerializer(data=announcement)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -61,7 +61,7 @@ class AnnouncementDetailAdminView(APIView):
     # 00-12 announcement_id인 announcement 조회
     def get(self, request, pk):
         announcement = self.get_object(pk)
-        serializer = serializers.AnnouncementSerializer(announcement)
+        serializer = AnnouncementSerializer(announcement)
         return Response(serializer.data) # 0315
 
     # 00-09 announcement_id인 announcement 수정
@@ -75,7 +75,7 @@ class AnnouncementDetailAdminView(APIView):
         obj["visible"] = data["visible"]
         obj["important"] = data["important"]
         obj["created_user"] = announcement.created_user
-        serializer = serializers.AnnouncementSerializer(announcement, data=obj) # 0315
+        serializer = AnnouncementSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data) # 0315
@@ -101,7 +101,7 @@ class AnnouncementCheckAdminView(APIView):
         obj = {} # 0315
         obj["visible"] = data["visible"]
         obj["important"] = data["important"]
-        serializer = serializers.AnnouncementCheckSerializer(announcement, data=obj)
+        serializer = AnnouncementCheckSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data) # 0315

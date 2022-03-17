@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import User
-from .. import serializers
+from ..serializers import UserInfoSerializer, UserModifySerializer
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -19,7 +19,7 @@ class ListUsersView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdminUser]
 
     pagination_class = BasicPagination
-    serializer_class = serializers.UserInfoSerializer # 0315 이름으로만
+    serializer_class = UserInfoSerializer
 
     # 00-00 유저 전체 조회
     def get(self, request, format = None):
@@ -52,17 +52,17 @@ class AdminUserInfoView(APIView):
         data = request.data
         obj = {}
         obj["privilege"] = data["privilege"]
-        serializer = serializers.UserModifySerializer(user, data=obj) # 0315
+        serializer = UserModifySerializer(user, data=obj)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializers.UserInfoSerializer(user).data) # 0315
+            return Response(UserInfoSerializer(user).data) # 0315
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 00-01-02 유저 조회
     def get(self, request, username): # 0315
         user = self.get_object(username)
         try:
-            serializer = serializers.UserInfoSerializer(user) # 0315
+            serializer = UserInfoSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             raise Response(serializer.error, status=status.HTTP_400_BAD_REQUEST) # 0315
