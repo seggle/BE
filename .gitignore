@@ -10,6 +10,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 secrets.json
-uploads/problem
-uploads/solution
-uploads/submission
+uploads/*
+# uploads/problem
+# uploads/solution
+# uploads/submission

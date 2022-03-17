@@ -15,6 +15,7 @@ import os
 import shutil
 import uuid
 # Import mimetypes module
+from wsgiref.util import FileWrapper
 import mimetypes
 
 # permission import
@@ -245,6 +246,41 @@ class ProblemDataDownloadView(APIView):
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # result = /Users/ingyu/Desktop/BE/problem
         BASE_DIR = BASE_DIR.replace("/problem", "")
+        # print(BASE_DIR)
+        data_path = str(problem.data.path).split('uploads/', 1)[1]
+        filename = data_path.split('/', 2)[2]
+        filepath = BASE_DIR + '/uploads/' + data_path
+        print(filepath)
+        # Open the file for reading content
+        path = open(filepath, 'rb')
+        # Set the mime type
+        # mime_type, _ = mimetypes.guess_type(filepath)
+        # Set the return value of the HttpResponse
+        response = HttpResponse(FileWrapper(path), content_type='application/zip')
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        # Return the response value
+        return response
+
+class ProblemSolutionDownloadView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, problem_id):
+        problem = get_object_or_404(Problem, id=problem_id)
+        if problem.is_deleted:
+            return Http404
+        return problem
+
+    def get(self, request, problem_id):
+        problem = self.get_object(problem_id)
+        if problem == Http404:
+            message = {"error": "Problem이 존재하지 않습니다."}
+            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+
+        # Define Django project base directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # result = /Users/ingyu/Desktop/BE/problem
+        BASE_DIR = BASE_DIR.replace("/solution", "")
         # print(BASE_DIR)
 
         data_path = str(problem.data.path).split('uploads/', 1)[1]
