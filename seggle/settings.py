@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'submission',
     'exam',
     'leaderboard',
+    'password',
 ]
 
 MIDDLEWARE = [
