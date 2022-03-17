@@ -19,8 +19,7 @@ def rand_str(length=10, type="lower_hex"):
     else:
         return random.choice("123456789") + get_random_string(length - 1, allowed_chars="0123456789")
 
-# 0315 끝에 API 때고 view 넣기
-class ApplyResetPasswordAPI(APIView):
+class ApplyResetPasswordView(APIView):
     permission_classes = [AllowAny]
     # 11-00
     def post(self, request):
@@ -39,8 +38,7 @@ class ApplyResetPasswordAPI(APIView):
         EmailMessage(subject="Reset your passsword", body=email_body, to=[user.email], from_email="seggle.sejong@gmail.com").send()
         return Response({'success': 'We have sent you a mail to reset your password'}, status=status.HTTP_200_OK)
 
-# 0315 끝에 API 때고 view 넣기
-class ResetPasswordAPI(APIView):
+class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     # 11-02
     def post(self, request):
@@ -55,8 +53,7 @@ class ResetPasswordAPI(APIView):
         else:
             return Response({'error': "password1, password2 not same"}, status=status.HTTP_400_BAD_REQUEST)
 
-# 0315 끝에 view 넣기
-class ResetPasswordToken(APIView):
+class ResetPasswordTokenView(APIView):
     permission_classes = [AllowAny]
     # 11-01
     def post(self, request):
