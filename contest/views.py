@@ -143,9 +143,7 @@ class ContestProblemView(APIView):
 
                     order = Contest_problem.objects.filter(contest_id=contest_id).count() + 1
                     problem = Problem.objects.get(id=data['problem_id'])
-                    if (problem.public != 1) or (problem.is_deleted != 0):
-                        error['Error_problem_id'].append(data['problem_id'])
-                        continue
+              
                     
                     problem_data['contest_id'] = contest_id
                     problem_data['order'] = order
