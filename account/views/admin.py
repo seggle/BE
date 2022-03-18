@@ -47,11 +47,12 @@ class AdminUserInfoView(APIView):
 
     # 00-01 유저 정보 수정
     # privilege만 수정할 수 있음
-    def put(self, request, username): # 0315
+    def put(self, request, username):
         user = self.get_object(username=username)
         data = request.data
-        obj = {}
-        obj["privilege"] = data["privilege"]
+        obj = {
+            "privilege": data["privilege"]
+        }
         serializer = UserModifySerializer(user, data=obj)
         if serializer.is_valid():
             serializer.save()

@@ -132,8 +132,9 @@ class ContestProblemView(APIView):
                 # tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
                 # if tilte_check != 0:
                 #     return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
-                error = {}
-                error['Error_problem_id'] = []
+                error = {
+                    "Error_problem_id": []
+                }
                 for data in datas:
                     # exist and Problem id and public and is_deleted is not checking
                     problem_data = {}

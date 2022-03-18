@@ -37,14 +37,14 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
 
     # 00-08 공지 생성
     def post(self, request):
-        # 0315
         data = request.data
-        announcement = {}
-        announcement["title"] = data["title"]
-        announcement["context"] = data["context"]
-        announcement["visible"] = data["visible"]
-        announcement["important"] = data["important"]
-        announcement["created_user"] = request.user
+        announcement = {
+            "title": data["title"],
+            "context": data["context"],
+            "visible": data["visible"],
+            "important": data["important"],
+            "created_user": request.user
+        }
         serializer = AnnouncementSerializer(data=announcement)
         if serializer.is_valid():
             serializer.save()
@@ -68,13 +68,13 @@ class AnnouncementDetailAdminView(APIView):
     def put(self, request, pk):
         announcement = self.get_object(pk)
         data = request.data
-        # 0315
-        obj = {}
-        obj["title"] = data["title"]
-        obj["context"] = data["context"]
-        obj["visible"] = data["visible"]
-        obj["important"] = data["important"]
-        obj["created_user"] = announcement.created_user
+        obj = {
+            "title": data["title"],
+            "context": data["context"],
+            "visible": data["visible"],
+            "important": data["important"],
+            "creted_user": announcement.created_user
+        }
         serializer = AnnouncementSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()
@@ -98,9 +98,10 @@ class AnnouncementCheckAdminView(APIView):
     def put(self, request, pk):
         announcement = self.get_object(pk)
         data = request.data
-        obj = {} # 0315
-        obj["visible"] = data["visible"]
-        obj["important"] = data["important"]
+        obj = {
+            "visible": data["visible"],
+            "important": data["important"],
+        }
         serializer = AnnouncementCheckSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()

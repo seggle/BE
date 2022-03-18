@@ -81,11 +81,11 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         # data = request.data
-        # 0315
-        data = {}
-        data['ip_address'] = GetIpAddr(request)
-        data['user'] = request.user
-        data['contest'] = contest.id
+        data = {
+            "ip_address": GetIpAddr(request),
+            "user": request.user,
+            "contest": contest.id
+        }
 
         exam = self.get_object(contest_id=contest_id, user_id=request.user.username)
 

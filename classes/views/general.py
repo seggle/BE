@@ -46,12 +46,12 @@ class ClassView(APIView):
 
         #print(Create_Class.id)
         # 교수 본인 추가
-        # 0315
-        data = {}
-        data['username'] = request.user
-        data['privilege'] = 2
-        data["is_show"] = True
-        data["class_id"] = class_id
+        data = {
+            "username": request.user,
+            "privilege": 2,
+            "is_show": True,
+            "class_id": class_id
+        }
         # 0315
         serializer = Class_user_Serializer(data=data) #Request의 data를 UserSerializer로 변환
 
@@ -200,9 +200,10 @@ class ClassTaView(APIView):
                     users.delete()
 
         # ta 추가
-        user_does_not_exist = {}
-        user_does_not_exist['does_not_exist'] = []
-        user_does_not_exist['is_existed'] = []
+        user_does_not_exist = {
+            "does_not_exist": [],
+            "is_existed": []
+        }
         datas = request.data
         user_add = Class.objects.get(id=class_id)
         for data in datas:

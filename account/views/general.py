@@ -247,10 +247,9 @@ class UserCompetitionInfoView(APIView):
                 "title": competition.competition_id.problem_id.title,
                 "start_time": competition.competition_id.start_time,
                 "end_time": competition.competition_id.end_time,
+                "user_total": Competition_user.objects.filter(Q(competition_id=competition.competition_id.id)&Q(privilege=0)).count(),
+                "rank": None
             }
-            obj["user_total"] = Competition_user.objects.filter(Q(competition_id=competition.competition_id.id)&Q(privilege=0)).count()
-            obj["rank"] = None
-            # 0315
 
             leaderboard_list = SubmissionCompetition.objects.filter(Q(competition_id=competition.competition_id.id)&Q(path__on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0: # submission 내역이 있다면

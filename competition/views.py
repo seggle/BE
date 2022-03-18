@@ -39,11 +39,12 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
             competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
         obj_list = []
         for competition in competitions:
-            obj = {} # 0315
-            obj["problem"] = Problem.objects.get(id=competition.problem_id.id)
-            obj["id"] = competition.id
-            obj["start_time"] = competition.start_time
-            obj["end_time"] = competition.end_time
+            obj = {
+                "problem": Problem.objects.get(id=competition.problem_id.id),
+                "id": competition.id,
+                "start_time": competition.start_time,
+                "end_time": competition.end_time
+            }
             obj_list.append(obj)
         competition_detail_serializer = CompetitionDetailSerializer(obj_list, many=True)
         # page = self.paginate_queryset(obj_list)
@@ -78,21 +79,22 @@ class CompetitionView(APIView, PaginationHandlerMixin, CustomPermissionMixin):
                 competition_obj = competition.save()
                 # 대회 참가 - 교수님
                 # 0315
-                user_data = {}
-                user_data["username"] = request.user.username
-                user_data["privilege"] = 2
-                user_data["competition_id"] = competition_obj.id
+                user_data = {
+                    "username": request.user.username,
+                    "privilege": 2,
+                    "competition_id": competition.id
+                }
                 competition_user_serializer = CompetitionUserSerializer(data=user_data)
                 if competition_user_serializer.is_valid():
                     competition_user_serializer.save()
                     # 0315
                 # 대회 정보
-                # 0315
-                obj = {}
-                obj["problem"] = problem_obj
-                obj["id"] = competition_obj.id
-                obj["start_time"] = competition_obj.start_time
-                obj["end_time"] = competition_obj.end_time
+                obj = {
+                    "problem": problem_obj,
+                    "id": competition.id,
+                    "start_time": competition_obj.start_time,
+                    "end_time": competition_obj.end_time
+                }
                 competition_detail_serializer = CompetitionDetailSerializer(obj)
                 return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
             else:
@@ -127,16 +129,18 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         solution_path_s = solution_path.split('/', 2)
         solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
 
-        obj = {"id":competition.id,
-                "problem_id":problem.id,
-                "title":problem.title,
-                "start_time":competition.start_time,
-                "end_time":competition.end_time,
-                "description":problem.description,
-                "data":data_url,
-                "data_description":problem.data_description,
-                "solution":solution_url,
-                "evaluation":problem.evaluation}
+        obj = {
+            "id":competition.id,
+            "problem_id":problem.id,
+            "title":problem.title,
+            "start_time":competition.start_time,
+            "end_time":competition.end_time,
+            "description":problem.description,
+            "data":data_url,
+            "data_description":problem.data_description,
+            "solution":solution_url,
+            "evaluation":problem.evaluation
+        }
 
         return Response(obj, status=status.HTTP_200_OK)
 
@@ -152,11 +156,13 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
         data = request.data
         # problem 수정
-        obj = {"title": data["title"],
+        obj = {
+            "title": data["title"],
             "description": data["description"],
             "data_description": data["data_description"],
             "evaluation":data["evaluation"],
-            "public": False}
+            "public": False
+        }
         if data['data']:
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
@@ -180,10 +186,12 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
             competition_obj = competition_serializer.save()
         else:
             return Response(competition_serializer.error, status=status.HTTP_400_BAD_REQUEST)
-        obj2 = {"problem":problem_obj,
-                "id":competition_obj.id,
-                "start_time":competition_obj.start_time,
-                "end_time":competition_obj.end_time}
+        obj2 = {
+            "problem":problem_obj,
+            "id":competition_obj.id,
+            "start_time":competition_obj.start_time,
+            "end_time":competition_obj.end_time
+        }
         serializer = CompetitionDetailSerializer(obj2)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -224,11 +232,11 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         if Competition_user.objects.filter(username = request.user).filter(competition_id = competition_id).count():
             return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 0315
-        data = {}
-        data["username"] = request.user.username
-        data["privilege"] = 0
-        data["competition_id"] = competition_id
+        data = {
+            "username": request.user.username,
+            "privilege": 0,
+            "competition_id": competition_id
+        }
         serializer = CompetitionUserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
@@ -274,9 +282,10 @@ class CompetitionTaView(APIView, CustomPermissionMixin):
             return Response({'error':"추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # TA 추가
-        user_does_not_exist = {}
-        user_does_not_exist['does_not_exist'] = []
-        user_does_not_exist['is_existed'] = []
+        user_does_not_exist = {
+            "does_not_exist": [],
+            "is_existed": []
+        }
         datas = request.data
         for data in datas:
             is_check_user = User.objects.filter(username = data['username']).count()
