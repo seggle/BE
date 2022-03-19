@@ -280,10 +280,10 @@ class ProblemSolutionDownloadView(APIView):
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/solution", "")
+        BASE_DIR = BASE_DIR.replace("/problem", "")
         # print(BASE_DIR)
 
-        data_path = str(problem.data.path).split('uploads/', 1)[1]
+        data_path = str(problem.solution.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
         filepath = BASE_DIR + '/uploads/' + data_path
         print(filepath)

@@ -68,7 +68,7 @@ class IsProblemOwnerOrReadOnly(permissions.BasePermission):
         problem = Problem.objects.get(id=view.kwargs.get('problem_id',None))
 
         return request.method in permissions.SAFE_METHODS \
-               or problem.professr == request.user \
+               or problem.professor == request.user \
                or problem.created_user == request.user
 
 

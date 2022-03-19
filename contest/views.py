@@ -315,6 +315,7 @@ class ContestProblemOrderView(APIView):
                 else:
                     return Response("Success", status=status.HTTP_200_OK)
 
+
 class ContestProblemTitleDescptView(APIView):
     #permission_classes = [IsAdminUser]
 
@@ -325,6 +326,10 @@ class ContestProblemTitleDescptView(APIView):
     def get_object_contest(self, contest_id):
         contestid = generics.get_object_or_404(Contest, id = contest_id)
         return contestid
+
+    def get_object_contest_problem(self, cp_id):
+        cpid = generics.get_object_or_404(Contest_problem, id = cp_id)
+        return cpid
 
     #05-13-03
     def patch(self, request, **kwargs):
@@ -339,40 +344,18 @@ class ContestProblemTitleDescptView(APIView):
             else:
                 contest_id = kwargs.get('contest_id')
                 contestid = self.get_object_contest(contest_id)
+                if kwargs.get('cp_id') is None:
+                    return Response("", status=status.HTTP_400_BAD_REQUEST)
+                cp_id = kwargs.get('cp_id')
+                contest_problem = self.get_object_contest_problem(cp_id)
 
-                datas = request.data
-                error = {}
-                error['Error'] = []
-                error['Error_Contest_Problem_id'] = []
-
-                for data in datas:
-                    if Contest_problem.objects.filter(id=data['id']).count() == 0:
-                        error['Error_Contest_Problem_id'].append(data['id'])
-                        continue
-                    contest_problem = Contest_problem.objects.get(id=data['id'])
-                    
-                    if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-                        error['Error'].append(data['id'])
-                        continue
-                    
-                    # if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (Contest_problem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() == 0):
-                    #     error['Error_Problem_id'].append(data['problem_id'])
-                    #     continue
-
-                    # tilte_check = Contest_problem.objects.filter(contest_id = contest_id).filter(title = data['title']).count()
-                    # if tilte_check != 0:
-                    #     error['Error_title_is_existed'].append(data['title'])
-                    #     continue
-                        # return Response({'error':"이미 존재하는 제목입니다."}, status=status.HTTP_400_BAD_REQUEST)
-                    contest_problem.title = data['title']
-                    contest_problem.description = data['description']
-                    contest_problem.data_description = data['data_description']
-                    contest_problem.save(force_update=True)
-
-                if (len(error['Error']) != 0) or (len(error['Error_Contest_Problem_id']) != 0):
-                    return Response(error, status=status.HTTP_200_OK)
-                else:
-                    return Response("Success", status=status.HTTP_200_OK)
+                data = request.data
+                contest_problem.title = data['title']
+                contest_problem.description = data['description']
+                contest_problem.data_description = data['data_description']
+                contest_problem.problem_id.evaluation = data['evaluation']
+                contest_problem.save(force_update=True)
+                return Response("Success", status=status.HTTP_200_OK)
 
 class ContestProblemInfoView(APIView):
     #permission_classes = [IsAdminUser]
@@ -435,6 +418,7 @@ class ContestProblemInfoView(APIView):
                         "data_description": contest_problem.data_description,
                         "start_time": contest_problem.contest_id.start_time,
                         "end_time": contest_problem.contest_id.end_time,
+                        "evaluation": contest_problem.problem_id.evaluation,
                         # "problem_data": problem.data.path,
                         "problem_data": url,
                     }
