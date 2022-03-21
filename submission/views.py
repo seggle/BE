@@ -125,13 +125,18 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
             submission_class_list = submission_class_list.filter(c_p_id=cpid)
 
         obj_list = []
-        ip_addr = "3.37.186.158"
+        # ip_addr = "3.37.186.158"
+        ip_addr = "3.37.186.158:8000"
+
         for submission in submission_class_list:
             path = Path.objects.get(id=submission.path.id)
-            csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
-            csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
-            ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
-            ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            # csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
+            # csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
+            # ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
+            # ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(ip_addr, submission.id)
+            ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(ip_addr, submission.id)
+
             obj = {
                 "id": submission.id,
                 "username": submission.username,
@@ -297,13 +302,16 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
         obj_list = []
-        ip_addr = "3.37.186.158"
+        ip_addr = "3.37.186.158:8000"
         for submission in submission_comptition_list:
             path = Path.objects.get(id=submission.path.id)
-            csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
-            csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
-            ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
-            ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            # csv_path = str(submission.csv.path).replace("/home/ubuntu/BE/uploads/", "")
+            # csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
+            # ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
+            # ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
+            csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(ip_addr, submission.id)
+            ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(ip_addr, submission.id)
+
             obj = {
                 "id": submission.id,
                 "username": submission.username,

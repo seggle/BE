@@ -113,13 +113,18 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         problem = get_object_or_404(Problem, id=competition.problem_id.id)
 
         # url 설정
-        ip_addr = "3.37.186.158"
-        data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        data_path_s = data_path.split('/', 2)
-        data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, data_path_s[0], data_path_s[1], data_path_s[2])
-        solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-        solution_path_s = solution_path.split('/', 2)
-        solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
+        # ip_addr = "3.37.186.158"
+        # data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        # data_path_s = data_path.split('/', 2)
+        # data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, data_path_s[0], data_path_s[1], data_path_s[2])
+        # solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+        # solution_path_s = solution_path.split('/', 2)
+        # solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
+
+        ip_addr = "3.37.186.158:8000"
+        data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+
+        solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
 
         obj = {"id":competition.id,
                 "problem_id":problem.id,
