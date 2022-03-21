@@ -20,20 +20,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password" : {"write_only": True}
         }
 
-    def save(self):
-        user = User(
-            email = self.validated_data["email"],
-            username = self.validated_data["username"],
-            name = self.validated_data['name'],
-        )
-        password = self.validated_data["password"]
-        password2 = self.validated_data["password2"]
-
-        if password != password2 :
-            raise serializers.ValidationError({'password': 'Passwords must match'})
-        user.set_password(password)
-        user.save()
-        return user
 
 #admin 00-00
 class UserInfoSerializer(serializers.ModelSerializer):
