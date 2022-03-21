@@ -14,6 +14,7 @@ from rest_framework.parsers import MultiPartParser, JSONParser
 import os
 import shutil
 import uuid
+from utils.common import IP_ADDR
 # Import mimetypes module
 from wsgiref.util import FileWrapper
 import mimetypes
@@ -45,10 +46,10 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            ip_addr = "3.37.186.158:8000"
-            data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+            # ip_addr = "3.37.186.158:8000"
+            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-            solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
+            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
             problem_json = {}
             problem_json['id'] = problem.id
@@ -134,10 +135,10 @@ class ProblemDetailView(APIView):
         # solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, solution_path_s[0],
         #                                                                            solution_path_s[1],
         #                                                                            solution_path_s[2])
-        ip_addr = "3.37.186.158:8000"
-        data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+        # ip_addr = "3.37.186.158:8000"
+        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
+        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         cp_json = {
             "id": problem.id,

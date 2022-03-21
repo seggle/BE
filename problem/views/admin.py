@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
+from utils.common import IP_ADDR
 import os
 import shutil
 
@@ -45,10 +46,10 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
             #     path2 = ""
             # url2 = "http://{0}/{1}".format(ip_addr, path2)
 
-            ip_addr = "3.37.186.158:8000"
-            data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+            # ip_addr = "3.37.186.158:8000"
+            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-            solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
+            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
             problem_json = {}
             problem_json['id'] = problem.id
@@ -101,10 +102,10 @@ class AdminProblemDetailView(APIView):
         # except ValueError:
         #     data_url = ""
 
-        ip_addr = "3.37.186.158:8000"
-        data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+        # ip_addr = "3.37.186.158:8000"
+        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
+        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         cp_json = {
             "id": problem.id,

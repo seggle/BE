@@ -15,6 +15,7 @@ from utils.pagination import PaginationHandlerMixin
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.permission import CustomPermissionMixin
+from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
@@ -121,10 +122,9 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         # solution_path_s = solution_path.split('/', 2)
         # solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, solution_path_s[0], solution_path_s[1], solution_path_s[2])
 
-        ip_addr = "3.37.186.158:8000"
-        data_url = "http://{0}/api/problems/{1}/download/data".format(ip_addr, problem.id)
+        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(ip_addr, problem.id)
+        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         obj = {"id":competition.id,
                 "problem_id":problem.id,

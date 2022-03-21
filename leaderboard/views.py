@@ -6,6 +6,7 @@ from .serializers import LeaderboardClassSerializer, LeaderboardCompetitionSeria
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
+from utils.common import IP_ADDR
 
 def order(evaluation, obj_list):
     if evaluation in ["F1-score", "Accuracy"]:
@@ -36,7 +37,7 @@ class LeaderboardClassView(APIView):
             submission_class_list = submission_class_list.order_by('-path__score')
 
         obj_list = []
-        ip_addr = "3.37.186.158:8000"
+        # ip_addr = "3.37.186.158:8000"
         count = 1
         for submission in submission_class_list:
             if submission.path.on_leaderboard == False:
@@ -46,8 +47,8 @@ class LeaderboardClassView(APIView):
             # csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
             # ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
             # ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
-            csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(ip_addr, submission.id)
-            ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(ip_addr, submission.id)
+            csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
+            ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
             obj = {
                 "id": count,
@@ -82,7 +83,7 @@ class LeaderboardCompetitionView(APIView):
 
 
         obj_list = []
-        ip_addr = "3.37.186.158:8000"
+        # ip_addr = "3.37.186.158:8000"
         count = 1
         for submission in submission_competition_list:
             if submission.path.on_leaderboard == False:
@@ -92,8 +93,8 @@ class LeaderboardCompetitionView(APIView):
             # csv_url = "http://{0}/{1}" . format (ip_addr, csv_path)
             # ipynb_path = str(submission.ipynb.path).replace("/home/ubuntu/BE/uploads/", "")
             # ipynb_url = "http://{0}/{1}" . format (ip_addr, ipynb_path)
-            csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(ip_addr, submission.id)
-            ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(ip_addr, submission.id)
+            csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
+            ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
             obj = {
                 "id": count,
