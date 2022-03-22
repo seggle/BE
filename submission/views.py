@@ -69,7 +69,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
         temp = str(uuid.uuid4()).replace("-","")
         path_json['username'] = request.user
         path_json['path'] = temp
-        path_json['problem_id'] = contest_problem_id.id
+        path_json['problem_id'] = contest_problem_id.problem_id.id
         path_json['score'] = None
         # path_json['ip_address'] = data['ip_address']
         path_json['ip_address'] = GetIpAddr(request)
