@@ -13,11 +13,12 @@ class Problem(models.Model):
     data_description = models.TextField()
     public = models.BooleanField(default=False)
     evaluation = models.TextField() # 평가 방식
-    # 어느 클래스에서 만들어 졌는지
-    class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
-    # 삭제되었는지
+    class_ = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class_", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor", blank=True, null=True)
+
+    def __str__(self):
+        return self.id
 
     class Meta:
         db_table = "problem"

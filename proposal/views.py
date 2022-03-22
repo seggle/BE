@@ -6,7 +6,6 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
@@ -16,6 +15,7 @@ from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from . import serializers
 from django.db.models import F
+from utils.get_obj import *
 
 # Create your views here.
 
@@ -23,13 +23,8 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class ProposalView(APIView, PaginationHandlerMixin):
-
     # pagination
     pagination_class = BasicPagination
-
-    def get_object(self, proposal_id):
-        proposal = generics.get_object_or_404(Proposal, id = proposal_id)
-        return proposal
 
     def post(self,request):
         data = request.data
@@ -49,7 +44,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         if kwargs.get('proposal_id') is None:
             proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time')
             page = self.paginate_queryset(proposal_list)
-            
+
             if page is not None:
                 serializer = self.get_paginated_response(page)
             else:
@@ -59,7 +54,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         else:
 
             proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
+            proposal = get_proposal(proposal_id)
 
             proposal_list_serializer = serializers.ProposalSerializer(Proposal.objects.get(id=proposal_id))
             return Response(proposal_list_serializer.data, status=status.HTTP_200_OK)
@@ -69,7 +64,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
+            proposal = get_proposal(proposal_id)
 
             data = request.data
             user = Proposal.objects.get(id=proposal_id)
@@ -86,7 +81,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
         else:
             proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
+            proposal = get_proposal(proposal_id)
 
             user = Proposal.objects.get(id=proposal_id)
             if user.created_user == request.user:

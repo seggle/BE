@@ -10,7 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from utils.get_ip import GetIpAddr
 from contest.models import Contest
-
+from utils.get_obj import *
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -19,18 +19,9 @@ class BasicPagination(PageNumberPagination):
 class ExamParticipateView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
-
-        #0315
-    def get_contest(self,contest_id):
-        try:
-            contest = Contest.objects.get(id=contest_id)
-        except:
-            contest = Http404
-        return contest
-
-        #0315
     def get_object(self, contest_id, user_id):
-        contest = self.get_contest(contest_id = contest_id)
+        # 정범님 수정부탁드려요~ ㅎ.ㅎ
+        contest = get_contest(contest_id = contest_id)
         try:
             if contest == Http404:
                 exam = Http404
@@ -42,11 +33,11 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
 
     def get(self, request, class_id, contest_id):
         # 권한체크
-        #0315        # 해당 수업에 속해있는지 아닌지
+        # 0315        # 해당 수업에 속해있는지 아닌지
         # 만약 속해있다면 해당 수업의 privilege가 0 인지 아닌지
 
         try:
-            if request.user.class_user_set.get(class_id=class_id).privilege == 0:
+            if request.user.ClassUser_set.get(class_id=class_id).privilege == 0:
                 message = {"error": "해당 class의 교수 또는 TA가 아닙니다."}
                 return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -68,7 +59,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         # 그 class에 등록되어 있는 사람인지 아닌지
         # 0315
         try:
-            if request.user.class_user_set.get(class_id=class_id):
+            if request.user.ClassUser_set.get(class_id=class_id):
                 pass
         except:
             message = {"error": "해당 class에 속하지 않습니다."}
@@ -86,7 +77,6 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             "user": request.user,
             "contest": contest.id
         }
-
         exam = self.get_object(contest_id=contest_id, user_id=request.user.username)
 
         # 기존 ip제출 내역이 없다면
@@ -132,12 +122,8 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
 
 class ExamExceptionView(APIView):
 
-    def get_object(self, exam_id):
-        exam = get_object_or_404(Exam, id=exam_id)
-        return exam
-
     def post(self, request, class_id, contest_id, exam_id):
-        exam = self.get_object(exam_id)
+        exam = get_exam(exam_id)
         if exam == Http404:
             message = {'error': '해당하는 제출 내역이 없습니다.'}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -149,12 +135,8 @@ class ExamExceptionView(APIView):
 
 class ExamResetView(APIView):
 
-    def get_object(self, exam_id):
-        exam = get_object_or_404(Exam, id=exam_id)
-        return exam
-
     def post(self, request, class_id, contest_id, exam_id):
-        exam = self.get_object(exam_id)
+        exam = get_exam(exam_id)
         if exam == Http404:
             message = {'error': '해당하는 제출 내역이 없습니다.'}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)

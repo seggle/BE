@@ -1,7 +1,6 @@
 from django.db.models import Q
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -10,7 +9,7 @@ from rest_framework import status, generics
 from django.contrib.auth.hashers import check_password
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, UserCompetitionSerializer
-from classes.models import Class, Class_user
+from classes.models import Class, ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import Competition_user
 from submission.models import SubmissionClass, SubmissionCompetition
@@ -19,6 +18,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from utils import permission
+from utils.get_obj import *
 
 # 0315 serializer에서 view로 다 옮길 것인지 고민중
 class UserRegisterView(APIView):
@@ -64,19 +64,14 @@ class UserInfoView(APIView):
 
     permission_classes = [permission.IsRightUser]
 
-    # 0315
-    def get_object(self, username): # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username = username)
-        return user
-
     # 01-07 유저 조회
     def get(self, request, username, format=None):
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
         competition = Competition_user.objects.filter(username=user.username)
-        classes = Class_user.objects.filter(username=user.username)
+        classes = ClassUser.objects.filter(username=user.username)
         obj = {"id":user.id,
                 "email":user.email,
                 "username":user.username,
@@ -93,7 +88,7 @@ class UserInfoView(APIView):
     def patch(self, request, username):
         data = request.data
         current_password = data["current_password"]
-        user = self.get_object(username)
+        user = get_username(username)
         if check_password(current_password, user.password):
             new_password = data["new_password"]
             password_confirm = data["new_password2"]
@@ -109,7 +104,7 @@ class UserInfoView(APIView):
     # 01-08 회원탈퇴
     def delete(self, request, username):
         data = request.data
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check # 0315
         if request.user.username != user.username:
             return Response({"error":"탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
@@ -124,17 +119,14 @@ class UserInfoView(APIView):
 
 
 class ClassInfoView(APIView):
-    # def get_object(self, username): # 존재하는 인스턴스인지 판단
-    #     user = get_object_or_404(User, username = username)
-    #     return user
-    def get_object(self, class_id):
-        classid = generics.get_object_or_404(Class, id = class_id)
-        return classid
+    # def get_object(self, class_id):
+    #     classid = generics.get_object_or_404(Class, id = class_id)
+    #     return classid
 
     # 01-09 유저 Class 조회
     def get(self, request):
         class_name_list = []
-        class_lists = Class_user.objects.filter(username=request.user)
+        class_lists = ClassUser.objects.filter(username=request.user)
         for class_list in class_lists:
             #print(class_list)
             class_add_is_show = {}
@@ -152,9 +144,9 @@ class ClassInfoView(APIView):
         #class_id = kwargs.get('class_id')
         datas = request.data
 
-        class_user_list = Class_user.objects.filter(username=request.user)
+        ClassUser_list = ClassUser.objects.filter(username=request.user)
 
-        for user in class_user_list:
+        for user in ClassUser_list:
             user.is_show = False
             user.save(force_update=True)
 
@@ -163,12 +155,12 @@ class ClassInfoView(APIView):
 
         for data in datas:
             #classid = self.get_object(data['class_id'])
-            class_user = class_user_list.filter(class_id=data['class_id'])
-            if class_user.count() == 0:
+            ClassUser = ClassUser_list.filter(class_id=data['class_id'])
+            if ClassUser.count() == 0:
                 does_not_exist['does_not_exist'].append(data['class_id'])
                 continue
 
-            user = class_user[0]
+            user = ClassUser[0]
             user.is_show = True
             user.save(force_update=True)
         if len(does_not_exist['does_not_exist']) == 0:
@@ -177,14 +169,9 @@ class ClassInfoView(APIView):
             return Response(does_not_exist, status=status.HTTP_200_OK)
 
 class ContributionsView(APIView):
-
-    def get_user(self, username): # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username = username)
-        return user
-
     # 01-12 유저 잔디밭 조회
     def get(self, request, username):
-        user = self.get_user(username)
+        user = get_username(username)
 
         # 0315
         # permission check
@@ -222,14 +209,9 @@ class ContributionsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserCompetitionInfoView(APIView):
-
-    def get_object(self, username): # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username = username)
-        return user
-
     # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error":"접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)

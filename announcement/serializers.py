@@ -7,12 +7,9 @@ class UsernameSerializer(serializers.ModelSerializer):
 		fields = ('id', 'username')
 
 class AnnouncementSerializer (serializers.ModelSerializer):
-    # created_user = UsernameSerializer(read_only=True)
-
     class Meta:
         model = Announcement
-        fields = "__all__"
-        # extra_kwargs = {'created_user': {'read_only':True}}
+        fields = ['id', 'title', 'context', 'created_user', 'created_time', 'last_modified', 'visible', 'important']
 
 class AnnouncementInfoSerializer(serializers.ModelSerializer):
     class Meta:

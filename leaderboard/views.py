@@ -6,11 +6,9 @@ from .serializers import LeaderboardClassSerializer, LeaderboardCompetitionSeria
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework import status
+from utils.get_obj import *
 
 class LeaderboardClassView(APIView):
-    def get_object_contest_problem(self, cp_id):
-        cpid = get_object_or_404(Contest_problem, id = cp_id)
-        return cpid
 
     def get(self, request, **kwargs):
         # competition_id = kwargs.get('competition_id')
@@ -18,7 +16,7 @@ class LeaderboardClassView(APIView):
         if kwargs.get('cp_id') is None:
             return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
         cp_id = kwargs.get('cp_id')
-        cpid = self.get_object_contest_problem(cp_id)
+        cpid = get_contest_problem(cp_id)
         submission_class_list = SubmissionClass.objects.filter(c_p_id=cp_id)
 
         # 정렬 # 0315
@@ -55,12 +53,8 @@ class LeaderboardClassView(APIView):
 
 class LeaderboardCompetitionView(APIView):
 
-    def get_object(self, competition_id):
-        competition = get_object_or_404(Competition, id=competition_id)
-        return competition
-
     def get(self, request, competition_id):
-        competition = self.get_object(competition_id)
+        competition = get_competition(competition_id)
         submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition.id)
 
         # 정렬

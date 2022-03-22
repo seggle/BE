@@ -6,29 +6,31 @@ from problem.models import Problem
 
 
 class Contest(models.Model):
-    class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id")
+    class_ = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_")
     name = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_exam = models.BooleanField(default=False)
-    # 0315
-    problems = models.ManyToManyField('Contest_problem', related_name="contests", blank=True)
     visible = models.BooleanField(default=True)
-    # 0315 is_deleted 추가
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.id
 
     class Meta:
         db_table = "contest"
 
-# contest와 problem사이의 다대다 테이블
-# 0315
-class Contest_problem(models.Model):
-    contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
-    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
+class ContestProblem(models.Model):
+    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest")
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem")
     title = models.TextField()
     description = models.TextField()
     data_description = models.TextField()
     order = models.IntegerField()
-    # 0315 is_deleted 추가
+    is_deleted = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.id
 
     class Meta:
         db_table = "contest_problem"

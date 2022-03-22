@@ -7,7 +7,8 @@ from competition.serializers import CompetitionUserGetInfoSerializer
 class UserSerializer (serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "username","email","name","privilege","is_active", "is_admin", "is_staff", "is_superuser", "date_joined", "reset_password_token", "reset_password_token_expire_time"]
 
 # 유저 회원가입
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -20,20 +21,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password" : {"write_only": True}
         }
 
-    def save(self):
-        user = User(
-            email = self.validated_data["email"],
-            username = self.validated_data["username"],
-            name = self.validated_data['name'],
-        )
-        password = self.validated_data["password"]
-        password2 = self.validated_data["password2"]
-
-        if password != password2 :
-            raise serializers.ValidationError({'password': 'Passwords must match'})
-        user.set_password(password)
-        user.save()
-        return user
 
 #admin 00-00
 class UserInfoSerializer(serializers.ModelSerializer):

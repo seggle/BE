@@ -3,13 +3,14 @@ from ..models import Problem
 from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
 from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
+from utils.common import IP_ADDR
+from utils.get_obj import *
 import os
 import shutil
 import uuid
@@ -41,26 +42,20 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            ip_addr = "3.37.186.158"
-            path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-            path_s = path.split('/', 2)
-            url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, path_s[0], path_s[1], path_s[2])
+            # ip_addr = "3.37.186.158:8000"
+            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
 
-            path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-            path2_s = path2.split('/', 2)
-            url2 = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, path2_s[0], path2_s[1],
-                                                                               path2_s[2])
-
-            # 0315
-            problem_json = {}
-            problem_json['id'] = problem.id
-            problem_json['title'] = problem.title
-            problem_json['created_time'] = problem.created_time
-            problem_json['created_user'] = problem.created_user.username
-            problem_json['data'] = url
-            problem_json['solution'] = url2
-            problem_json['public'] = problem.public
-            problem_json['class_id'] = problem.class_id.id
+            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+            problem_json = {
+                "id": problem.id,
+                "title": problem.title,
+                "created_time" : problem.created_time,
+                "created_user" : problem.created_user.username,
+                "data" : data_url,
+                "solution" : solution_url,
+                "public" : problem.public,
+                "class_id" : problem.class_id.id
+            }
             new_problems.append(problem_json)
 
         # page = self.paginate_queryset(problems)
@@ -115,15 +110,8 @@ class ProblemDetailView(APIView):
 
     # parser_classes = [MultiPartParser, JSONParser]
 
-    # 0315
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -157,7 +145,7 @@ class ProblemDetailView(APIView):
         return Response(cp_json, status=status.HTTP_200_OK)
 
     def put(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -192,7 +180,7 @@ class ProblemDetailView(APIView):
             return Response(data)
 
     def delete(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -208,14 +196,8 @@ class ProblemDetailView(APIView):
 class ProblemVisibilityView(APIView):
     # permission_classes = [AllowAny]
 
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
     def post(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problm이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -229,15 +211,10 @@ class ProblemVisibilityView(APIView):
 # 0315
 class ProblemDataDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
-
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
+    # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)

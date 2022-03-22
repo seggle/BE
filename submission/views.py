@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from utils.evaluation import EvaluationMixin
 from utils.get_ip import GetIpAddr
+from utils.get_obj import *
 from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -18,17 +19,6 @@ import uuid
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
-    def get_object_class(self, class_id):
-        classid = get_object_or_404(Class, id = class_id)
-        return classid
-
-    def get_object_contest(self, contest_id):
-        contestid = get_object_or_404(Contest, id = contest_id)
-        return contestid
-
-    def get_object_contest_problem(self, cp_id):
-        cpid = get_object_or_404(Contest_problem, id = cp_id)
-        return cpid
 
     # 05-16
     def post(self, request, **kwargs):
@@ -39,11 +29,11 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if kwargs.get('cp_id') is None:
             return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
         class_id = kwargs.get('class_id')
-        classid = self.get_object_class(class_id)
+        classid = get_class(class_id)
         contest_id = kwargs.get('contest_id')
-        contestid = self.get_object_contest(contest_id)
+        contestid = get_contest(contest_id)
         cp_id = kwargs.get('cp_id')
-        cpid = self.get_object_contest_problem(cp_id)
+        cpid = get_contest_problem(cp_id)
 
         username = kwargs.get('username')
 
@@ -60,26 +50,27 @@ class SubmissionClassView(APIView, EvaluationMixin):
         #
 
         data = request.data.copy()
-
-        path_json = {}
         temp = str(uuid.uuid4()).replace("-","")
-        path_json['username'] = request.user
-        path_json['path'] = temp
-        path_json['problem_id'] = contest_problem_id.id
-        path_json['score'] = None
-        # path_json['ip_address'] = data['ip_address']
-        path_json['ip_address'] = GetIpAddr(request)
-        # path_json['on_leaderboard'] = request.user
-        # path_json['status'] = 0
 
-        submission_json = {}
-        submission_json['username'] = request.user
-        submission_json['class_id'] = contest_problem_id.contest_id.class_id.id
-        submission_json['contest_id'] = contest_problem_id.contest_id.id
-        submission_json['c_p_id'] = contest_problem_id.id
-        submission_json['csv'] = data['csv']
-        submission_json['ipynb'] = data['ipynb']
+        path_json = {
+            "username": request.user,
+            "path": temp,
+            "problem_id": contest_problem_id.problem_id.id,
+            "score": None,
+            "ip_address": GetIpAddr(request)
+            # path_json['ip_address'] = data['ip_address']
+            # path_json['on_leaderboard'] = request.user
+            # path_json['status'] = 0
+        }
 
+        submission_json = {
+            "username": request.user,
+            "class_id": contest_problem_id.contest_id.class_id.id,
+            "contest_id": contest_problem_id.contest_id.id,
+            "c_p_id": contest_problem_id.id,
+            "csv": data['csv'],
+            "ipynb": data['ipynb']
+        }
 
         path_serializer = PathSerializer(data=path_json)
         if path_serializer.is_valid():
@@ -150,18 +141,6 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class SubmissionClassCheckView(APIView):
-    def get_object_class(self, class_id):
-        classid = get_object_or_404(Class, id = class_id)
-        return classid
-
-    def get_object_contest(self, contest_id):
-        contestid = get_object_or_404(Contest, id = contest_id)
-        return contestid
-
-    def get_object_contest_problem(self, cp_id):
-        cpid = get_object_or_404(Contest_problem, id = cp_id)
-        return cpid
-
     # 05-17
     def patch(self, request, **kwargs):
         if kwargs.get('class_id') is None:
@@ -171,11 +150,11 @@ class SubmissionClassCheckView(APIView):
         if kwargs.get('cp_id') is None:
             return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
         class_id = kwargs.get('class_id')
-        classid = self.get_object_class(class_id)
+        classid = get_class(class_id)
         contest_id = kwargs.get('contest_id')
-        contestid = self.get_object_contest(contest_id)
+        contestid = get_contest(contest_id)
         cp_id = kwargs.get('cp_id')
-        cpid = self.get_object_contest_problem(cp_id)
+        cpid = get_contest_problem(cp_id)
 
         data = request.data
         class_submission = SubmissionClass.objects.get(id=data['id'])
@@ -204,20 +183,9 @@ class SubmissionClassCheckView(APIView):
 
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
-    def get_competition(self, competition_id):
-        competition = get_object_or_404(Competition, id=competition_id)
-        problem = get_object_or_404(Problem, id=competition.problem_id.id)
-        if problem.is_deleted: # 삭제된 문제인 경우 False 반환
-            return False
-        else:
-            return competition
-
-    def get_user(self, username):
-        user = get_object_or_404(User, username=username)
-        return user
 
     def check_participation(self, competition_id, username):
-        user = self.get_user(username)
+        user = get_username(username)
         if Competition_user.objects.filter(username = username).filter(competition_id = competition_id).count() == 0:
             return False
         return user
@@ -237,7 +205,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
 
         # problem check
-        competition = self.get_competition(competition_id=competition_id)
+        competition = get_competition(competition_id)
         if competition is False:
             return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -326,20 +294,12 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
 
 class SubmissionCompetitionCheckView(APIView):
 
-    def get_competition(self, competition_id):
-        competition = get_object_or_404(Competition, id=competition_id)
-        return competition
-
-    def get_submissionCompetition(self, id):
-        competition_submission = get_object_or_404(SubmissionCompetition, id=id)
-        return competition_submission
-
     # 06-06 submission 리더보드 체크
     def patch(self, request, competition_id):
-        competition = self.get_competition(competition_id)
+        competition = get_competition(competition_id)
 
         data = request.data
-        competition_submission = self.get_submissionCompetition(id=data["id"])
+        competition_submission = get_submissionCompetition(id=data["id"])
 
         if competition_submission.username.username != request.user.username:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)

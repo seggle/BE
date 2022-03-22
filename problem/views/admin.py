@@ -1,4 +1,3 @@
-from utils import permission
 from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
@@ -12,6 +11,8 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
+from utils import permission
+from utils.get_obj import *
 import os
 import shutil
 
@@ -44,15 +45,17 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
             except ValueError:
                 path2 = ""
             url2 = "http://{0}/{1}".format(ip_addr, path2)
-            problem_json = {}
-            problem_json['id'] = problem.id
-            problem_json['title'] = problem.title
-            problem_json['created_time'] = problem.created_time
-            problem_json['created_user'] = problem.created_user.username
-            problem_json['data'] = url
-            problem_json['solution'] = url2
-            problem_json['public'] = problem.public
-            problem_json['class_id'] = problem.class_id.id
+            problem_json = {
+                "id" : problem.id,
+                "title" : problem.title,
+                "created_time" : problem.created_time,
+                "created_user" : problem.created_user.username,
+                "data" : url,
+                "solution" : url2,
+                "public" : problem.public,
+                "class_id" : problem.class_id.id
+
+            }
             new_problems.append(problem_json)
 
         # page = self.paginate_queryset(problems)
@@ -71,14 +74,8 @@ class AdminProblemDetailView(APIView):
 
     # parser_classes = [MultiPartParser, JSONParser]
 
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -113,7 +110,7 @@ class AdminProblemDetailView(APIView):
         return Response(cp_json, status=status.HTTP_200_OK)
 
     def put(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
@@ -148,7 +145,7 @@ class AdminProblemDetailView(APIView):
             return Response(data)
 
     def delete(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
         if problem == Http404:
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)

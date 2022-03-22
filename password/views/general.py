@@ -33,8 +33,7 @@ class ApplyResetPasswordView(APIView):
         user.reset_password_token = rand_str()
         user.reset_password_token_expire_time = now() + timedelta(minutes=5)
         user.save()
-        # 0315 문구 좀 더 멋있게
-        email_body = f"{user.username}님 비밀번호 리셋 인증 번호입니다.\n{user.reset_password_token}\n까먹지마세요"
+        email_body = f"{user.username}님 안녕하세요.\n비밀번호 리셋 인증 번호입니다.\n{user.reset_password_token}\n해당 Key를 비밀번호 리셋 페이지에서 입력해주세요."
         EmailMessage(subject="Reset your passsword", body=email_body, to=[user.email], from_email="seggle.sejong@gmail.com").send()
         return Response({'success': 'We have sent you a mail to reset your password'}, status=status.HTTP_200_OK)
 
