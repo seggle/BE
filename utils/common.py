@@ -1,7 +1,7 @@
 # from django.contrib.sites.models import Site
 import uuid
 
-IP_ADDR = "15.165.30.200:8000"
+IP_ADDR = "3.37.186.158:8000"
 
 def upload_to_data(instance, filename):
     instance_slug = getattr(instance,"slug",False)
