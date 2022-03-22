@@ -4,18 +4,19 @@ from .models import Contest, Contest_problem
 class ContestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contest
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "class_id", "name", "start_time", "end_time", "is_exam", "problems", "visible"]
 
 class ContestGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contest
-        #fields = "__all__"
         fields = ["id", "class_id", "name", "start_time", "end_time", "is_exam", "visible"]
 
 class ContestProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contest_problem
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "contest_id", "problem_id", "title", "description", "data_description", "order"]
 
 # class ClassAdminGetSerializer(serializers.ModelSerializer):
 #     class Meta:

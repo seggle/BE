@@ -42,7 +42,8 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
 class CompetitionUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition_user
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "competition_id", "username", "is_show", "privilege"]
 
 class CompetitionUserGetSerializer(serializers.ModelSerializer):
     class Meta:

@@ -7,7 +7,8 @@ from competition.serializers import CompetitionUserGetInfoSerializer
 class UserSerializer (serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "username","email","name","privilege","is_active", "is_admin", "is_staff", "is_superuser", "date_joined", "reset_password_token", "reset_password_token_expire_time"]
 
 # 유저 회원가입
 class UserRegisterSerializer(serializers.ModelSerializer):
