@@ -5,7 +5,7 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
@@ -17,7 +17,7 @@ from .. import serializers
 
 class FaqView(APIView):
     def get_object(self, faq_id):
-        faq = generics.get_object_or_404(Faq, id = faq_id)
+        faq = get_object_or_404(Faq, id = faq_id)
         return faq
 
     def get(self, request):
