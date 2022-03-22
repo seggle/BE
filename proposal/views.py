@@ -47,7 +47,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
     def get(self, request, **kwargs):
 
         if kwargs.get('proposal_id') is None:
-            proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time')
+            proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time').order_by('-created_time')
             page = self.paginate_queryset(proposal_list)
             
             if page is not None:

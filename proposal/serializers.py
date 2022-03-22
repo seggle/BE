@@ -6,5 +6,5 @@ class ProposalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Proposal
-        #fields = ["id", "title", "context", "created_user", "created_time"]
-        fields = "__all__"
+        # fields = "__all__"
+        fields = ["id", "title", "context", "created_user", "created_time"]

@@ -17,6 +17,7 @@ from account.models import User
 from problem.models import Problem
 from .models import Contest, Contest_problem
 from . import serializers
+from utils.common import IP_ADDR
 
 # Create your views here.
 
@@ -404,11 +405,13 @@ class ContestProblemInfoView(APIView):
 
                     problem = Problem.objects.get(id=contest_problem.problem_id.id)
                     
-                    ip_addr = "3.37.186.158"
-                    path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-                    path_s = path.split('/', 2)
-                    url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path_s[0], path_s[1], path_s[2])
+                    # ip_addr = "3.37.186.158"
+                    # path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+                    # path_s = path.split('/', 2)
+                    # url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}" . format (ip_addr, path_s[0], path_s[1], path_s[2])
 
+                    
+                    data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
                     cp_json = {
                         "id": contest_problem.id,
                         "contest_id": contest_problem.contest_id.id,
@@ -420,7 +423,7 @@ class ContestProblemInfoView(APIView):
                         "end_time": contest_problem.contest_id.end_time,
                         "evaluation": contest_problem.problem_id.evaluation,
                         # "problem_data": problem.data.path,
-                        "problem_data": url,
+                        "problem_data": data_url,
                     }
 
                     #serializer = serializers.ContestProblemSerializer(contest_problem, many=True)

@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
+from utils.common import IP_ADDR
 import os
 import shutil
 
@@ -33,24 +34,30 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            ip_addr = "3.37.186.158"
-            try:
-                path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-            except ValueError:
-                path = ""
-            url = "http://{0}/{1}".format(ip_addr, path)
-            try:
-                path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-            except ValueError:
-                path2 = ""
-            url2 = "http://{0}/{1}".format(ip_addr, path2)
+            # ip_addr = "3.37.186.158"
+            # try:
+            #     path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+            # except ValueError:
+            #     path = ""
+            # url = "http://{0}/{1}".format(ip_addr, path)
+            # try:
+            #     path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+            # except ValueError:
+            #     path2 = ""
+            # url2 = "http://{0}/{1}".format(ip_addr, path2)
+
+            # ip_addr = "3.37.186.158:8000"
+            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+
+            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+
             problem_json = {}
             problem_json['id'] = problem.id
             problem_json['title'] = problem.title
             problem_json['created_time'] = problem.created_time
             problem_json['created_user'] = problem.created_user.username
-            problem_json['data'] = url
-            problem_json['solution'] = url2
+            problem_json['data'] = data_url
+            problem_json['solution'] = solution_url
             problem_json['public'] = problem.public
             problem_json['class_id'] = problem.class_id.id
             new_problems.append(problem_json)
@@ -83,17 +90,22 @@ class AdminProblemDetailView(APIView):
             message = {"error": "Problem이 존재하지 않습니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
-        ip_addr = "3.37.186.158"
-        try:
-            data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-            data_url = "http://{0}/{1}".format(ip_addr, data_path)
-        except ValueError:
-            data_url = ""
-        try:
-            solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-            solution_url = "http://{0}/{1}".format(ip_addr, solution_path)
-        except ValueError:
-            data_url = ""
+        # ip_addr = "3.37.186.158"
+        # try:
+        #     data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
+        #     data_url = "http://{0}/{1}".format(ip_addr, data_path)
+        # except ValueError:
+        #     data_url = ""
+        # try:
+        #     solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
+        #     solution_url = "http://{0}/{1}".format(ip_addr, solution_path)
+        # except ValueError:
+        #     data_url = ""
+
+        # ip_addr = "3.37.186.158:8000"
+        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+
+        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         cp_json = {
             "id": problem.id,
