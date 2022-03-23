@@ -8,10 +8,11 @@ class LeaderboardClassSerializer(serializers.ModelSerializer):
     created_time = serializers.DateTimeField()
     csv = serializers.CharField()
     ipynb = serializers.CharField()
+    submission_id = serializers.IntegerField()
 
     class Meta:
         model = SubmissionClass
-        fields = ["id", "username", "name", "score", "created_time", "csv", "ipynb"]
+        fields = ["id", "username", "name", "score", "created_time", "csv", "ipynb", "submission_id"]
 
 class LeaderboardCompetitionSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
@@ -19,7 +20,8 @@ class LeaderboardCompetitionSerializer(serializers.ModelSerializer):
     created_time = serializers.DateTimeField()
     csv = serializers.CharField()
     ipynb = serializers.CharField()
+    submission_id = serializers.IntegerField()
 
     class Meta:
         model = SubmissionCompetition
-        fields = ["id", "username", "name", "score", "created_time", "csv", "ipynb"]
+        fields = ["id", "username", "name", "score", "created_time", "csv", "ipynb", "submission_id"]

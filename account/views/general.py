@@ -264,7 +264,7 @@ class UserCompetitionInfoView(APIView):
         competition_list = Competition_user.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
-            return Response({"error": "참가 중인 대회가 없습니다."}, status=status.HTTP_200_OK)
+            return Response([], status=status.HTTP_200_OK)
 
         obj_list = []
         for competition in competition_list:

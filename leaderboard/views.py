@@ -52,6 +52,7 @@ class LeaderboardClassView(APIView):
 
             obj = {
                 "id": count,
+                "submission_id":submission.id,
                 "username": submission.username,
                 "name": submission.username.name,
                 "score": path.score,
@@ -98,6 +99,7 @@ class LeaderboardCompetitionView(APIView):
 
             obj = {
                 "id": count,
+                "submission_id":submission.id,
                 "username": submission.username,
                 "name": submission.username.name,
                 "score": path.score,
