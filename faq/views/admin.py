@@ -26,7 +26,7 @@ class FaqAdminView(APIView):
         data["created_user"] = request.user
         serializer = FaqSerializer(data=data)
         if serializer.is_valid():
-            serializer.save() 
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -51,33 +51,22 @@ class FaqAdminView(APIView):
 
     def delete(self, request, faq_id):
         faq = get_faq(faq_id)
-        if kwargs.get('faq_id') is None:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        if faq.created_user == request.user:
+            faq.delete()
+            return Response(msg_success, status=status.HTTP_200_OK)
         else:
-            faq_id = kwargs.get('faq_id')
-            faq = get_faq(faq_id)
-
-            user = Faq.objects.get(id=faq_id)
-            if user.created_user == request.user:
-                user.delete()
-                return Response(msg_success, status=status.HTTP_200_OK)
-            else:
-                return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
 class FaqCheckAdminView(APIView):
     permission_classes = [permission.IsAdmin] # 어드민만 가능한것
 
     def post(self,request):
         data = request.data
-
         faq_id = data['id']
         faq = get_faq(faq_id)
-
-        user = Faq.objects.get(id=faq_id)
-        if user.created_user == request.user:
-            user.visible = not user.visible
-            user.save(force_update=True)
-            serializer = FaqSerializer(Faq.objects.get(id=faq_id)) #Request의 data를 UserSerializer로 변환
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        if faq.created_user == request.user:
+            faq.visible = not faq.visible
+            faq.save(force_update=True)
+            return Response(msg_success, status=status.HTTP_200_OK)
         else:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)

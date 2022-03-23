@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, Blac
 from rest_framework import status
 from django.http import JsonResponse
 from ..models import Faq
-from .. import serializers
+from ..serializers import FaqSerializer
 from utils.get_obj import *
 
 # Create your views here.
@@ -20,5 +20,5 @@ class FaqView(APIView):
 
     def get(self, request):
         faq_list = Faq.objects.exclude(visible=False)
-        faq_list_serializer = serializers.FaqSerializer(faq_list, many=True)
+        faq_list_serializer = FaqSerializer(faq_list, many=True)
         return Response(faq_list_serializer.data, status=status.HTTP_200_OK)

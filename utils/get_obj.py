@@ -66,7 +66,7 @@ def get_contest(id):
 
 # contest_problem
 def get_contest_problem(id):
-    contestproblem = get_object_or_404(ContestProblem, id = id)
+    contestproblem = get_object_or_404(ContestProblem, id=id)
     return contestproblem
 
 def get_submissionCompetition(id):
