@@ -121,9 +121,9 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
         submission_class_list = SubmissionClass.objects.all()
 
         if username:
-            submission_class_list = submission_class_list.filter(username=username)
+            submission_class_list = submission_class_list.filter(username=username).order_by('-path__created_time')
         if cpid:
-            submission_class_list = submission_class_list.filter(c_p_id=cpid)
+            submission_class_list = submission_class_list.filter(c_p_id=cpid).order_by('-path__created_time')
 
         obj_list = []
         # ip_addr = "3.37.186.158"
@@ -299,7 +299,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         if Competition.objects.filter(id = competition_id).count() == 0:
             return Response({"error":"존재 하지 않는 대회 입니다. "}, status=status.HTTP_400_BAD_REQUEST)
 
-        submission_comptition_list =SubmissionCompetition.objects.filter(competition_id = competition_id)
+        submission_comptition_list =SubmissionCompetition.objects.filter(competition_id = competition_id).order_by('-path__created_time')
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
         obj_list = []
