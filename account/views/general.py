@@ -327,7 +327,7 @@ class UserCompetitionPrivilege(APIView):
         competition = self.get_object(competition_id)
         username = request.user
         try:
-            privilege = Competition_user.objects.get(competition_id=competition, username=username)
+            privilege = Competition_user.objects.get(competition_id=competition, username=username).privilege
         except:
             privilege = -1
         data = {'privilege': privilege}
