@@ -62,6 +62,7 @@ class LeaderboardClassView(APIView):
             }
             obj_list.append(obj)
             count = count + 1
+
         serializer = LeaderboardClassSerializer(obj_list, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -81,7 +82,7 @@ class LeaderboardCompetitionView(APIView):
             submission_competition_list = submission_competition_list.order_by('-path__score')
         else:
             submission_competition_list = submission_competition_list.order_by('path__score')
-
+        
 
         obj_list = []
         # ip_addr = "3.37.186.158:8000"

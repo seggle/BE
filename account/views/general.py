@@ -11,7 +11,7 @@ from rest_framework import status, generics
 from django.contrib.auth.hashers import check_password
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer
+    UserCompetitionSerializer, UserClassPrivilege
 from classes.models import Class, Class_user
 from classes.serializers import ClassGetSerializer
 from competition.models import Competition_user
@@ -296,3 +296,20 @@ class UserCompetitionInfoView(APIView):
 
         serializer = UserCompetitionSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserClassPrivilege(APIView):
+    def get_object(self, class_id):  # 존재하는 인스턴스인지 판단
+        _class = get_object_or_404(Class, id=class_id)
+        return _class
+
+    def get(self, request, class_id):
+        _class = self.get_object(class_id)
+        username = request.user
+        try:
+            privilege = Class_user.objects.get(class_id=_class, username=username).privilege
+        except:
+            privilege = -1
+        data = {'privilege': privilege}
+
+        return Response(data, status=status.HTTP_200_OK)

@@ -183,7 +183,7 @@ class ProblemDetailView(APIView):
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
 
-        serializer = ProblemSerializer(problem, data=obj)
+        serializer = ProblemSerializer(problem, data=obj,partial=True)
 
         if serializer.is_valid():
             serializer.save()
