@@ -3,7 +3,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from account.views.general import (
     LogoutView, UserCompetitionInfoView, UserRegisterView,
-    UserInfoView, ClassInfoView, RefreshView, ContributionsView
+    UserInfoView, ClassInfoView, RefreshView, ContributionsView,UserClassPrivilege
 )
 
 
@@ -19,8 +19,9 @@ urlpatterns = [
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', RefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
+    path('class/', ClassInfoView.as_view()),
+    path('class/<int:class_id>/', UserClassPrivilege.as_view(), name="user_class_privilege"),
     path('<str:username>/', UserInfoView.as_view(), name='user_info_api'),
-    path('class', ClassInfoView.as_view()),
     path('<str:username>/contributions', ContributionsView.as_view(), name="user_contributions"),
     path('<str:username>/competitions', UserCompetitionInfoView.as_view(), name='user_competition_info'),
     # path('logout_all/', LogoutAllView.as_view(), name='auth_logout_all'),

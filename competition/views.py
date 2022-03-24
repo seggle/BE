@@ -168,17 +168,17 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
                 path = path[1].split("/")
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
-        problem_serializer = ProblemSerializer(problem, data=obj)
+        problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
         else:
-            return Response(problem_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(problem_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # competition 수정
         competition_serializer = CompetitionPutSerializer(competition, data=data)
         if competition_serializer.is_valid():
             competition_obj = competition_serializer.save()
         else:
-            return Response(competition_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(competition_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         obj2 = {"problem":problem_obj,
                 "id":competition_obj.id,
                 "start_time":competition_obj.start_time,
