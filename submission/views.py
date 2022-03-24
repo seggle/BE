@@ -22,27 +22,19 @@ class SubmissionClassView(APIView, EvaluationMixin):
 
     # 05-16
     def post(self, request, **kwargs):
-        if kwargs.get('class_id') is None:
-            return Response({"error": "class_id"}, status=status.HTTP_400_BAD_REQUEST)
-        if kwargs.get('contest_id') is None:
-            return Response({"error": "contest_id"}, status=status.HTTP_400_BAD_REQUEST)
-        if kwargs.get('cp_id') is None:
-            return Response({"error": "cp_id"}, status=status.HTTP_400_BAD_REQUEST)
-        class_id = kwargs.get('class_id')
-        classid = get_class(class_id)
-        contest_id = kwargs.get('contest_id')
-        contestid = get_contest(contest_id)
-        cp_id = kwargs.get('cp_id')
-        cpid = get_contest_problem(cp_id)
+        class_id = request.get.GET('class_id')
+        class_ = get_class(class_id)
+        contest_id = request.get.GET('contest_id')
+        contest = get_contest(contest_id)
+        cp_id = request.get.GET('cp_id')
+        contest_problem = get_contest_problem(cp_id)
 
-        username = kwargs.get('username')
+        username = request.get.GET('username')
 
         if username != request.user.username:
             return Response({"error": "username"}, status=status.HTTP_400_BAD_REQUEST)
 
-        contest_problem_id = Contest_problem.objects.get(id=cp_id)
-
-        if (contest_problem_id.contest_id.id != contest_id) or (contest_problem_id.contest_id.class_id.id != class_id):
+        if (contest_problem.contest.id != contest_id) or (contest_problem.contest.class_id.id != class_id):
             return Response({"error": "id"}, status=status.HTTP_400_BAD_REQUEST)
 
         #
@@ -55,19 +47,16 @@ class SubmissionClassView(APIView, EvaluationMixin):
         path_json = {
             "username": request.user,
             "path": temp,
-            "problem_id": contest_problem_id.problem_id.id,
+            "problem_id": contest_problem.problem.id,
             "score": None,
             "ip_address": GetIpAddr(request)
-            # path_json['ip_address'] = data['ip_address']
-            # path_json['on_leaderboard'] = request.user
-            # path_json['status'] = 0
         }
 
         submission_json = {
             "username": request.user,
-            "class_id": contest_problem_id.contest_id.class_id.id,
-            "contest_id": contest_problem_id.contest_id.id,
-            "c_p_id": contest_problem_id.id,
+            "class_id": contest_problem.contest.class_.id,
+            "contest_id": contest_problem.contest.id,
+            "c_p_id": contest_problem.id,
             "csv": data['csv'],
             "ipynb": data['ipynb']
         }
@@ -81,9 +70,9 @@ class SubmissionClassView(APIView, EvaluationMixin):
             if submission_serializer.is_valid():
                 submission = submission_serializer.save()
                 # evaluation
-                problem = get_object_or_404(Problem, id=contest_problem_id.problem_id.id)
-                self.evaluate(path=path_obj, solution_csv=problem.solution, submission_csv=submission.csv, evaluation=problem.evaluation)
-
+                problem = get_problem(submission.problem.id)
+                self.evaluate(submission=submission, problem=problem)
+                
                 return Response(submission_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -322,3 +311,128 @@ class SubmissionCompetitionCheckView(APIView):
             print("path.on_leaderboard", path.on_leaderboard)
 
         return Response({'success':'성공'}, status=status.HTTP_200_OK)
+
+
+class SubmissionClassCsvDownloadView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, submission_id):
+        submission = get_object_or_404(SubmissionClass, id=submission_id)
+        return submission
+
+    def get(self, request, submission_id):
+        submission = self.get_object(submission_id)
+
+        # Define Django project base directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # result = /Users/ingyu/Desktop/BE/problem
+        BASE_DIR = BASE_DIR.replace("/submission", "")
+        # print(BASE_DIR)
+
+        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
+        filename = csv_path.split('/', 2)[2]
+        filepath = BASE_DIR + '/uploads/' + csv_path
+        print(filepath)
+        # Open the file for reading content
+        path = open(filepath, 'r')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        # Set the return value of the HttpResponse
+        response = HttpResponse(path, content_type=mime_type)
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        # Return the response value
+        return response
+
+class SubmissionClassIpynbDownloadView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, submission_id):
+        submission = get_object_or_404(SubmissionClass, id=submission_id)
+        return submission
+
+    def get(self, request, submission_id):
+        submission = self.get_object(submission_id)
+
+        # Define Django project base directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # result = /Users/ingyu/Desktop/BE/problem
+        BASE_DIR = BASE_DIR.replace("/submission", "")
+        # print(BASE_DIR)
+
+        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
+        filename = csv_path.split('/', 2)[2]
+        filepath = BASE_DIR + '/uploads/' + csv_path
+        print(filepath)
+        # Open the file for reading content
+        path = open(filepath, 'r')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        # Set the return value of the HttpResponse
+        response = HttpResponse(path, content_type=mime_type)
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        # Return the response value
+        return response
+
+class SubmissionCompetitionCsvDownloadView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, submission_id):
+        submission = get_object_or_404(SubmissionCompetition, id=submission_id)
+        return submission
+
+    def get(self, request, submission_id):
+        submission = self.get_object(submission_id)
+
+        # Define Django project base directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # result = /Users/ingyu/Desktop/BE/problem
+        BASE_DIR = BASE_DIR.replace("/submission", "")
+        # print(BASE_DIR)
+
+        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
+        filename = csv_path.split('/', 2)[2]
+        filepath = BASE_DIR + '/uploads/' + csv_path
+        print(filepath)
+        # Open the file for reading content
+        path = open(filepath, 'r')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        # Set the return value of the HttpResponse
+        response = HttpResponse(path, content_type=mime_type)
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        # Return the response value
+        return response
+
+class SubmissionCompetitionIpynbDownloadView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, submission_id):
+        submission = get_object_or_404(SubmissionCompetition, id=submission_id)
+        return submission
+
+    def get(self, request, submission_id):
+        submission = self.get_object(submission_id)
+
+        # Define Django project base directory
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # result = /Users/ingyu/Desktop/BE/problem
+        BASE_DIR = BASE_DIR.replace("/submission", "")
+        # print(BASE_DIR)
+
+        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
+        filename = csv_path.split('/', 2)[2]
+        filepath = BASE_DIR + '/uploads/' + csv_path
+        print(filepath)
+        # Open the file for reading content
+        path = open(filepath, 'r')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        # Set the return value of the HttpResponse
+        response = HttpResponse(path, content_type=mime_type)
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        # Return the response value
+        return response

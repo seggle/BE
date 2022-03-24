@@ -27,6 +27,7 @@ msg_ExamParticipateView_get_e_2 = {"error": "해당 class에 속하지 않습니
 # password
 
 # problem
+msg_ProblemDetailView_delete_e_1 = {"success": "문제가 제거되었습니다."}
 
 # proposal
 

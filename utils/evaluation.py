@@ -10,8 +10,12 @@ class EvaluationMixin(object):
     # solution_csv - problem의 solution 파일
     # submission_csv - 학생의 csv 파일
     # evaluation - problem의 평가 방식
-    def evaluate(self, path, solution_csv, submission_csv, evaluation):
+    def evaluate(self, submission, problem):
         try:
+            solution_csv = problem.solution
+            submission_csv = submission.csv
+            evaluation = problem.evaluation
+            
             solution = pd.read_csv(solution_csv)
             submission = pd.read_csv(submission_csv)
 
@@ -26,7 +30,7 @@ class EvaluationMixin(object):
                 score = np.sqrt(mean_squared_error(y_true, y_pred))
 
             if evaluation == "mAP":
-                path.score = 1
+                score = 1
 
             if evaluation == "MSE":
                 score = mean_squared_error(y_true, y_pred) # 낮을수록 1등
@@ -40,10 +44,10 @@ class EvaluationMixin(object):
             if evaluation == "Accuracy":
                 score = accuracy_score(y_true, y_pred) # 높을수록 1등
 
-            path.score = score
+            submission.score = score
 
         except: # 에러 발생
-            path.score = None
-            path.status = 1 # 문제 있음
+            submission.score = None
+            submission.status = 1 # 문제 있음
 
-        path.save()
+        submission.save()

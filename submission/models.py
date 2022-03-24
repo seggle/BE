@@ -39,7 +39,7 @@ class SubmissionClass(models.Model): # 0315
 class SubmissionCompetition(models.Model): # 0315
     username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")
     path = models.ForeignKey(Path, on_delete=models.CASCADE, db_column="path")
-    competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id")
+    competition = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id")
     csv = models.FileField(blank=True,null=True,upload_to=upload_to_submission)
     ipynb = models.FileField(blank=True,null=True,upload_to=upload_to_submission)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem")
