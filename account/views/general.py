@@ -20,6 +20,9 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+from competition.models import Competition
+
 from utils import permission
 
 """
@@ -308,6 +311,23 @@ class UserClassPrivilege(APIView):
         username = request.user
         try:
             privilege = Class_user.objects.get(class_id=_class, username=username).privilege
+        except:
+            privilege = -1
+        data = {'privilege': privilege}
+
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class UserCompetitionPrivilege(APIView):
+    def get_object(self, competition_id):
+        competition = get_object_or_404(Competition, id=competition_id)
+        return competition
+
+    def get(self, request, competition_id):
+        competition = self.get_object(competition_id)
+        username = request.user
+        try:
+            privilege = Competition_user.objects.get(competition_id=competition, username=username)
         except:
             privilege = -1
         data = {'privilege': privilege}
