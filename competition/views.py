@@ -2,7 +2,7 @@ from django.http import Http404
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionListSerializer, CompetitionUserGetSerializer, CompetitionUserSerializer,
+    CompetitionListSerializer, CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionPostSerializer, 
 )
 from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
 from competition.models import Competition, CompetitionUser
@@ -57,16 +57,20 @@ class CompetitionView(APIView, CustomPermissionMixin):
                 problem_obj = problem.save() # save() calls create() of the Serializer which returns an object instance
             else:
                 return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
-            data["problem_id"] = problem_obj.id
             # 대회 생성
-            competition = CompetitionSerializer(data=data)
+            obj = {
+                "problem_id" : problem_obj.id,
+                "start_time" : data['start_time'],
+                "end_time" : data['end_time']
+            }
+            competition = CompetitionSerializer(data=obj)
             if competition.is_valid():
                 competition_obj = competition.save()
                 # 대회 참가 - 교수님
                 user_data = {
                     "username": request.user.username,
                     "privilege": 2,
-                    "competition_id": competition.id
+                    "competition_id": competition_obj.id
                 }
                 competition_user_serializer = CompetitionUserSerializer(data=user_data)
                 if competition_user_serializer.is_valid():
@@ -74,7 +78,7 @@ class CompetitionView(APIView, CustomPermissionMixin):
                     # 대회 정보
                     obj = {
                         "problem": problem_obj,
-                        "id": competition.id,
+                        "id": competition_obj.id,
                         "start_time": competition_obj.start_time,
                         "end_time": competition_obj.end_time
                     }
@@ -145,17 +149,17 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
-        problem_serializer = ProblemSerializer(problem, data=obj)
+        problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
         else:
-            return Response(problem_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(problem_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # competition 수정
         competition_serializer = CompetitionPutSerializer(competition, data=data)
         if competition_serializer.is_valid():
             competition_obj = competition_serializer.save()
         else:
-            return Response(competition_serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(competition_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         obj2 = {
             "problem":problem_obj,
             "id":competition_obj.id,
@@ -204,7 +208,7 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 06-05-03 대회 참가자, 관리자 전체 조회
     def get(self, request, competition_id):
@@ -251,13 +255,14 @@ class CompetitionTaView(APIView, CustomPermissionMixin):
                 user_does_not_exist['is_existed'].append(data['username'])
                 continue
 
-            data = {
+            obj = {
+                "username" : data['username'],
                 "is_show" : True,
                 "privilege" : 1,
                 "competition_id" : competition_id
             }
 
-            serializer = CompetitionUserSerializer(data=data)
+            serializer = CompetitionUserSerializer(data=obj)
 
             if serializer.is_valid():
                 serializer.save()

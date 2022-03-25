@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
-from ..serializers import ProblemSerializer, AllProblemSerializer
+from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemPutSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
@@ -16,6 +16,7 @@ import os
 import shutil
 import uuid
 import mimetypes
+import urllib
 from wsgiref.util import FileWrapper
 
 # permission import
@@ -142,12 +143,12 @@ class ProblemDetailView(APIView):
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
 
-        serializer = ProblemSerializer(problem, data=obj)
+        serializer = ProblemPutSerializer(problem, data=obj, partial=True)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 03-05
     def delete(self, request, problem_id):
@@ -186,6 +187,7 @@ class ProblemDataDownloadView(APIView):
         
         data_path = str(problem.data.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + data_path
         
         # Open the file for reading content
@@ -193,7 +195,7 @@ class ProblemDataDownloadView(APIView):
 
         response = HttpResponse(FileWrapper(path), content_type='application/zip')
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
 class ProblemSolutionDownloadView(APIView):
@@ -209,6 +211,7 @@ class ProblemSolutionDownloadView(APIView):
 
         data_path = str(problem.solution.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + data_path
 
         # Open the file for reading content
@@ -218,5 +221,5 @@ class ProblemSolutionDownloadView(APIView):
         mime_type, _ = mimetypes.guess_type(filepath)
         response = HttpResponse(FileWrapper(path), content_type=mime_type)
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response

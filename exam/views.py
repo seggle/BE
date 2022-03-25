@@ -40,15 +40,15 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         # 해당 수업에 속해있는지 아닌지
         # 만약 속해있다면 해당 수업의 privilege가 0 인지 아닌지
 
-        try:
-            if request.user.class_user_set.get(class_id=class_id).privilege == 0:
-                message = {"error": "해당 class의 교수 또는 TA가 아닙니다."}
-                return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                pass
-        except:
-            message = {"error": "해당 class에 속하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     if request.user.class_user_set.get(class_id=class_id).privilege == 0:
+        #         message = {"error": "해당 class의 교수 또는 TA가 아닙니다."}
+        #         return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        #     else:
+        #         pass
+        # except:
+        #     message = {"error": "해당 class에 속하지 않습니다."}
+        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         exams = Exam.objects.filter(contest=contest_id)
         page = self.paginate_queryset(exams)
@@ -61,12 +61,12 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
     def post(self, request, contest_id, class_id):
         # 권한 체크
         # 그 class에 등록되어 있는 사람인지 아닌지
-        try:
-            if request.user.class_user_set.get(class_id=class_id):
-                pass
-        except:
-            message = {"error": "해당 class에 속하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     if request.user.class_user_set.get(class_id=class_id):
+        #         pass
+        # except:
+        #     message = {"error": "해당 class에 속하지 않습니다."}
+        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         contest = Contest.objects.get(id=contest_id)
 

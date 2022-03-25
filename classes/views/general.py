@@ -66,7 +66,7 @@ class ClassView(APIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, class_id):
@@ -119,6 +119,7 @@ class ClassStdView(APIView):
                 continue
 
             data = {
+                "username" : data['username'],
                 "is_show" : True,
                 "privilege" : 0,
                 "class_id" : class_id
@@ -167,6 +168,7 @@ class ClassTaView(APIView):
                 continue
             
             data = {
+                "username" : data['username'],
                 "is_show" : True,
                 "privilege" : 1,
                 "class_id" : class_id

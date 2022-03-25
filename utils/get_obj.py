@@ -34,8 +34,8 @@ def get_proposal(id):
     return proposal
 
 # faq
-def get_faq(self, faq_id):
-    faq = get_object_or_404(Faq, id = faq_id)
+def get_faq(id):
+    faq = get_object_or_404(Faq, id = id)
     return faq
 
 # class

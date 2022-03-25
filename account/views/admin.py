@@ -58,7 +58,7 @@ class AdminUserInfoView(APIView):
             serializer = UserInfoSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
-            raise Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            raise Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 00-01-03 회원탈퇴
     def delete(self, request, username):

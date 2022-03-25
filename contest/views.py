@@ -14,7 +14,7 @@ from classes.models import Class, ClassUser
 from account.models import User
 from problem.models import Problem
 from .models import Contest, ContestProblem
-from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer
+from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
@@ -222,15 +222,28 @@ class ContestProblemTitleDescptView(APIView):
         # contest_id = request.get.GET("contest_id")
         contest = get_contest(contest_id)
         # cp_id = request.get.GET("cp_id")
-        contest_problem = get_contest(cp_id)
+        contest_problem = get_contest_problem(cp_id)
         
         data = request.data
         
-        serializer = ContestProblemDesSerializer(contest_problem, data=data)
-        if serializer.is_valid:
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        obj = {
+            "title" : data['title'],
+            "description" : data['description'],
+            "data_description" : data['data_description']
+        }
+        serializer = ContestProblemDesSerializer(contest_problem, data=obj)
+        if serializer.is_valid():
+            contest_problem = serializer.save()
+            problem = contest_problem.problem_id
+            obj = {
+                "evaluation" : data['evaluation']
+            }
+            serializer = ContestProblemDesEvaluateSerializer(problem, data=obj)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(msg_success, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ContestProblemInfoView(APIView):
     #permission_classes = [IsAdminUser]

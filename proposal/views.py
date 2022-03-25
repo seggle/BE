@@ -42,13 +42,14 @@ class ProposalView(APIView, PaginationHandlerMixin):
     def get(self, request, proposal_id=None):
         if proposal_id is None:
             proposal_list = Proposal.objects.all().order_by('-created_time')
+            
             page = self.paginate_queryset(proposal_list)
             
             if page is not None:
-                serializer = self.get_paginated_response(ProposalGetSerializer(page, many=True))
+                serializer = self.get_paginated_response(ProposalGetSerializer(page, many=True).data)
             else:
                 serializer = ProposalGetSerializer(proposal_list, many=True)
-
+            
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             proposal = get_proposal(proposal_id)
@@ -68,7 +69,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         }
         if proposal.created_user == request.user:
             serializer = ProposalPatchSerializer(proposal, data=obj) #Request의 data를 UserSerializer로 변환
-            if serializer.is_valid:
+            if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)

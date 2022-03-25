@@ -19,6 +19,7 @@ from rest_framework import status
 import uuid
 import mimetypes
 import os
+import urllib
 from django.http import Http404, HttpResponse
 
 # submission-class 관련
@@ -288,6 +289,7 @@ class SubmissionClassCsvDownloadView(APIView):
 
         csv_path = str(submission.csv.path).split('uploads/', 1)[1]
         filename = csv_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
 
         # Open the file for reading content
@@ -296,7 +298,7 @@ class SubmissionClassCsvDownloadView(APIView):
         mime_type, _ = mimetypes.guess_type(filepath)
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
 class SubmissionClassIpynbDownloadView(APIView):
@@ -313,6 +315,7 @@ class SubmissionClassIpynbDownloadView(APIView):
 
         csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
         filename = csv_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
         
         # Open the file for reading content
@@ -321,7 +324,7 @@ class SubmissionClassIpynbDownloadView(APIView):
         mime_type, _ = mimetypes.guess_type(filepath)
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
 class SubmissionCompetitionCsvDownloadView(APIView):
@@ -338,6 +341,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
 
         csv_path = str(submission.csv.path).split('uploads/', 1)[1]
         filename = csv_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
 
         # Open the file for reading content
@@ -346,7 +350,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         mime_type, _ = mimetypes.guess_type(filepath)
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
 class SubmissionCompetitionIpynbDownloadView(APIView):
@@ -363,6 +367,7 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
 
         csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
         filename = csv_path.split('/', 2)[2]
+        filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
         
         # Open the file for reading content
@@ -371,5 +376,5 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         mime_type, _ = mimetypes.guess_type(filepath)
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = "attachment; filename=%s" % filename
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response

@@ -4,6 +4,7 @@ from submission.models import SubmissionClass, SubmissionCompetition
 
 class LeaderboardClassSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    score = serializers.FloatField()
     csv = serializers.CharField()
     ipynb = serializers.CharField()
     submission_id = serializers.IntegerField()
@@ -14,6 +15,7 @@ class LeaderboardClassSerializer(serializers.ModelSerializer):
 
 class LeaderboardCompetitionSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
+    score = serializers.FloatField()
     csv = serializers.CharField()
     ipynb = serializers.CharField()
     submission_id = serializers.IntegerField()

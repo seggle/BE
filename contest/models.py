@@ -23,7 +23,7 @@ class Contest(models.Model):
 # contest와 problem사이의 다대다 테이블
 class ContestProblem(models.Model):
     contest_id = models.ForeignKey(Contest, on_delete=models.CASCADE, db_column="contest_id")
-    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
+    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id", related_name="problems")
     title = models.TextField()
     description = models.TextField()
     data_description = models.TextField()

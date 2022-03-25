@@ -25,9 +25,9 @@ class LeaderboardClassView(APIView):
 
         # 정렬
         if contest_problem.problem_id.evaluation in ["F1-score", "Accuracy"]: # 내림차순
-            submission_class_list = submission_class_list.order_by('path__score')
+            submission_class_list = submission_class_list.order_by('-score')
         else:
-            submission_class_list = submission_class_list.order_by('-path__score')
+            submission_class_list = submission_class_list.order_by('score')
 
         obj_list = []
         count = 1
@@ -57,16 +57,16 @@ class LeaderboardClassView(APIView):
 class LeaderboardCompetitionView(APIView):
 
     def get(self, request, competition_id):
+        print(1)
         competition = get_competition(competition_id)
         submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
 
         # 정렬
         if competition.problem_id.evaluation in ["F1-score", "Accuracy"]: # 내림차순
-            submission_competition_list = submission_competition_list.order_by('-path__score')
+            submission_competition_list = submission_competition_list.order_by('-score')
         else:
-            submission_competition_list = submission_competition_list.order_by('path__score')
+            submission_competition_list = submission_competition_list.order_by('score')
         
-
         obj_list = []
         count = 1
         for submission in submission_competition_list:
@@ -85,6 +85,7 @@ class LeaderboardCompetitionView(APIView):
                 "csv": csv_url,
                 "ipynb": ipynb_url,
             }
+            
             obj_list.append(obj)
             count = count + 1
             

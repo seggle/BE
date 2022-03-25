@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Contest, ContestProblem
+from problem.models import Problem
 
 class ContestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,4 +26,9 @@ class ContestProblemPostSerializer(serializers.ModelSerializer):
 class ContestProblemDesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContestProblem
-        fields = ["title", "description", "data_description", "evaluation"]
+        fields = ["title", "description", "data_description"]
+
+class ContestProblemDesEvaluateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problem
+        fields = ["evaluation"]

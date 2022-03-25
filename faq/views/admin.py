@@ -14,7 +14,7 @@ from django.http import JsonResponse
 from utils.get_obj import *
 from utils.message import *
 from ..models import Faq
-from ..serializers import FaqSerializer, FaqAllGetSerializer
+from ..serializers import FaqSerializer, FaqAllGetSerializer, FaqPatchSerializer
 
 # Create your views here.
 
@@ -37,7 +37,7 @@ class FaqAdminView(APIView):
             faq_list = Faq.objects.all()
             faq_list_serializer = FaqAllGetSerializer(faq_list, many=True)
             
-            return Response(faq_list, status=status.HTTP_200_OK)
+            return Response(faq_list_serializer.data, status=status.HTTP_200_OK)
         else:
             faq = get_faq(faq_id)
             serializer = FaqSerializer(faq)
@@ -54,8 +54,8 @@ class FaqAdminView(APIView):
             "visible" : data["visible"]
         }
         if faq.created_user == request.user:
-            serializer = FaqSerializer(faq, data=obj) #Request의 data를 UserSerializer로 변환
-            if serializer.is_valid:
+            serializer = FaqPatchSerializer(faq, data=obj) #Request의 data를 UserSerializer로 변환
+            if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)

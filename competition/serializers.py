@@ -20,6 +20,11 @@ class CompetitionPutSerializer(serializers.ModelSerializer):
         model = Competition
         fields = ['start_time', 'end_time']
 
+class CompetitionPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition
+        fields = ['problem_id', 'start_time', 'end_time']
+
 class CompetitionListSerializer(serializers.ModelSerializer):
     problem = AllProblemSerializer()
     class Meta:
