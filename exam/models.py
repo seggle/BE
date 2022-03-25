@@ -11,5 +11,8 @@ class Exam(models.Model):
     start_time = models.DateTimeField(auto_now_add=True)
     is_duplicated = models.BooleanField(default = False)
 
+    def __str__(self):
+        return self.id
+
     class Meta:
         db_table = "exam"

@@ -14,7 +14,9 @@ from django.http import JsonResponse
 from .models import Proposal
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
-from . import serializers
+from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
+from utils.get_obj import *
+from utils.message import *
 from django.db.models import F
 
 # Create your views here.
@@ -23,76 +25,64 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class ProposalView(APIView, PaginationHandlerMixin):
-
-    # pagination
     pagination_class = BasicPagination
-
-    def get_object(self, proposal_id):
-        proposal = generics.get_object_or_404(Proposal, id = proposal_id)
-        return proposal
 
     def post(self,request):
         data = request.data
         data["created_user"] = request.user
 
-        serializer = serializers.ProposalSerializer(data=data) #Request의 data를 UserSerializer로 변환
+        serializer = ProposalSerializer(data=data) #Request의 data를 UserSerializer로 변환
 
         if serializer.is_valid():
-            serializer.save() #UserSerializer의 유효성 검사를 한 뒤 DB에 저장
-            #return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
-            return Response("Success", status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            serializer.save()
+            return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, **kwargs):
-
-        if kwargs.get('proposal_id') is None:
-            proposal_list = Proposal.objects.values('id', 'title', 'created_user', 'created_time').order_by('-created_time')
+    def get(self, request, proposal_id=None):
+        if proposal_id is None:
+            proposal_list = Proposal.objects.all().order_by('-created_time')
             page = self.paginate_queryset(proposal_list)
             
             if page is not None:
-                serializer = self.get_paginated_response(page)
+                serializer = self.get_paginated_response(ProposalGetSerializer(page, many=True))
             else:
-                serializer = self.serializer_class(proposal_list, many=True)
+                serializer = ProposalGetSerializer(proposal_list, many=True)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
+            proposal = get_proposal(proposal_id)
 
-            proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
-
-            proposal_list_serializer = serializers.ProposalSerializer(Proposal.objects.get(id=proposal_id))
+            proposal_list_serializer = ProposalSerializer(proposal)
             return Response(proposal_list_serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, **kwargs):
-        if kwargs.get('proposal_id') is None:
-            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
+    def patch(self, request, proposal_id=None):
+        if proposal_id is None:
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        proposal = get_proposal(proposal_id)
+
+        data = request.data
+        obj = {
+            "title" : data["title"],
+            "context" : data["context"],
+        }
+        if proposal.created_user == request.user:
+            serializer = ProposalPatchSerializer(proposal, data=obj) #Request의 data를 UserSerializer로 변환
+            if serializer.is_valid:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request, proposal_id=None):
+        if proposal_id is None:
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+    
+        proposal = get_proposal(proposal_id)
+
+        if proposal.created_user == request.user:
+            proposal.delete()
+            return Response(msg_success, status=status.HTTP_200_OK)
         else:
-            proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
-
-            data = request.data
-            user = Proposal.objects.get(id=proposal_id)
-            if user.created_user == request.user:
-                user.title = data["title"]
-                user.context = data["context"]
-                user.save(force_update=True)
-                return Response("Success", status=status.HTTP_200_OK)
-            else:
-                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, **kwargs):
-        if kwargs.get('proposal_id') is None:
-            return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-        else:
-            proposal_id = kwargs.get('proposal_id')
-            proposal = self.get_object(proposal_id)
-
-            user = Proposal.objects.get(id=proposal_id)
-            if user.created_user == request.user:
-                user.delete()
-                return Response("Success", status=status.HTTP_200_OK)
-            else:
-                return Response("Fail", status=status.HTTP_400_BAD_REQUEST)
-
-
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)

@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import Competition, Competition_user
+from .models import Competition, CompetitionUser
 from problem.models import Problem
 from problem.serializers import ProblemSerializer, AllProblemSerializer
 
-class CompetitionGenerateSerializer(serializers.ModelSerializer):
+class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
-        fields = ['problem_id', 'id', 'start_time', 'end_time']
+        fields = ['id', 'problem_id', 'start_time', 'end_time']
 
 class CompetitionDetailSerializer(serializers.ModelSerializer):
     problem = ProblemSerializer()
@@ -21,8 +21,6 @@ class CompetitionPutSerializer(serializers.ModelSerializer):
         fields = ['start_time', 'end_time']
 
 class CompetitionListSerializer(serializers.ModelSerializer):
-    # problem = serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all())
-    # problem = serializers.ModelSerializer.serializers.PrimaryKeyRelatedField(queryset=Problem.objects.all())
     problem = AllProblemSerializer()
     class Meta:
         model = Competition
@@ -31,7 +29,6 @@ class CompetitionListSerializer(serializers.ModelSerializer):
 class CompetitionProblemCheckSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField()
-    # public = serializers.BooleanField()
     data_description = serializers.CharField()
     data = serializers.FileField()
     solution = serializers.FileField()
@@ -40,17 +37,19 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
     end_time = serializers.DateTimeField()
 
 class CompetitionUserSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = Competition_user
+        model = CompetitionUser
         # fields = "__all__"
         fields = ["id", "competition_id", "username", "is_show", "privilege"]
 
 class CompetitionUserGetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Competition_user
+        model = CompetitionUser
         fields = ["username", "privilege"]
 
 class CompetitionUserGetInfoSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = Competition_user
+        model = CompetitionUser
         fields = ["competition_id", "privilege"]

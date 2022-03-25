@@ -5,10 +5,11 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
-from rest_framework.pagination import PageNumberPagination #pagination
+from rest_framework.pagination import PageNumberPagination
+from utils.get_obj import *
 from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import User
-from .. import serializers
+from ..serializers import UserInfoSerializer, UserModifySerializer
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -17,7 +18,6 @@ class ListUsersView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdminUser]
 
     pagination_class = BasicPagination
-    serializer_class = serializers.UserInfoSerializer
 
     # 00-00 유저 전체 조회
     def get(self, request, format = None):
@@ -29,44 +29,40 @@ class ListUsersView(APIView, PaginationHandlerMixin):
             users = users.filter(username__icontains=keyword)
         page = self.paginate_queryset(users)
         if page is not None:
-            serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
+            serializer = self.get_paginated_response(UserInfoSerializer(page, many=True).data)
         else:
-            serializer = self.serializer_class(users, many=True)
-        # serializer = serializers.UserInfoSerializer(users, many = True)
+            serializer = UserInfoSerializer(users, many=True)
+        
         return Response(serializer.data)
 
 class AdminUserInfoView(APIView):
     permission_classes = [IsAdminUser]
 
-    def get_object(self, username): # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username = username)
-        return user
-
     # 00-01 유저 정보 수정
     # privilege만 수정할 수 있음
-    def put(self, request, username, format = None):
-        user = self.get_object(username=username)
+    def put(self, request, username):
+        user = get_username(username)
         data = request.data
         obj = {}
         obj["privilege"] = data["privilege"]
-        serializer = serializers.UserModifySerializer(user, data=obj)
+        serializer = UserModifySerializer(user, data=obj)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializers.UserInfoSerializer(user).data)
+            user = serializer.save()
+            return Response(UserInfoSerializer(user).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 00-01-02 유저 조회
     def get(self, request, username, format=None):
-        user = self.get_object(username)
+        user = get_username(username)
         try:
-            serializer = serializers.UserInfoSerializer(user)
+            serializer = UserInfoSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             raise Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
     # 00-01-03 회원탈퇴
     def delete(self, request, username):
-        user = self.get_object(username)
+        user = get_username(username)
         if user.is_active == False:
             return Response({'error': '이미 탈퇴 되었습니다.'})
         else:

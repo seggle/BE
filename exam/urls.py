@@ -10,6 +10,6 @@ from exam.views import (
 app_name = "exam"
 urlpatterns = [
     path('', ExamParticipateView.as_view()),
-    path('<int:exam_id>/exception',ExamExceptionView.as_view()),
-    path('<int:exam_id>/reset',ExamResetView.as_view()),
+    path('<int:exam_id>/exception/',ExamExceptionView.as_view()),
+    path('<int:exam_id>/reset/',ExamResetView.as_view()),
 ]

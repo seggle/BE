@@ -12,5 +12,8 @@ class Announcement(models.Model):
     visible = models.BooleanField(default=True)
     important = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.id
+
     class Meta:
         db_table = "announcement"

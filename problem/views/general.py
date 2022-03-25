@@ -2,22 +2,21 @@ from rest_framework.views import APIView
 from ..models import Problem
 from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
-
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
 from django.http import Http404, HttpResponse
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, JSONParser
+from utils.get_obj import *
+from utils.message import *
+from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
-from utils.common import IP_ADDR
-# Import mimetypes module
-from wsgiref.util import FileWrapper
 import mimetypes
+from wsgiref.util import FileWrapper
 
 # permission import
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -32,8 +31,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
     permission_classes = [(IsAuthenticated & (IsProf | IsTA)) | IsAdmin]
     pagination_class = BasicPagination
 
-    # parser_classes = [MultiPartParser, JSONParser]
-
+    # 03-01
     def get(self, request):
         if request.user.privilege == 0:
             problems = Problem.objects.filter(Q(created_user=request.user) & Q(is_deleted=False))
@@ -48,62 +46,40 @@ class ProblemView(APIView, PaginationHandlerMixin):
         for problem in problems:
             # ip_addr = "3.37.186.158:8000"
             data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-
             solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
-            problem_json = {}
-            problem_json['id'] = problem.id
-            problem_json['title'] = problem.title
-            problem_json['created_time'] = problem.created_time
-            problem_json['created_user'] = problem.created_user.username
-            problem_json['data'] = data_url
-            problem_json['solution'] = solution_url
-            problem_json['public'] = problem.public
-            problem_json['class_id'] = problem.class_id.id
+            problem_json = {
+                "id": problem.id,
+                "title": problem.title,
+                "created_time" : problem.created_time,
+                "created_user" : problem.created_user.username,
+                "data" : data_url,
+                "solution" : solution_url,
+                "public" : problem.public,
+                "class_id" : problem.class_id.id
+            }
             new_problems.append(problem_json)
 
-        # page = self.paginate_queryset(problems)
         page = self.paginate_queryset(new_problems)
         if page is not None:
-            # serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
             serializer = self.get_paginated_response(page)
         else:
             serializer = AllProblemSerializer(page, many=True)
         return Response(serializer.data)
 
-    """def modify_input_for_multiple_files(self, title, description, data,
-                                        data_description, public, c_u):
-        dict = {}
-        dict['title'] = title
-        dict['description'] = description
-        dict['data_description'] = data_description
-        dict['public'] = public
-        dict['created_user'] = c_u
-        dict['data'] = data
-        return dict"""
-
+    # 03-02
     def post(self, request):
-        """title = request.data['title']
-        description = request.data['description']
-        data_description = request.data['data_description']
-        public = request.data['public']
-        data = request.data['data']
-        c_u = request.user
-        modified_data = self.modify_input_for_multiple_files(title, description, data, data_description, public, c_u)
-        professor = request.data['professor']
-        """
         data = request.data.copy()
         data['created_user'] = request.user
-        # 존재하는 class_id인지 확인
-        if (Class.objects.filter(id=data["class_id"]).count()) == 0:
-            return Response({"error": "존재하지 않는 class 입니다."}, status=status.HTTP_400_BAD_REQUEST)
-        # problem = ProblemGenerateSerializer(data=data)
-        data['professor'] = Class.objects.get(id=data['class_id']).created_user
+
+        class_ = get_class(data['class_id'])
+
+        data['professor'] = class_.created_user
         problem = ProblemSerializer(data=data)
 
         if problem.is_valid():
             problem.save()
-            return Response(problem.data)
+            return Response(problem.data, status=status.HTTP_200_OK)
         else:
             return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,33 +87,14 @@ class ProblemView(APIView, PaginationHandlerMixin):
 class ProblemDetailView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
 
-    # parser_classes = [MultiPartParser, JSONParser]
-
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
+    # 03-04
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        problem = get_problem(problem_id)
+        # if problem == Http404:
+        #     message = {"error": "Problem이 존재하지 않습니다."}
+        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
-        # ip_addr = "3.37.186.158"
-        # data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        # data_path_s = data_path.split('/', 2)
-        # data_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, data_path_s[0], data_path_s[1],
-        #                                                                        data_path_s[2])
-        # solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-        # solution_path_s = solution_path.split('/', 2)
-        # solution_url = "http://{0}/download.php?dir1={1}&dir2={2}&file={3}".format(ip_addr, solution_path_s[0],
-        #                                                                            solution_path_s[1],
-        #                                                                            solution_path_s[2])
-        # ip_addr = "3.37.186.158:8000"
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-
         solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         cp_json = {
@@ -153,147 +110,113 @@ class ProblemDetailView(APIView):
             "public": problem.public,
             "class_id": problem.class_id.id
         }
-        print("problem.class_id", problem.class_id)
 
         return Response(cp_json, status=status.HTTP_200_OK)
 
+    # 03-03
     def put(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        problem = get_problem(problem_id)
+        # if problem == Http404:
+        #     message = {"error": "Problem이 존재하지 않습니다."}
+        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
         data = request.data
-        obj = {"title": data["title"],
-               "description": data["description"],
-               "data_description": data["data_description"],
-               "evaluation": data["evaluation"],
-               "public": data["public"]}
+        obj = {
+            "title": data["title"],
+            "description": data["description"],
+            "data_description": data["data_description"],
+            "evaluation": data["evaluation"],
+            "public": data["public"]
+        }
 
         if data['data']:
             # 폴더 삭제
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
-                path = path[1].split("/")
+                path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
             if os.path.isfile(problem.solution.path):
                 path = (problem.solution.path).split("uploads/solution/")
-                path = path[1].split("/")
+                path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
 
-        serializer = ProblemSerializer(problem, data=obj,partial=True)
+        serializer = ProblemSerializer(problem, data=obj)
 
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        else:
-            data = serializer.errors
-            return Response(data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
+    # 03-05
     def delete(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            problem.is_deleted = True
-            temp = str(uuid.uuid4()).replace("-", "")
-            problem.title = problem.title + ' - ' + temp
-            problem.save()
-            message = {"success": "문제가 제거되었습니다."}
-        return Response(data=message, status=status.HTTP_200_OK)
+        problem = get_problem(problem_id)
+        problem.is_deleted = True
+        temp = str(uuid.uuid4()).replace("-", "")
+        problem.title = problem.title + ' - ' + temp
+        problem.save()
+        return Response(msg_ProblemDetailView_delete_e_1, status=status.HTTP_200_OK)
 
 
 class ProblemVisibilityView(APIView):
     # permission_classes = [AllowAny]
 
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
+    # 03-06
     def post(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problm이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        problem = get_problem(problem_id)
         if problem.public:
             problem.public = False
         else:
             problem.public = True
         problem.save()
-        return Response(data=ProblemSerializer(problem).data)
+        return Response(msg_success, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
-
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
+    # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        problem = get_problem(problem_id)
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # result = /Users/ingyu/Desktop/BE/problem
         BASE_DIR = BASE_DIR.replace("/problem", "")
-        # print(BASE_DIR)
+        
         data_path = str(problem.data.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
         filepath = BASE_DIR + '/uploads/' + data_path
-        print(filepath)
+        
         # Open the file for reading content
         path = open(filepath, 'rb')
-        # Set the mime type
-        # mime_type, _ = mimetypes.guess_type(filepath)
-        # Set the return value of the HttpResponse
+
         response = HttpResponse(FileWrapper(path), content_type='application/zip')
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = "attachment; filename=%s" % filename
-        # Return the response value
         return response
 
 class ProblemSolutionDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        problem = get_problem(problem_id)
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # result = /Users/ingyu/Desktop/BE/problem
         BASE_DIR = BASE_DIR.replace("/problem", "")
-        # print(BASE_DIR)
 
         data_path = str(problem.solution.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
         filepath = BASE_DIR + '/uploads/' + data_path
-        print(filepath)
+
         # Open the file for reading content
         path = open(filepath, 'r')
+
         # Set the mime type
         mime_type, _ = mimetypes.guess_type(filepath)
-        # Set the return value of the HttpResponse
-        response = HttpResponse(path, content_type=mime_type)
+        response = HttpResponse(FileWrapper(path), content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = "attachment; filename=%s" % filename
-        # Return the response value
         return response

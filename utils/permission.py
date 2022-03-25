@@ -1,9 +1,9 @@
 from rest_framework import permissions
 
 from account.models import User
-from classes.models import Class, Class_user
+from classes.models import Class, ClassUser
 from problem.models import Problem
-from contest.models import Contest,Contest_problem
+from contest.models import Contest,ContestProblem
 
 
 class CustomPermissionMixin(object):
@@ -58,7 +58,7 @@ class IsTA(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        if Class_user.objects.filter(username=user.username, privilege=1).count():
+        if ClassUser.objects.filter(username=user.username, privilege=1).count():
             return True
         else:
             return False
@@ -70,26 +70,3 @@ class IsProblemOwnerOrReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS \
                or problem.professor == request.user \
                or problem.created_user == request.user
-
-
-
-"""# 그 class의 member인지 (student, prof , TA 다 된다)
-class IsClassMember(permissions.BasePermission):
-
-    def has_permission(self,request,view):
-        user =request.user
-        class_id = view.kwargs.get("class_id",None)
-        problem_id = view.kwargs.get("problem_id",None)
-        cp_id = view.kwargs.get("cp_id",None)
-        if class_id:
-            classid = Class.objects.get(id=class_id)
-        elif cp_id:
-            cp = Contest_problem.objects.get(id=cp_id).contest_id_set
-        else:
-            problem =
-
-
-        try:
-            classid = Class.objects.get(id=class_id)
-            privilege =
-            return True"""

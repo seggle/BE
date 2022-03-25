@@ -3,11 +3,14 @@ from account.models import User
 
 # Create your models here.
 
-class Class_user(models.Model):
+class ClassUser(models.Model):
     class_id = models.ForeignKey('Class', on_delete=models.CASCADE, db_column="class_id")
     username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")
     is_show = models.BooleanField(default=True)
     privilege = models.IntegerField()
+
+    def __str__(self):
+        return self.username
 
     class Meta:
         db_table = "class_user"
@@ -17,7 +20,10 @@ class Class(models.Model):
     year = models.IntegerField()
     semester = models.IntegerField()
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user", related_name='created_user', to_field="username")
-    # users = models.ManyToManyField(Class_user, related_name="classes", blank=True)
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.id
 
     class Meta:
         db_table = "class"
