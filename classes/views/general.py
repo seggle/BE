@@ -79,13 +79,21 @@ class ClassView(APIView):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ClassUserInfoView(APIView):
+class ClassUserStdInfoView(APIView):
     #permission_classes = [IsAdminUser]
 
-    def get(self, request, class_id): # 0315
-        # class_id = request.get.GET('class_id')
-        class_ = get_class(class_id)
-        datas = ClassUser.objects.filter(class_id=class_id)
+    def get(self, request, class_id):
+        _class = get_class(class_id)
+        datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=0)
+        serializer = ClassUserGetSerializer(datas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ClassUserTaInfoView(APIView):
+    #permission_classes = [IsAdminUser]
+
+    def get(self, request, class_id):
+        _class = get_class(class_id)
+        datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=1)
         serializer = ClassUserGetSerializer(datas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
