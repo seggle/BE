@@ -71,6 +71,12 @@ class ProblemView(APIView, PaginationHandlerMixin):
     # 03-02
     def post(self, request):
         data = request.data.copy()
+
+        if data['data'] is '':
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if data['solution'] is '':
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+
         data['created_user'] = request.user
 
         class_ = get_class(data['class_id'])
