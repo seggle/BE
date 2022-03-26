@@ -10,5 +10,8 @@ class Faq(models.Model):
     last_modified = models.DateTimeField(auto_now=True)
     visible = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.id
+
     class Meta:
         db_table = "faq"

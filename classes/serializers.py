@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from classes.models import Class, Class_user
+from classes.models import Class, ClassUser
 
 class ClassSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,27 +10,24 @@ class ClassSerializer(serializers.ModelSerializer):
 class ClassGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Class
-        #fields = "__all__"
         fields = ["id", "name", "year", "semester"]
 
-class ClassAdminGetSerializer(serializers.ModelSerializer):
+class ClassPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Class
-        #fields = "__all__"
-        fields = ["id", "name", "year", "semester", "created_user"]
+        fields = ["name", "year", "semester"]
 
-class Class_user_Serializer(serializers.ModelSerializer):
+class ClassUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Class_user
-        # fields = "__all__"
+        model = ClassUser
         fields = ["class_id", "username", "is_show", "privilege"]
 
-class Class_user_Get_Serializer(serializers.ModelSerializer):
+class ClassUserGetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Class_user
+        model = ClassUser
         fields = ["username", "privilege"]
 
 class ClassUserGetInfoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Class_user
+        model = ClassUser
         fields = ["class_id", "privilege"]

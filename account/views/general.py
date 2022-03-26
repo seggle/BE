@@ -12,29 +12,18 @@ from django.contrib.auth.hashers import check_password
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
     UserCompetitionSerializer, UserClassPrivilege
-from classes.models import Class, Class_user
+from classes.models import Class, ClassUser
 from classes.serializers import ClassGetSerializer
-from competition.models import Competition_user
+from competition.models import CompetitionUser
 from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
+from utils.get_obj import *
 from competition.models import Competition
 
 from utils import permission
-
-"""
-# 이메일 확인 완료
-def send_email(request):
-    subject = "message"
-    to = ["seggle.sejong@gmail.com"]
-    from_email = "seggle.sejong@gmail.com"
-    message = "메지시 테스트"
-    EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
-"""
-
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
@@ -93,35 +82,35 @@ class RefreshView(TokenRefreshView):
 class UserInfoView(APIView):
     permission_classes = [permission.IsRightUser]
 
-    def get_object(self, username):  # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username=username)
-        return user
-
     # 01-07 유저 조회
     def get(self, request, username, format=None):
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
-        competition = Competition_user.objects.filter(username=user.username)
-        classes = Class_user.objects.filter(username=user.username)
+        competition = CompetitionUser.objects.filter(username=user.username)
+        classes = ClassUser.objects.filter(username=user.username)
         obj = {"id": user.id,
                "email": user.email,
                "username": user.username,
                "name": user.name,
                "privilege": user.privilege,
                "dated_joined": user.date_joined,
-               "is_active": user.is_active}
-        obj["competition"] = competition
-        obj["classes"] = classes
+               "is_active": user.is_active,
+
+               "competition": competition,
+               "classes": classes
+               }
+        
         serializer = UserInfoClassCompetitionSerializer(obj)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 01-06 비밀번호 변경
     def patch(self, request, username):
         data = request.data
         current_password = data["current_password"]
-        user = self.get_object(username)
+        user = get_username(username)
         if check_password(current_password, user.password):
             new_password = data["new_password"]
             password_confirm = data["new_password2"]
@@ -137,7 +126,7 @@ class UserInfoView(APIView):
     # 01-08 회원탈퇴
     def delete(self, request, username):
         data = request.data
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error": "탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
@@ -152,21 +141,12 @@ class UserInfoView(APIView):
 
 
 class ClassInfoView(APIView):
-    # def get_object(self, username): # 존재하는 인스턴스인지 판단
-    #     user = get_object_or_404(User, username = username)
-    #     return user
-    def get_object(self, class_id):
-        classid = generics.get_object_or_404(Class, id=class_id)
-        return classid
-
     # 01-09 유저 Class 조회
     def get(self, request):
         class_name_list = []
-        class_lists = Class_user.objects.filter(username=request.user)
+        class_lists = ClassUser.objects.filter(username=request.user)
         for class_list in class_lists:
-            # print(class_list)
             class_add_is_show = {}
-            # class_add = {}
 
             class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
@@ -176,20 +156,18 @@ class ClassInfoView(APIView):
         return Response(class_name_list, status=status.HTTP_200_OK)
 
     def patch(self, request):
-        # class_id = kwargs.get('class_id')
         datas = request.data
 
-        class_user_list = Class_user.objects.filter(username=request.user)
+        class_user_list = ClassUser.objects.filter(username=request.user)
 
         for user in class_user_list:
             user.is_show = False
-            user.save(force_update=True)
+            user.save()
 
         does_not_exist = {}
         does_not_exist['does_not_exist'] = []
 
         for data in datas:
-            # classid = self.get_object(data['class_id'])
             class_user = class_user_list.filter(class_id=data['class_id'])
             if class_user.count() == 0:
                 does_not_exist['does_not_exist'].append(data['class_id'])
@@ -197,7 +175,7 @@ class ClassInfoView(APIView):
 
             user = class_user[0]
             user.is_show = True
-            user.save(force_update=True)
+            user.save()
         if len(does_not_exist['does_not_exist']) == 0:
             return Response("Success", status=status.HTTP_200_OK)
         else:
@@ -205,15 +183,9 @@ class ClassInfoView(APIView):
 
 
 class ContributionsView(APIView):
-
-    def get_user(self, username):  # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username=username)
-        return user
-
     # 01-12 유저 잔디밭 조회
     def get(self, request, username):
-        user = self.get_user(username)
-
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
@@ -252,19 +224,14 @@ class ContributionsView(APIView):
 
 
 class UserCompetitionInfoView(APIView):
-
-    def get_object(self, username):  # 존재하는 인스턴스인지 판단
-        user = get_object_or_404(User, username=username)
-        return user
-
     # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
-        user = self.get_object(username)
+        user = get_username(username)
         # permission check
         if request.user.username != user.username:
             return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
 
-        competition_list = Competition_user.objects.filter(username=user.username)
+        competition_list = CompetitionUser.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
             return Response([], status=status.HTTP_200_OK)
@@ -278,7 +245,7 @@ class UserCompetitionInfoView(APIView):
                 "start_time": competition.competition_id.start_time,
                 "end_time": competition.competition_id.end_time,
             }
-            obj["user_total"] = Competition_user.objects.filter(
+            obj["user_total"] = CompetitionUser.objects.filter(
                 Q(competition_id=competition.competition_id.id) & Q(privilege=0)).count()
             obj["rank"] = None
 
@@ -302,15 +269,11 @@ class UserCompetitionInfoView(APIView):
 
 
 class UserClassPrivilege(APIView):
-    def get_object(self, class_id):  # 존재하는 인스턴스인지 판단
-        _class = get_object_or_404(Class, id=class_id)
-        return _class
-
     def get(self, request, class_id):
-        _class = self.get_object(class_id)
+        _class = get_class(class_id)
         username = request.user
         try:
-            privilege = Class_user.objects.get(class_id=_class, username=username).privilege
+            privilege = ClassUser.objects.get(class_id=_class, username=username).privilege
         except:
             privilege = -1
         data = {'privilege': privilege}
@@ -319,15 +282,12 @@ class UserClassPrivilege(APIView):
 
 
 class UserCompetitionPrivilege(APIView):
-    def get_object(self, competition_id):
-        competition = get_object_or_404(Competition, id=competition_id)
-        return competition
 
     def get(self, request, competition_id):
-        competition = self.get_object(competition_id)
+        competition = get_competition(competition_id)
         username = request.user
         try:
-            privilege = Competition_user.objects.get(competition_id=competition, username=username).privilege
+            privilege = CompetitionUser.objects.get(competition_id=competition, username=username).privilege
         except:
             privilege = -1
         data = {'privilege': privilege}

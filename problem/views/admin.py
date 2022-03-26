@@ -1,5 +1,6 @@
 from utils import permission
 from rest_framework.views import APIView
+from utils.get_obj import get_problem
 from ..models import Problem
 from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer
@@ -25,6 +26,7 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
     permission_classes = [permission.IsAdmin]
     pagination_class = BasicPagination
 
+    # 00-17
     def get(self, request):
         problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None))
 
@@ -34,138 +36,24 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            # ip_addr = "3.37.186.158"
-            # try:
-            #     path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-            # except ValueError:
-            #     path = ""
-            # url = "http://{0}/{1}".format(ip_addr, path)
-            # try:
-            #     path2 = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-            # except ValueError:
-            #     path2 = ""
-            # url2 = "http://{0}/{1}".format(ip_addr, path2)
-
-            # ip_addr = "3.37.186.158:8000"
             data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-
             solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
-            problem_json = {}
-            problem_json['id'] = problem.id
-            problem_json['title'] = problem.title
-            problem_json['created_time'] = problem.created_time
-            problem_json['created_user'] = problem.created_user.username
-            problem_json['data'] = data_url
-            problem_json['solution'] = solution_url
-            problem_json['public'] = problem.public
-            problem_json['class_id'] = problem.class_id.id
+            problem_json = {
+                "id" : problem.id,
+                "title" : problem.title,
+                "created_time" : problem.created_time,
+                "created_user" : problem.created_user,
+                "data" : data_url,
+                "solution" : solution_url,
+                "public" : problem.public,
+                "class_id" : problem.class_id.id,
+            }
             new_problems.append(problem_json)
 
-        # page = self.paginate_queryset(problems)
         page = self.paginate_queryset(new_problems)
         if page is not None:
-            # serializer = self.get_paginated_response(AllProblemSerializer(page, many=True).data)
             serializer = self.get_paginated_response(page)
         else:
             serializer = AllProblemSerializer(page, many=True)
-        return Response(serializer.data)
-
-
-
-class AdminProblemDetailView(APIView):
-    permission_classes = [permission.IsAdmin]
-
-    # parser_classes = [MultiPartParser, JSONParser]
-
-    def get_object(self, problem_id):
-        problem = get_object_or_404(Problem, id=problem_id)
-        if problem.is_deleted:
-            return Http404
-        return problem
-
-    def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-
-        # ip_addr = "3.37.186.158"
-        # try:
-        #     data_path = str(problem.data.path).replace("/home/ubuntu/BE/uploads/", "")
-        #     data_url = "http://{0}/{1}".format(ip_addr, data_path)
-        # except ValueError:
-        #     data_url = ""
-        # try:
-        #     solution_path = str(problem.solution.path).replace("/home/ubuntu/BE/uploads/", "")
-        #     solution_url = "http://{0}/{1}".format(ip_addr, solution_path)
-        # except ValueError:
-        #     data_url = ""
-
-        # ip_addr = "3.37.186.158:8000"
-        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
-
-        cp_json = {
-            "id": problem.id,
-            "title": problem.title,
-            "description": problem.description,
-            "created_time": problem.created_time,
-            "created_user": problem.created_user.username,
-            "data": data_url,
-            "data_description": problem.data_description,
-            "solution": solution_url,
-            "evaluation": problem.evaluation,
-            "public": problem.public,
-            "class_id": problem.class_id.id
-        }
-        print("problem.class_id", problem.class_id)
-
-        return Response(cp_json, status=status.HTTP_200_OK)
-
-    def put(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        data = request.data
-        obj = {"title": data["title"],
-               "description": data["description"],
-               "data_description": data["data_description"],
-               "evaluation": data["evaluation"],
-               "public": data["public"]}
-
-        if data['data']:
-            # 폴더 삭제
-            if os.path.isfile(problem.data.path):
-                path = (problem.data.path).split("uploads/problem/")
-                path = path[1].split("/")
-                shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
-            obj['data'] = data['data']
-        if data['solution']:
-            if os.path.isfile(problem.solution.path):
-                path = (problem.solution.path).split("uploads/solution/")
-                path = path[1].split("/")
-                shutil.rmtree('./uploads/solution/' + path[0] + '/')
-            obj['solution'] = data['solution']
-
-        serializer = ProblemSerializer(problem, data=obj)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            data = serializer.errors
-            return Response(data)
-
-    def delete(self, request, problem_id):
-        problem = self.get_object(problem_id)
-        if problem == Http404:
-            message = {"error": "Problem이 존재하지 않습니다."}
-            return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            problem.is_deleted = True
-            problem.save()
-            message = {"success": "문제가 제거되었습니다."}
-        return Response(data=message, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

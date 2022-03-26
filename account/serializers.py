@@ -3,7 +3,7 @@ from .models import User
 from competition.models import Competition
 from classes.serializers import ClassUserGetInfoSerializer
 from competition.serializers import CompetitionUserGetInfoSerializer
-from classes.models import Class_user
+from classes.models import ClassUser
 
 
 
@@ -59,5 +59,5 @@ class UserCompetitionSerializer(serializers.ModelSerializer):
 class UserClassPrivilege(serializers.ModelSerializer):
 
     class Meta:
-        model = Class_user
+        model = ClassUser
         fields = ['privilege']

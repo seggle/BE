@@ -23,7 +23,7 @@ urlpatterns = [
     path('class/<int:class_id>/', UserClassPrivilege.as_view(), name="user_class_privilege"),
     path('competition/<int:competition_id>/', UserCompetitionPrivilege.as_view(),name="user_competition_privilege"),
     path('<str:username>/', UserInfoView.as_view(), name='user_info_api'),
-    path('<str:username>/contributions', ContributionsView.as_view(), name="user_contributions"),
-    path('<str:username>/competitions', UserCompetitionInfoView.as_view(), name='user_competition_info'),
+    path('<str:username>/contributions/', ContributionsView.as_view(), name="user_contributions"),
+    path('<str:username>/competitions/', UserCompetitionInfoView.as_view(), name='user_competition_info'),
     # path('logout_all/', LogoutAllView.as_view(), name='auth_logout_all'),
 ]
