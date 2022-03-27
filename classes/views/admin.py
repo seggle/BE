@@ -23,21 +23,21 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
         uid = request.GET.get('uid', None)
         if uid is None:
             keyword = request.GET.get('keyword', '')
-            class_list = Class.objects.all()
+            class_list = Class.objects.all().order_by('-id')
             if keyword:
                 class_list = class_list.filter(Q(name__icontains=keyword) | Q(created_user__username__icontains=keyword))
                 # class_list = class_list.filter(Q(created_user__username__icontains=keyword))
             page = self.paginate_queryset(class_list)
             if page is not None:
                 #serializer = self.get_paginated_response(self.serializer_class(page, many=True).data)
-                serializer = self.get_paginated_response(page)
+                serializer = self.get_paginated_response(ClassSerializer(page, many=True).data)
             else:
                 serializer = ClassSerializer(class_list)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
 
             class_name_list = []
-            class_lists = ClassUser.objects.filter(username=uid)
+            class_lists = ClassUser.objects.filter(username=uid).order_by('-id')
             for class_list in class_lists:
                 class_add = {}
                 class_list_serializer = ClassSerializer(class_list.class_id)

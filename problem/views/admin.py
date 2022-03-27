@@ -28,7 +28,7 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
     # 00-17
     def get(self, request):
-        problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None))
+        problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None)).order_by('-created_time')
 
         keyword = request.GET.get('keyword', '')
         if keyword:
@@ -43,12 +43,13 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
                 "id" : problem.id,
                 "title" : problem.title,
                 "created_time" : problem.created_time,
-                "created_user" : problem.created_user,
+                "created_user" : problem.created_user.username,
                 "data" : data_url,
                 "solution" : solution_url,
                 "public" : problem.public,
                 "class_id" : problem.class_id.id,
             }
+            
             new_problems.append(problem_json)
 
         page = self.paginate_queryset(new_problems)

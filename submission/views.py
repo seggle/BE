@@ -86,22 +86,16 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
 
     # 07-00 유저 submission 내역 조회
     def get(self, request):
-        username = request.GET.get('username', '')
-        cp_id = request.GET.get('cpid', '')
-
-        submission_class_list = SubmissionClass.objects.all()
-
-        if username:
-            submission_class_list = submission_class_list.filter(username=username).order_by('-created_time')
-        if cp_id:
-            submission_class_list = submission_class_list.filter(c_p_id=cp_id).order_by('-created_time')
+        cp_id = request.GET.get('cpid', 0)
+        contest_problem = get_contest_problem(cp_id)
+        submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(c_p_id=cp_id).order_by('-created_time')
 
         obj_list = []
 
         for submission in submission_class_list:
             csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
             ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
-            # print(csv_url)
+            
             obj = {
                 "id": submission.id,
                 "username": submission.username,
@@ -112,7 +106,6 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
                 "status": submission.status,
                 "on_leaderboard": submission.on_leaderboard
             }
-            print(obj)
             obj_list.append(obj)
 
         page = self.paginate_queryset(obj_list)
