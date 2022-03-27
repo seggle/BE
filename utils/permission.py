@@ -65,7 +65,7 @@ class IsTA(permissions.BasePermission):
 
 class IsProblemOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self,request,view):
-        problem = Problem.objects.get(id=view.kwargs.get('problem_id',None))
+        problem = Problem.objects.get(id=view.kwargs.get('problem_id',None)).active()
 
         return request.method in permissions.SAFE_METHODS \
                or problem.professor == request.user \

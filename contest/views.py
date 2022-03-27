@@ -45,7 +45,7 @@ class ContestView(APIView):
         # class_id = request.get.GET("class_id")
         class_ = get_class(class_id)
         contest = []
-        contest_lists = Contest.objects.filter(class_id=class_id)
+        contest_lists = Contest.objects.filter(class_id=class_id).active()
         for contest_list in contest_lists:
             contest_list_serializer = ContestSerializer(contest_list)
             contest.append(contest_list_serializer.data)
@@ -88,12 +88,12 @@ class ContestProblemView(APIView):
         for data in datas:
             # exist and Problem id and public and is_deleted is not checking
             # problem_id 가 존재하지 않거나, 이미 등록된 경우
-            if (Problem.objects.filter(id=data['problem_id']).count() == 0) or (ContestProblem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).count() != 0):
+            if (Problem.objects.filter(id=data['problem_id']).active().count() == 0) or (ContestProblem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).active().count() != 0):
                 error['Error_problem_id'].append(data['problem_id'])
                 continue
 
-            order = ContestProblem.objects.filter(contest_id=contest_id).count() + 1
-            problem = Problem.objects.get(id=data['problem_id'])
+            order = ContestProblem.objects.filter(contest_id=contest_id).active().count() + 1
+            problem = Problem.objects.get(id=data['problem_id']).active()
             # 0315 수정 필요
             # if ((problem.public != 1) or (problem.is_deleted != 0)):
             #     error['Error_problem_id'].append(data['problem_id'])
@@ -126,7 +126,7 @@ class ContestProblemView(APIView):
         # contest_id = request.get.GET("contest_id")
         contest = get_contest(contest_id)
 
-        contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order')
+        contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []
 
         if contest_problem_lists.count() == 0:
@@ -143,6 +143,8 @@ class ContestProblemView(APIView):
             return Response(msg_contest_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         for contest_problem in contest_problem_lists:
+            if contest_problem.problem_id.is_deleted:
+                continue
             contest_problem_json = {
                 "id": contest_problem.id,
                 "contest_id": contest_problem.contest_id.id,
@@ -206,7 +208,7 @@ class ContestProblemOrderView(APIView):
                 return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
         for data in datas:
-            contest_problem = ContestProblem.objects.get(id=data['id'])
+            contest_problem = ContestProblem.objects.get(id=data['id']).active()
             contest_problem.order = data['order']
             contest_problem.save()
 
@@ -264,7 +266,7 @@ class ContestProblemInfoView(APIView):
         if (contest_problem.contest_id.start_time > time_check) or (contest_problem.contest_id.end_time < time_check):
             return Response(msg_contest_time_error, status=status.HTTP_400_BAD_REQUEST)
 
-        problem = Problem.objects.get(id=contest_problem.problem_id.id)
+        problem = Problem.objects.get(id=contest_problem.problem_id.id).active()
         
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         cp_json = {
@@ -289,11 +291,11 @@ class ContestProblemInfoView(APIView):
         # contest_id = request.get.GET("contest_id")
         contest = get_contest(contest_id)
         # cp_id = request.get.GET("cp_id")
-        contest_problem = get_contest(cp_id)
+        contest_problem = get_contest_problem(cp_id)
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-        contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('-order')
+        contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('-order').active()
 
         for contest_problem_list in contest_problem_lists:
             if(contest_problem_list.order > contest_problem.order):

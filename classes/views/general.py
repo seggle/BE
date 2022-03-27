@@ -9,7 +9,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from ..models import Class, ClassUser
 from account.models import User
 from ..serializers import ClassSerializer, ClassGetSerializer, ClassPatchSerializer, ClassUserSerializer, ClassUserGetSerializer, ClassUserGetInfoSerializer
@@ -30,9 +30,9 @@ class ClassView(APIView):
         serializer = ClassSerializer(data=data)
 
         if serializer.is_valid():
-            _class = serializer.save()
+            class_ = serializer.save()
             # class_id = serializer.data['id']
-            class_id = _class.id
+            class_id = class_.id
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -83,7 +83,7 @@ class ClassUserStdInfoView(APIView):
     #permission_classes = [IsAdminUser]
 
     def get(self, request, class_id):
-        _class = get_class(class_id)
+        class_ = get_class(class_id)
         datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=0)
         serializer = ClassUserGetSerializer(datas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -92,7 +92,7 @@ class ClassUserTaInfoView(APIView):
     #permission_classes = [IsAdminUser]
 
     def get(self, request, class_id):
-        _class = get_class(class_id)
+        class_ = get_class(class_id)
         datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=1)
         serializer = ClassUserGetSerializer(datas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -102,7 +102,6 @@ class ClassStdView(APIView):
 
     def post(self,request, class_id):
         class_ = get_class(class_id)
-
         # 기존 std 삭제
         if class_.created_user == request.user:
             classuser_list = ClassUser.objects.filter(class_id=class_id)

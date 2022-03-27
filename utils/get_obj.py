@@ -10,6 +10,7 @@ from leaderboard.models import *
 from problem.models import *
 from proposal.models import *
 from submission.models import *
+from django.http import Http404
 
 # is_deleted 고려해주세요ㅎㅎ사랑합니다~~~~
 
@@ -40,15 +41,17 @@ def get_faq(id):
 
 # class
 def get_class(id):
-    class_ = get_object_or_404(Class, id = id)
-    return class_
+    _class = get_object_or_404(Class, id = id)
+    if _class.is_deleted:
+        raise Http404()
+    return _class
 
 # competition
 def get_competition(id):
     competition = get_object_or_404(Competition, id=id)
     problem = get_object_or_404(Problem, id=competition.problem_id.id)
-    if problem.is_deleted: # 삭제된 문제인 경우 False 반환
-        return False
+    if problem.is_deleted:
+        raise Http404()
     else:
         return competition
 
@@ -56,17 +59,23 @@ def get_competition(id):
 def get_problem(id):
     problem = get_object_or_404(Problem, id=id)
     if problem.is_deleted:
-        return False
+        raise Http404()
     return problem
 
 # contest
 def get_contest(id):
     contest = get_object_or_404(Contest, id = id)
+    if contest.is_deleted:
+        raise Http404()
     return contest
 
 # contest_problem
 def get_contest_problem(id):
     contestproblem = get_object_or_404(ContestProblem, id=id)
+    if contestproblem.is_deleted:
+        raise Http404()
+    if contestproblem.problem_id.is_deleted:
+        raise Http404()
     return contestproblem
 
 def get_submission_class(id):

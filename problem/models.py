@@ -3,6 +3,15 @@ from account.models import User
 from classes.models import Class
 from utils.common import upload_to_data, upload_to_solution
 
+class ActiveModelQuerySet(models.QuerySet):
+
+    def not_active(self, *args, **kwargs):
+        return self.filter(is_deleted=True, *args, **kwargs)
+
+    def active(self, *args, **kwargs):
+        return self.filter(is_deleted=False, *args, **kwargs)
+
+
 class Problem(models.Model):
     title = models.TextField(unique=True)
     description = models.TextField()
@@ -16,6 +25,7 @@ class Problem(models.Model):
     class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor", blank=True, null=True)
+    objects = ActiveModelQuerySet().as_manager()
 
     def __str__(self):
         return self.id

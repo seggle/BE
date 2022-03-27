@@ -3,6 +3,13 @@ from account.models import User
 from classes.models import Class
 from problem.models import Problem
 
+class ActiveModelQuerySet(models.QuerySet):
+
+    def not_active(self, *args, **kwargs):
+        return self.filter(is_deleted=True, *args, **kwargs)
+
+    def active(self, *args, **kwargs):
+        return self.filter(is_deleted=False, *args, **kwargs)
 
 class Contest(models.Model):
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id")
@@ -12,6 +19,7 @@ class Contest(models.Model):
     is_exam = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
+    objects = ActiveModelQuerySet().as_manager()
 
     def __str__(self):
         return self.id
@@ -29,6 +37,7 @@ class ContestProblem(models.Model):
     data_description = models.TextField()
     order = models.IntegerField()
     is_deleted = models.BooleanField(default=False)
+    objects = ActiveModelQuerySet().as_manager()
     
     def __str__(self):
         return self.id

@@ -23,14 +23,16 @@ class CompetitionView(APIView, CustomPermissionMixin):
 
     # 06-00 대회 리스트 조회
     def get(self, request):
-        competitions = Competition.objects.filter(problem_id__is_deleted=False)
+        competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
         obj_list = []
         for competition in competitions:
+            if competition.is_deleted:
+                continue
             obj = {
-                "problem": Problem.objects.get(id=competition.problem_id.id),
+                "problem": Problem.objects.get(id=competition.problem_id.id).active(),
                 "id": competition.id,
                 "start_time": competition.start_time,
                 "end_time": competition.end_time

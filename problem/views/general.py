@@ -35,10 +35,10 @@ class ProblemView(APIView, PaginationHandlerMixin):
     # 03-01
     def get(self, request):
         if request.user.privilege == 0:
-            problems = Problem.objects.filter(Q(created_user=request.user) & Q(is_deleted=False))
+            problems = Problem.objects.filter(Q(created_user=request.user)).active()
         else:
             problems = Problem.objects.filter(
-                (Q(public=True) | Q(professor=request.user)) & Q(is_deleted=False) & ~Q(class_id=None))
+                (Q(public=True) | Q(professor=request.user)) & ~Q(class_id=None)).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             problems = problems.filter(title__icontains=keyword)
@@ -72,9 +72,9 @@ class ProblemView(APIView, PaginationHandlerMixin):
     def post(self, request):
         data = request.data.copy()
 
-        if data['data'] is '':
+        if data['data'] == '':
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
-        if data['solution'] is '':
+        if data['solution'] == '':
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         data['created_user'] = request.user

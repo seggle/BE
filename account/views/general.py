@@ -147,8 +147,8 @@ class ClassInfoView(APIView):
         class_lists = ClassUser.objects.filter(username=request.user)
         for class_list in class_lists:
             class_add_is_show = {}
-
-            class_list_serializer = ClassGetSerializer(class_list.class_id)
+            class_ = get_class(class_list.class_id)
+            class_list_serializer = ClassGetSerializer(class_)
             class_add_is_show = class_list_serializer.data
             class_add_is_show["privilege"] = class_list.privilege
             class_add_is_show["is_show"] = class_list.is_show
@@ -238,6 +238,9 @@ class UserCompetitionInfoView(APIView):
 
         obj_list = []
         for competition in competition_list:
+
+            if competition.competition_id.is_deleted:
+                continue
             obj = {
                 "id": competition.competition_id.id,
                 "problem_id": competition.competition_id.problem_id,

@@ -28,7 +28,7 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
     # 00-17
     def get(self, request):
-        problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None)).order_by('-created_time')
+        problems = Problem.objects.filter(~Q(class_id=None)).active().order_by('-created_time')
 
         keyword = request.GET.get('keyword', '')
         if keyword:
