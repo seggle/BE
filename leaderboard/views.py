@@ -57,7 +57,6 @@ class LeaderboardClassView(APIView):
 class LeaderboardCompetitionView(APIView):
 
     def get(self, request, competition_id):
-        print(1)
         competition = get_competition(competition_id)
         submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
 

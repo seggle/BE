@@ -54,7 +54,7 @@ class FaqAdminView(APIView):
             "visible" : data["visible"]
         }
         if faq.created_user == request.user:
-            serializer = FaqPatchSerializer(faq, data=obj) #Request의 data를 UserSerializer로 변환
+            serializer = FaqPatchSerializer(faq, data=obj)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -82,7 +82,7 @@ class FaqCheckAdminView(APIView):
         if faq.created_user == request.user:
             faq.visible = not faq.visible
             faq.save()
-            serializer = FaqSerializer(faq) #Request의 data를 UserSerializer로 변환
+            serializer = FaqSerializer(faq)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)

@@ -49,6 +49,8 @@ def get_class(id):
 # competition
 def get_competition(id):
     competition = get_object_or_404(Competition, id=id)
+    if competition.is_deleted:
+        raise Http404()
     problem = get_object_or_404(Problem, id=competition.problem_id.id)
     if problem.is_deleted:
         raise Http404()

@@ -29,7 +29,7 @@ class SubmissionClass(models.Model):
     score = models.FloatField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     ip_address = models.TextField(null=True)
-    on_leaderboard = models.BooleanField(default=False) # 1이면 leaderboard에 보이고 0이면 보이지 않음
+    on_leaderboard = models.BooleanField(default=False)
     status = models.IntegerField(default=0) # 0이면 문제 없음 , 1이면 에러 발생
 
     def __str__(self):
@@ -48,7 +48,7 @@ class SubmissionCompetition(models.Model):
     score = models.FloatField(null=True)
     created_time = models.DateTimeField(auto_now_add=True)
     ip_address = models.TextField(null=True)
-    on_leaderboard = models.BooleanField(default=False) # 1이면 leaderboard에 보이고 0이면 보이지 않음
+    on_leaderboard = models.BooleanField(default=False)
     status = models.IntegerField(default=0) # 0이면 문제 없음 , 1이면 에러 발생
 
     def __str__(self):

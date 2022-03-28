@@ -45,7 +45,6 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            # ip_addr = "3.37.186.158:8000"
             data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
             solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
@@ -97,9 +96,6 @@ class ProblemDetailView(APIView):
     # 03-04
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
-        # if problem == Http404:
-        #     message = {"error": "Problem이 존재하지 않습니다."}
-        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
@@ -123,9 +119,7 @@ class ProblemDetailView(APIView):
     # 03-03
     def put(self, request, problem_id):
         problem = get_problem(problem_id)
-        # if problem == Http404:
-        #     message = {"error": "Problem이 존재하지 않습니다."}
-        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        
         data = request.data
         obj = {
             "title": data["title"],

@@ -32,7 +32,7 @@ class CompetitionView(APIView, CustomPermissionMixin):
             if competition.is_deleted:
                 continue
             obj = {
-                "problem": Problem.objects.get(id=competition.problem_id.id).active(),
+                "problem": Problem.objects.get(id=competition.problem_id.id),
                 "id": competition.id,
                 "start_time": competition.start_time,
                 "end_time": competition.end_time
@@ -56,7 +56,7 @@ class CompetitionView(APIView, CustomPermissionMixin):
             # 문제 생성
             problem = ProblemSerializer(data=data)
             if problem.is_valid():
-                problem_obj = problem.save() # save() calls create() of the Serializer which returns an object instance
+                problem_obj = problem.save()
             else:
                 return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
             # 대회 생성
@@ -96,9 +96,6 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
     # 06-02 대회 개별 조회
     def get(self, request, competition_id):
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_problem(competition.problem_id.id)
 
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
@@ -125,9 +122,6 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 수정 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_problem(competition.problem_id.id)
 
         data = request.data
@@ -177,10 +171,6 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 삭제 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        # problem 삭제 확인
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-","")
@@ -193,9 +183,6 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
     # 06-05-01 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         # competition_user에 username이 이미 존재하는지 체크
         if CompetitionUser.objects.filter(username = request.user).filter(competition_id = competition_id).count():
             return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -215,9 +202,6 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
     # 06-05-03 대회 참가자, 관리자 전체 조회
     def get(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         user_list = CompetitionUser.objects.filter(competition_id = competition.id)
         competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
         return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
@@ -227,9 +211,6 @@ class CompetitionTaView(APIView, CustomPermissionMixin):
     # 06-05-02 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 0315
         # 기존 TA 삭제

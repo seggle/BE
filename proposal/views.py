@@ -31,7 +31,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         data = request.data
         data["created_user"] = request.user
 
-        serializer = ProposalSerializer(data=data) #Request의 data를 UserSerializer로 변환
+        serializer = ProposalSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -68,7 +68,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
             "context" : data["context"],
         }
         if proposal.created_user == request.user:
-            serializer = ProposalPatchSerializer(proposal, data=obj) #Request의 data를 UserSerializer로 변환
+            serializer = ProposalPatchSerializer(proposal, data=obj)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)

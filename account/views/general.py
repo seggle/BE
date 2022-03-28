@@ -146,9 +146,10 @@ class ClassInfoView(APIView):
         class_name_list = []
         class_lists = ClassUser.objects.filter(username=request.user)
         for class_list in class_lists:
+            if class_list.class_id.is_deleted:
+                continue
             class_add_is_show = {}
-            class_ = get_class(class_list.class_id)
-            class_list_serializer = ClassGetSerializer(class_)
+            class_list_serializer = ClassGetSerializer(class_list.class_id)
             class_add_is_show = class_list_serializer.data
             class_add_is_show["privilege"] = class_list.privilege
             class_add_is_show["is_show"] = class_list.is_show

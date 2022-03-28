@@ -16,7 +16,6 @@ class ProblemPutSerializer(serializers.ModelSerializer):
 class AllProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
-        # fields = ["id", "title", "created_time", "created_user", "public"]
         fields = ["id", "title", "created_time", "created_user", "data", "solution", "public", "class_id"]
 
 class ProblemGenerateSerializer(serializers.ModelSerializer):

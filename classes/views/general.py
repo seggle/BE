@@ -31,7 +31,6 @@ class ClassView(APIView):
 
         if serializer.is_valid():
             class_ = serializer.save()
-            # class_id = serializer.data['id']
             class_id = class_.id
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -190,7 +189,6 @@ class ClassTaView(APIView):
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            # users_datas = user_add.users.all()
             class_users_datas = ClassUser.objects.all()
             serializer = ClassUserGetSerializer(class_users_datas, many=True)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
