@@ -1,18 +1,11 @@
-from multiprocessing import context
 from pickle import TRUE
-from django.shortcuts import render
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
-from django.http import Http404, JsonResponse
-from ..models import Class, ClassUser
+from ..models import ClassUser
 from account.models import User
-from ..serializers import ClassSerializer, ClassGetSerializer, ClassPatchSerializer, ClassUserSerializer, ClassUserGetSerializer, ClassUserGetInfoSerializer
+from ..serializers import ClassSerializer, ClassPatchSerializer, ClassUserSerializer, ClassUserGetSerializer
 from utils.get_obj import *
 from utils.message import *
 #from utils.user_permission import user_perm, class_user_check

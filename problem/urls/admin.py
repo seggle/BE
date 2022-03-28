@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 from problem.views.admin import AdminProblemView
 
 app_name = "admin_problem"

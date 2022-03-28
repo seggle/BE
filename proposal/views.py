@@ -1,23 +1,15 @@
-from curses import use_default_colors
 from multiprocessing import context
 from pickle import TRUE
-from django.shortcuts import render
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
-from django.http import JsonResponse
 from .models import Proposal
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
-from django.db.models import F
 
 # Create your views here.
 

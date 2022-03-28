@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from proposal.models import Proposal
-from account.models import User
 
 class ProposalSerializer(serializers.ModelSerializer):
 

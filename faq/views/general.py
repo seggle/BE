@@ -1,15 +1,9 @@
 from multiprocessing import context
 from pickle import TRUE
-from django.shortcuts import render
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework import status
-from django.http import JsonResponse
 from ..models import Faq
 from ..serializers import FaqSerializer
 

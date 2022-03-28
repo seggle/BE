@@ -1,18 +1,14 @@
 from utils import permission
 from rest_framework.views import APIView
-from utils.get_obj import get_problem
+from utils.get_obj import *
 from ..models import Problem
-from classes.models import Class
-from ..serializers import ProblemSerializer, AllProblemSerializer
+from ..serializers import AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
-from django.http import Http404, HttpResponse
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.common import IP_ADDR
 import os
 import shutil
