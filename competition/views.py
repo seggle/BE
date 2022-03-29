@@ -1,24 +1,23 @@
-from django.http import Http404
-from django.utils import timezone
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionListSerializer, CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionPostSerializer, 
+    CompetitionUserGetSerializer, CompetitionUserSerializer, 
 )
-from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
+from problem.serializers import ProblemSerializer
 from competition.models import Competition, CompetitionUser
 from problem.models import Problem
 from account.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.permission import CustomPermissionMixin
 from utils.get_obj import *
 from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
+from django.http import Http404
+from django.utils import timezone
 
 class CompetitionView(APIView, CustomPermissionMixin):
 

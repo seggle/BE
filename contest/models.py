@@ -1,5 +1,4 @@
 from django.db import models
-from account.models import User
 from classes.models import Class
 from problem.models import Problem
 

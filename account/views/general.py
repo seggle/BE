@@ -1,27 +1,21 @@
 from django.db.models import Q
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
-from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
-from rest_framework import status, generics
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
 from django.contrib.auth.hashers import check_password
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer, UserClassPrivilege
-from classes.models import Class, ClassUser
+    UserCompetitionSerializer
+from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
 from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 from utils.get_obj import *
-from competition.models import Competition
 
 from utils import permission
 

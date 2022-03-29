@@ -1,5 +1,5 @@
 from tokenize import Token
-from django.urls import path, include
+from django.urls import path
 from django.contrib.auth import views as auth_views
 from account.views.general import (
     LogoutView, UserCompetitionInfoView, UserRegisterView,

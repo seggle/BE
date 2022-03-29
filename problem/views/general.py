@@ -1,14 +1,12 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemPutSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR

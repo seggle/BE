@@ -1,11 +1,7 @@
 from rest_framework.views import APIView
-from classes.models import Class
-from contest.models import Contest, ContestProblem
-from submission.models import SubmissionClass, SubmissionCompetition, Path
+from submission.models import SubmissionClass, SubmissionCompetition
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
-from competition.models import Competition, CompetitionUser
-from problem.models import Problem
-from account.models import User
+from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from utils.evaluation import EvaluationMixin
@@ -20,7 +16,7 @@ import uuid
 import mimetypes
 import os
 import urllib
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.utils import timezone
 
 # submission-class 관련

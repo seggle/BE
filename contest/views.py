@@ -1,20 +1,12 @@
 from multiprocessing import context
 from pickle import TRUE
-from django.shortcuts import render
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
 from rest_framework import status
-from datetime import datetime
 from django.utils import timezone
-from django.http import JsonResponse
-from classes.models import Class, ClassUser
-from account.models import User
 from problem.models import Problem
 from .models import Contest, ContestProblem
-from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
+from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
