@@ -20,7 +20,7 @@ import uuid
 import mimetypes
 import os
 import urllib
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.utils import timezone
 
 # submission-class 관련

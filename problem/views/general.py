@@ -147,7 +147,7 @@ class ProblemDetailView(APIView):
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
-            solution = data['solution'].name.split('.')[-1]
+            solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):

@@ -1,5 +1,3 @@
-from django.http import Http404
-from django.utils import timezone
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
@@ -19,6 +17,8 @@ from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
+from django.http import Http404
+from django.utils import timezone
 
 class CompetitionView(APIView, CustomPermissionMixin):
 
