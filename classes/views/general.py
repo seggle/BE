@@ -22,6 +22,7 @@ from utils.message import *
 class ClassView(APIView):
     #permission_classes = [IsAdminUser]
 
+    # 05-01
     def post(self,request):
 
         data = request.data
@@ -50,11 +51,15 @@ class ClassView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ClassDetailView(APIView):
+
+    # 05-02
     def get(self, request, class_id):
         class_ = get_class(class_id)
         serializer = ClassSerializer(class_)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # 05-03
     def patch(self, request, class_id):
         class_ = get_class(class_id)
         data = request.data
@@ -68,6 +73,7 @@ class ClassView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
+    # 05-04
     def delete(self, request, class_id):
         class_ = get_class(class_id)
         if class_.created_user == request.user:
@@ -77,28 +83,17 @@ class ClassView(APIView):
         else:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-
-class ClassUserStdInfoView(APIView):
+class ClassStdView(APIView):
     #permission_classes = [IsAdminUser]
 
+    # 05-05-01
     def get(self, request, class_id):
         class_ = get_class(class_id)
         datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=0)
         serializer = ClassUserGetSerializer(datas, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class ClassUserTaInfoView(APIView):
-    #permission_classes = [IsAdminUser]
-
-    def get(self, request, class_id):
-        class_ = get_class(class_id)
-        datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=1)
-        serializer = ClassUserGetSerializer(datas, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-class ClassStdView(APIView):
-    #permission_classes = [IsAdminUser]
-
+    # 05-06
     def post(self,request, class_id):
         class_ = get_class(class_id)
         # 기존 std 삭제
@@ -148,6 +143,14 @@ class ClassStdView(APIView):
 class ClassTaView(APIView):
     #permission_classes = [IsAdminUser]
 
+    # 05-05-02
+    def get(self, request, class_id):
+        class_ = get_class(class_id)
+        datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=1)
+        serializer = ClassUserGetSerializer(datas, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    # 05-07
     def post(self,request, class_id):
         class_ = get_class(class_id)
         # 기존 ta 삭제

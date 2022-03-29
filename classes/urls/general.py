@@ -1,6 +1,6 @@
 from django.urls import path
 from classes.views.general import (
-    ClassView, ClassUserStdInfoView, ClassUserTaInfoView, ClassStdView, ClassTaView, 
+    ClassView, ClassDetailView, ClassStdView, ClassTaView, 
 )
 from contest.views import (
     ContestView, ContestCheckView, ContestProblemView, ContestProblemOrderView, ContestProblemTitleDescptView, ContestProblemInfoView, 
@@ -14,9 +14,7 @@ app_name = "class"
 urlpatterns = [
     #class
     path('', ClassView.as_view(), name="class_api"),
-    path('<int:class_id>/', ClassView.as_view()),
-    path('<int:class_id>/users/std/', ClassUserStdInfoView.as_view()), 
-    path('<int:class_id>/users/ta/', ClassUserTaInfoView.as_view()), 
+    path('<int:class_id>/', ClassDetailView.as_view()),
     path('<int:class_id>/std/', ClassStdView.as_view()), 
     path('<int:class_id>/ta/', ClassTaView.as_view()),
 
