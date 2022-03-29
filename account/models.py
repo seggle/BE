@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from utils.message import *
 
 class UserManager(BaseUserManager):
 
@@ -40,8 +41,8 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager() # 만들어진 쿼리셋 UserManager 상속
 
-    username = models.CharField(max_length=20, unique=True)
-    email = models.EmailField(max_length=255, unique=True)
+    username = models.CharField(max_length=20, unique=True, error_messages=msg_user_model_username_unique)
+    email = models.EmailField(max_length=255, unique=True, error_messages=msg_user_model_email_unique)
     name = models.CharField(max_length=20, null=True)
     privilege = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True) # 유저 모델의 필수 필드

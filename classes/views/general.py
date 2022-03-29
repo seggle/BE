@@ -139,9 +139,9 @@ class ClassStdView(APIView):
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            class_users_datas = ClassUser.objects.all()
-            serializer = ClassUserGetSerializer(class_users_datas, many=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # class_users_datas = ClassUser.objects.all()
+            # serializer = ClassUserGetSerializer(class_users_datas, many=True)
+            return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 
@@ -189,8 +189,8 @@ class ClassTaView(APIView):
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            class_users_datas = ClassUser.objects.all()
-            serializer = ClassUserGetSerializer(class_users_datas, many=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # class_users_datas = ClassUser.objects.all()
+            # serializer = ClassUserGetSerializer(class_users_datas, many=True)
+            return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)

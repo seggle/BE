@@ -21,6 +21,7 @@ import mimetypes
 import os
 import urllib
 from django.http import Http404, HttpResponse
+from django.utils import timezone
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
@@ -34,11 +35,20 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
             return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
 
-        #
-        # csv, ipynb file check
-        #
+        time_check = timezone.now()
+        if (contest.start_time > time_check) or (contest.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
+        
+        csv_str = data['csv'].name.split('.')[-1]
+        ipynb_str = data['ipynb'].name.split('.')[-1]
+        if csv_str != 'csv':
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if ipynb_str != 'ipynb':
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+
+
         temp = str(uuid.uuid4()).replace("-","")
 
         path_json = {
@@ -146,24 +156,36 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         competition = get_competition(competition_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
+        time_check = timezone.now()
+        if (competition.start_time > time_check) or (competition.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
         user = get_username(request.user.username)
         if CompetitionUser.objects.filter(username = request.user.username).filter(competition_id = competition_id).count() == 0:
             return Response({'error':"대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-        temp = str(uuid.uuid4()).replace("-","")
 
+        csv_str = data['csv'].name.split('.')[-1]
+        ipynb_str = data['ipynb'].name.split('.')[-1]
+        if csv_str != 'csv':
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if ipynb_str != 'ipynb':
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+
+        temp = str(uuid.uuid4()).replace("-","")
         path_json = {
             "path":temp
         }
+
         submission_json = {
-            "username": request.user,
-            "competition_id":competition.id,
-            "csv":data["csv"],
-            "ipynb":data["ipynb"],
-            "problem_id":competition.problem_id.id,
-            "score":None,
-            "ip_address":GetIpAddr(request)
+            "username" : request.user,
+            "competition_id" : competition.id,
+            "csv" : data["csv"],
+            "ipynb" : data["ipynb"],
+            "problem_id" : competition.problem_id.id,
+            "score" : None,
+            "ip_address" : GetIpAddr(request)
         }
 
         path_serializer = PathSerializer(data=path_json)

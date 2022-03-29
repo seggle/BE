@@ -110,10 +110,14 @@ class ContestProblemView(APIView):
         else:
             return Response(error, status=status.HTTP_201_CREATED)
 
-    #05-11
+    #05-12
     def get(self, request, class_id, contest_id):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
+
+        time_check = timezone.now()
+        if (contest.start_time > time_check) or (contest.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []
@@ -123,13 +127,6 @@ class ContestProblemView(APIView):
 
         if contest_problem_lists[0].contest_id.class_id.id != class_id:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
-
-        start_time = contest_problem_lists[0].contest_id.start_time
-        end_time = contest_problem_lists[0].contest_id.end_time
-
-        time_check = timezone.now()
-        if (start_time > time_check) or (end_time < time_check):
-            return Response(msg_contest_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         for contest_problem in contest_problem_lists:
             if contest_problem.problem_id.is_deleted:
@@ -147,7 +144,7 @@ class ContestProblemView(APIView):
 
         return Response(contest_problem_list, status=status.HTTP_200_OK)
 
-    #05-10
+    #05-11
     def patch(self, request, class_id, contest_id):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
@@ -161,7 +158,7 @@ class ContestProblemView(APIView):
             serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 05-12
+    # 05-13
     def delete(self, request, class_id, contest_id):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
@@ -237,13 +234,13 @@ class ContestProblemInfoView(APIView):
         contest_problem = get_contest_problem(cp_id)
 
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
         
         time_check = timezone.now()
         if (contest_problem.contest_id.start_time > time_check) or (contest_problem.contest_id.end_time < time_check):
-            return Response(msg_contest_time_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
-        problem = Problem.objects.get(id=contest_problem.problem_id.id).active()
+        problem = Problem.objects.get(id=contest_problem.problem_id.id)
         
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         cp_json = {
