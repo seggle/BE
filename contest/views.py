@@ -107,9 +107,9 @@ class ContestProblemView(APIView):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
 
-        time_check = timezone.now()
-        if (contest.start_time > time_check) or (contest.end_time < time_check):
-            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        # time_check = timezone.now()
+        # if (contest.start_time > time_check) or (contest.end_time < time_check):
+        #     return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []
@@ -128,8 +128,8 @@ class ContestProblemView(APIView):
                 "contest_id": contest_problem.contest_id.id,
                 "problem_id": contest_problem.problem_id.id,
                 "title": contest_problem.title,
-                "start_time": start_time,
-                "end_time": end_time,
+                "start_time": contest.start_time,
+                "end_time": contest.end_time,
                 "order": contest_problem.order
             }
             contest_problem_list.append(contest_problem_json)
