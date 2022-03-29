@@ -16,6 +16,8 @@ from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
+from django.http import Http404
+from django.utils import timezone
 
 class CompetitionView(APIView, CustomPermissionMixin):
 
@@ -48,6 +50,14 @@ class CompetitionView(APIView, CustomPermissionMixin):
             return Response({'error':'Competition 생성 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
+        data_str = data['data'].name.split('.')[-1]
+        solution_str = data['solution'].name.split('.')[-1]
+        if data_str != 'zip':
+            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        if solution_str != 'csv':
+            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+
+
         data['created_user'] = request.user
         check = CompetitionProblemCheckSerializer(data=data)
         if check.is_valid():
@@ -132,17 +142,24 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
             "public": False
         }
         if data['data']:
+            data_str = data['data'].name.split('.')[-1]
+            if data_str != 'zip':
+                return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
+            solution_str = data['solution'].name.split('.')[-1]
+            if solution_str != 'csv':
+                return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
                 path = (problem.solution.path).split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
+        
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
@@ -181,6 +198,11 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
     # 06-05-01 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
+
+        time_check = timezone.now()
+        if (competition.start_time > time_check) or (competition.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
         # competition_user에 username이 이미 존재하는지 체크
         if CompetitionUser.objects.filter(username = request.user).filter(competition_id = competition_id).count():
             return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
