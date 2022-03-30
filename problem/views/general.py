@@ -16,6 +16,7 @@ import uuid
 import mimetypes
 import urllib
 from wsgiref.util import FileWrapper
+from utils.permission import *
 
 # permission import
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -172,7 +173,7 @@ class ProblemDetailView(APIView):
 
 
 class ProblemVisibilityView(APIView):
-    # permission_classes = [AllowAny]
+    permission_classes = [IsProblemOwnerOrReadOnly]
 
     # 03-06
     def post(self, request, problem_id):
@@ -185,7 +186,7 @@ class ProblemVisibilityView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsClassUser]
     # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
@@ -210,7 +211,7 @@ class ProblemDataDownloadView(APIView):
         return response
 
 class ProblemSolutionDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsProblemOwner]
 
     def get(self, request, problem_id):
         problem = get_problem(problem_id)

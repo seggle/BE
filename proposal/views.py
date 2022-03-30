@@ -2,7 +2,7 @@ from multiprocessing import context
 from pickle import TRUE
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny,IsAuthenticatedOrReadOnly
 from rest_framework import status
 from .models import Proposal
 from rest_framework.pagination import PageNumberPagination #pagination
@@ -17,6 +17,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class ProposalView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = BasicPagination
 
     def post(self,request):

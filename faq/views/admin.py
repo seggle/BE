@@ -2,18 +2,18 @@ from multiprocessing import context
 from pickle import TRUE
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from utils.get_obj import *
 from utils.message import *
 from ..models import Faq
 from ..serializers import FaqSerializer, FaqAllGetSerializer, FaqPatchSerializer
-
+from utils.permission import IsAdmin
 # Create your views here.
 
 class FaqAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     def post(self,request):
         data = request.data
@@ -65,7 +65,7 @@ class FaqAdminView(APIView):
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
 class FaqCheckAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     def post(self,request):
         data = request.data

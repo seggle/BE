@@ -9,13 +9,16 @@ from ..models import Class, ClassUser
 from ..serializers import ClassSerializer
 from utils.get_obj import *
 from django.http import Http404
+from utils.permission import IsAdmin
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     # pagination
+    permission_classes = [IsAdmin]
     pagination_class = BasicPagination
+
 
     def get(self, request):
         uid = request.GET.get('uid', None)

@@ -10,7 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from utils.get_ip import GetIpAddr
 from contest.models import Contest
-
+from utils.permission import *
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
@@ -18,6 +18,7 @@ class BasicPagination(PageNumberPagination):
 
 class ExamParticipateView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
+    permission_classes = [~IsSafeMethod | IsClassProfOrTA]
     def get_contest(self,contest_id):
         try:
             contest = Contest.objects.get(id=contest_id)
@@ -58,7 +59,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
             serializer = ExamSerializer(exams, many=True)
         return Response(serializer.data)
 
-    def post(self, request, contest_id, class_id):
+    def post(self, request, class_id, contest_id):
         # 권한 체크
         # 그 class에 등록되어 있는 사람인지 아닌지
         # try:
@@ -123,7 +124,7 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
 
 
 class ExamExceptionView(APIView):
-
+    permission_classes = [IsClassProfOrTA]
     def get_object(self, exam_id):
         exam = get_object_or_404(Exam, id=exam_id)
         return exam
@@ -140,7 +141,7 @@ class ExamExceptionView(APIView):
 
 
 class ExamResetView(APIView):
-
+    permission_classes = [IsClassProfOrTA]
     def get_object(self, exam_id):
         exam = get_object_or_404(Exam, id=exam_id)
         return exam

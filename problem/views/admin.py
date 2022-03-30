@@ -1,4 +1,4 @@
-from utils import permission
+
 from rest_framework.views import APIView
 from utils.get_obj import *
 from ..models import Problem
@@ -12,14 +12,14 @@ from rest_framework import status
 from utils.common import IP_ADDR
 import os
 import shutil
-
+from utils.permission import IsAdmin
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
 class AdminProblemView(APIView,PaginationHandlerMixin):
-    permission_classes = [permission.IsAdmin]
+    permission_classes = [IsAdmin]
     pagination_class = BasicPagination
 
     # 00-17

@@ -10,11 +10,13 @@ from .serializers import ContestSerializer, ContestPatchSerializer, ContestProbl
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
+from utils.permission import *
+
 
 # Create your views here.
 
 class ContestView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA]
 
     #05-08
     def post(self,request, class_id):
@@ -42,7 +44,7 @@ class ContestView(APIView):
         return Response(contest, status=status.HTTP_200_OK)
 
 class ContestCheckView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsClassProfOrTA]
 
     #05-09
     def patch(self, request, class_id, contest_id):
@@ -58,7 +60,7 @@ class ContestCheckView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ContestProblemView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA]
 
     # 05-13-01
     def post(self, request, class_id, contest_id):
@@ -163,7 +165,7 @@ class ContestProblemView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ContestProblemOrderView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsClassProfOrTA]
 
     #05-13-02
     def patch(self, request, class_id, contest_id):
@@ -187,7 +189,7 @@ class ContestProblemOrderView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ContestProblemTitleDescptView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsClassProfOrTA]
 
     #05-13-03
     def patch(self, request, class_id, contest_id, cp_id):
@@ -217,7 +219,7 @@ class ContestProblemTitleDescptView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ContestProblemInfoView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA]
 
     #05-14
     def get(self, request, class_id, contest_id, cp_id):

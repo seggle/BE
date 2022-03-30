@@ -8,15 +8,17 @@ from account.models import User
 from ..serializers import ClassSerializer, ClassPatchSerializer, ClassUserSerializer, ClassUserGetSerializer
 from utils.get_obj import *
 from utils.message import *
-#from utils.user_permission import user_perm, class_user_check
+from utils.permission import *
+
+# from utils.user_permission import user_perm, class_user_check
 
 # Create your views here.
 
 class ClassView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsProf | IsAdmin]
 
     # 05-01
-    def post(self,request):
+    def post(self, request):
 
         data = request.data
 
@@ -36,15 +38,17 @@ class ClassView(APIView):
             "is_show": True,
             "class_id": class_id
         }
- 
+
         serializer = ClassUserSerializer(data=data)
-        
+
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED) #client에게 JSON response 전달
+            return Response(serializer.data, status=status.HTTP_201_CREATED)  # client에게 JSON response 전달
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ClassDetailView(APIView):
+    permission_classes = [ClassProfOrReadOnly]
 
     # 05-02
     def get(self, request, class_id):
@@ -77,7 +81,8 @@ class ClassDetailView(APIView):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
 class ClassStdView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsClassProfOrTA]
+
 
     # 05-05-01
     def get(self, request, class_id):
@@ -87,7 +92,8 @@ class ClassStdView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-06
-    def post(self,request, class_id):
+    def post(self, request, class_id):
+
         class_ = get_class(class_id)
         # 기존 std 삭제
         if class_.created_user == request.user:
@@ -103,8 +109,8 @@ class ClassStdView(APIView):
         }
         datas = request.data
         for data in datas:
-            is_check_user = User.objects.filter(username = data['username']).count()
-            is_check_ClassUser = ClassUser.objects.filter(username = data['username']).filter(class_id = class_id).count()
+            is_check_user = User.objects.filter(username=data['username']).count()
+            is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
             if is_check_user == 0:
                 user_does_not_exist['does_not_exist'].append(data['username'])
                 continue
@@ -113,10 +119,10 @@ class ClassStdView(APIView):
                 continue
 
             data = {
-                "username" : data['username'],
-                "is_show" : True,
-                "privilege" : 0,
-                "class_id" : class_id
+                "username": data['username'],
+                "is_show": True,
+                "privilege": 0,
+                "class_id": class_id
             }
             serializer = ClassUserSerializer(data=data)
 
@@ -133,8 +139,9 @@ class ClassStdView(APIView):
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 
+
 class ClassTaView(APIView):
-    #permission_classes = [IsAdminUser]
+    permission_classes = [IsClassProf]
 
     # 05-05-02
     def get(self, request, class_id):
@@ -144,7 +151,8 @@ class ClassTaView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-07
-    def post(self,request, class_id):
+
+    def post(self, request, class_id):
         class_ = get_class(class_id)
         # 기존 ta 삭제
         if class_.created_user == request.user:
@@ -160,20 +168,20 @@ class ClassTaView(APIView):
         }
         datas = request.data
         for data in datas:
-            is_check_user = User.objects.filter(username = data['username']).count()
-            is_check_ClassUser = ClassUser.objects.filter(username = data['username']).filter(class_id = class_id).count()
+            is_check_user = User.objects.filter(username=data['username']).count()
+            is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
             if is_check_user == 0:
                 user_does_not_exist['does_not_exist'].append(data['username'])
                 continue
             if is_check_ClassUser != 0:
                 user_does_not_exist['is_existed'].append(data['username'])
                 continue
-            
+
             data = {
-                "username" : data['username'],
-                "is_show" : True,
-                "privilege" : 1,
-                "class_id" : class_id
+                "username": data['username'],
+                "is_show": True,
+                "privilege": 1,
+                "class_id": class_id
             }
 
             serializer = ClassUserSerializer(data=data)
