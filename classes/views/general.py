@@ -49,6 +49,7 @@ class ClassView(APIView):
 
 class ClassDetailView(APIView):
     permission_classes = [ClassProfOrReadOnly]
+
     # 05-02
     def get(self, request, class_id):
         class_ = get_class(class_id)
@@ -79,9 +80,9 @@ class ClassDetailView(APIView):
         else:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-
 class ClassStdView(APIView):
     permission_classes = [IsClassProfOrTA]
+
 
     # 05-05-01
     def get(self, request, class_id):
@@ -92,6 +93,7 @@ class ClassStdView(APIView):
 
     # 05-06
     def post(self, request, class_id):
+
         class_ = get_class(class_id)
         # 기존 std 삭제
         if class_.created_user == request.user:
@@ -149,6 +151,7 @@ class ClassTaView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-07
+
     def post(self, request, class_id):
         class_ = get_class(class_id)
         # 기존 ta 삭제
