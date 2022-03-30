@@ -224,3 +224,6 @@ EMAIL_HOST_USER = get_secret("EMAIL_HOST_USER")	 # 우리가 사용할 Gmail
 EMAIL_HOST_PASSWORD = get_secret("EMAIL_HOST_PASSWORD")		 # 우리가 사용할 Gmail p
 EMAIL_USE_TLS = True			 # TLS 보안 설정
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER	 # 응답 메일 관련 설정
+
+# file upload 관련
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024

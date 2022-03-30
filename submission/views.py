@@ -37,7 +37,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-        
+
         csv_str = data['csv'].name.split('.')[-1]
         ipynb_str = data['ipynb'].name.split('.')[-1]
         if csv_str != 'csv':
@@ -75,7 +75,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
                 # evaluation
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
-                
+
                 return Response(msg_success, status=status.HTTP_200_OK)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -98,7 +98,7 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
         for submission in submission_class_list:
             csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
             ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
-            
+
             obj = {
                 "id": submission.id,
                 "username": submission.username,
@@ -126,20 +126,23 @@ class SubmissionClassCheckView(APIView):
         contest_problem = get_contest_problem(cp_id)
 
         data = request.data
-        class_submission = get_submission_class(data['id'])
-
-        if class_submission.username.username != request.user.username:
-            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
+        class_submission_list = []
+        for submission in data:
+            class_submission = get_submission_class(submission['id'])
+            if class_submission.username.username != request.user.username:
+                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
+            class_submission_list.append(class_submission)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionClass.objects.filter(username = request.user.username).filter(c_p_id=cp_id)
         for submission in submission_list:
             submission.on_leaderboard = False
             submission.save()
-        
+
         # submission의 on_leaderboard를 True로 설정
-        class_submission.on_leaderboard = True
-        class_submission.save()
+        for class_submission in class_submission_list:
+            class_submission.on_leaderboard = True
+            class_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
@@ -194,7 +197,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 # evaluation
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
-                
+
                 return Response(msg_success, status=status.HTTP_200_OK)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -209,13 +212,13 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     def get(self, request, competition_id):
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
-        
+
         submission_comptition_list = SubmissionCompetition.objects.filter(competition_id = competition_id)
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
-        
+
         obj_list = []
-         
+
         for submission in submission_comptition_list:
             csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
             ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
@@ -246,10 +249,12 @@ class SubmissionCompetitionCheckView(APIView):
         competition = get_competition(competition_id)
 
         data = request.data
-        competition_submission = get_submission_competition(id=data["id"])
-
-        if competition_submission.username.username != request.user.username:
-            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
+        competition_submission_list = []
+        for submission in data:
+            competition_submission = get_submission_competition(id=submission["id"])
+            if competition_submission.username.username != request.user.username:
+                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
+            competition_submission_list.append(competition_submission)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionCompetition.objects.filter(username = request.user.username).filter(competition_id=competition.id)
@@ -259,12 +264,13 @@ class SubmissionCompetitionCheckView(APIView):
             submission.save()
 
         # submission의 on_leaderboard를 True로 설정
-        competition_submission.on_leaderboard = True
-        competition_submission.save()
+        for competition_submission in competition_submission_list:
+            competition_submission.on_leaderboard = True
+            competition_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
-    
+
 
 class SubmissionClassCsvDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
@@ -306,7 +312,7 @@ class SubmissionClassIpynbDownloadView(APIView):
         filename = csv_path.split('/', 2)[2]
         filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
-        
+
         # Open the file for reading content
         path = open(filepath, 'r')
         # Set the mime type
@@ -356,7 +362,7 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         filename = csv_path.split('/', 2)[2]
         filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + csv_path
-        
+
         # Open the file for reading content
         path = open(filepath, 'r')
         # Set the mime type
