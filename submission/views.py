@@ -18,10 +18,11 @@ import os
 import urllib
 from django.http import HttpResponse
 from django.utils import timezone
+from utils.permission import *
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
-
+    permission_classes = [IsClassUser]
     # 05-16
     def post(self, request, class_id, contest_id, cp_id):
         class_ = get_class(class_id)
@@ -84,7 +85,6 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
-    # pagination
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회

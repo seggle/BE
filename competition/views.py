@@ -10,7 +10,7 @@ from account.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from utils.permission import CustomPermissionMixin
+from utils.permission import *
 from utils.get_obj import *
 from utils.common import IP_ADDR
 import os
@@ -18,9 +18,11 @@ import shutil
 import uuid
 from django.http import Http404
 from django.utils import timezone
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-class CompetitionView(APIView, CustomPermissionMixin):
 
+class CompetitionView(APIView):
+    permissions = [IsProfAdminOrReadOnly]
     # 06-00 대회 리스트 조회
     def get(self, request):
         competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
@@ -99,8 +101,8 @@ class CompetitionView(APIView, CustomPermissionMixin):
             return Response(competition.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(check.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CompetitionDetailView(APIView, CustomPermissionMixin):
-
+class CompetitionDetailView(APIView):
+    permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-02 대회 개별 조회
     def get(self, request, competition_id):
         competition = get_competition(id=competition_id)
@@ -193,8 +195,8 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         problem.save()
         return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
-class CompetitionUserView(APIView, CustomPermissionMixin):
-
+class CompetitionUserView(APIView):
+    #permission_classes =
     # 06-05-01 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
@@ -226,8 +228,8 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
         competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
         return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
 
-class CompetitionTaView(APIView, CustomPermissionMixin):
-
+class CompetitionTaView(APIView):
+    permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-05-02 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
