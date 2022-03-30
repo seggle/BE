@@ -1,14 +1,12 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from classes.models import Class
 from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemPutSerializer
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
@@ -18,6 +16,7 @@ import uuid
 import mimetypes
 import urllib
 from wsgiref.util import FileWrapper
+from utils.permission import *
 
 # permission import
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -35,17 +34,16 @@ class ProblemView(APIView, PaginationHandlerMixin):
     # 03-01
     def get(self, request):
         if request.user.privilege == 0:
-            problems = Problem.objects.filter(Q(created_user=request.user) & Q(is_deleted=False))
+            problems = Problem.objects.filter(Q(created_user=request.user)).active()
         else:
             problems = Problem.objects.filter(
-                (Q(public=True) | Q(professor=request.user)) & Q(is_deleted=False) & ~Q(class_id=None))
+                (Q(public=True) | Q(professor=request.user)) & ~Q(class_id=None)).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             problems = problems.filter(title__icontains=keyword)
 
         new_problems = []
         for problem in problems:
-            # ip_addr = "3.37.186.158:8000"
             data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
             solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
@@ -72,10 +70,17 @@ class ProblemView(APIView, PaginationHandlerMixin):
     def post(self, request):
         data = request.data.copy()
 
-        if data['data'] is '':
+        if data['data'] == '':
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
-        if data['solution'] is '':
+        if data['solution'] == '':
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+
+        data_str = data['data'].name.split('.')[-1]
+        solution_str = data['solution'].name.split('.')[-1]
+        if data_str != 'zip':
+            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        if solution_str != 'csv':
+            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
         data['created_user'] = request.user
 
@@ -97,9 +102,6 @@ class ProblemDetailView(APIView):
     # 03-04
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
-        # if problem == Http404:
-        #     message = {"error": "Problem이 존재하지 않습니다."}
-        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
@@ -123,9 +125,7 @@ class ProblemDetailView(APIView):
     # 03-03
     def put(self, request, problem_id):
         problem = get_problem(problem_id)
-        # if problem == Http404:
-        #     message = {"error": "Problem이 존재하지 않습니다."}
-        #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
+        
         data = request.data
         obj = {
             "title": data["title"],
@@ -136,6 +136,9 @@ class ProblemDetailView(APIView):
         }
 
         if data['data']:
+            data_str = data['data'].name.split('.')[-1]
+            if data_str != 'zip':
+                return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             # 폴더 삭제
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
@@ -143,6 +146,9 @@ class ProblemDetailView(APIView):
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
+            solution_str = data['solution'].name.split('.')[-1]
+            if solution_str != 'csv':
+                return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
                 path = (problem.solution.path).split("uploads/solution/")
                 path = path[1].split("/", 1)
@@ -167,7 +173,7 @@ class ProblemDetailView(APIView):
 
 
 class ProblemVisibilityView(APIView):
-    # permission_classes = [AllowAny]
+    permission_classes = [IsProblemOwnerOrReadOnly]
 
     # 03-06
     def post(self, request, problem_id):
@@ -180,7 +186,7 @@ class ProblemVisibilityView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsClassUser]
     # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
@@ -205,7 +211,7 @@ class ProblemDataDownloadView(APIView):
         return response
 
 class ProblemSolutionDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsProblemOwner]
 
     def get(self, request, problem_id):
         problem = get_problem(problem_id)

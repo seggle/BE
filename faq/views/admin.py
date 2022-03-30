@@ -1,25 +1,19 @@
 from multiprocessing import context
 from pickle import TRUE
-from django.shortcuts import render
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from django.http import JsonResponse
 
 from utils.get_obj import *
 from utils.message import *
 from ..models import Faq
 from ..serializers import FaqSerializer, FaqAllGetSerializer, FaqPatchSerializer
-
+from utils.permission import IsAdmin
 # Create your views here.
 
 class FaqAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     def post(self,request):
         data = request.data
@@ -54,7 +48,7 @@ class FaqAdminView(APIView):
             "visible" : data["visible"]
         }
         if faq.created_user == request.user:
-            serializer = FaqPatchSerializer(faq, data=obj) #Request의 data를 UserSerializer로 변환
+            serializer = FaqPatchSerializer(faq, data=obj)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -71,7 +65,7 @@ class FaqAdminView(APIView):
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
 class FaqCheckAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     def post(self,request):
         data = request.data
@@ -82,7 +76,7 @@ class FaqCheckAdminView(APIView):
         if faq.created_user == request.user:
             faq.visible = not faq.visible
             faq.save()
-            serializer = FaqSerializer(faq) #Request의 data를 UserSerializer로 변환
+            serializer = FaqSerializer(faq)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response("Fail", status=status.HTTP_400_BAD_REQUEST)

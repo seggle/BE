@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Competition, CompetitionUser
-from problem.models import Problem
 from problem.serializers import ProblemSerializer, AllProblemSerializer
 
 class CompetitionSerializer(serializers.ModelSerializer):

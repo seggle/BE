@@ -1,34 +1,39 @@
-from django.http import Http404
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionListSerializer, CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionPostSerializer, 
+    CompetitionUserGetSerializer, CompetitionUserSerializer, 
 )
-from problem.serializers import ProblemSerializer, ProblemGenerateSerializer
+from problem.serializers import ProblemSerializer
 from competition.models import Competition, CompetitionUser
 from problem.models import Problem
 from account.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
-from utils.permission import CustomPermissionMixin
+from utils.permission import *
 from utils.get_obj import *
 from utils.common import IP_ADDR
 import os
 import shutil
 import uuid
+from django.http import Http404
+from django.utils import timezone
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from utils.message import *
 
-class CompetitionView(APIView, CustomPermissionMixin):
 
+class CompetitionView(APIView):
+    permissions = [IsProfAdminOrReadOnly]
     # 06-00 대회 리스트 조회
     def get(self, request):
-        competitions = Competition.objects.filter(problem_id__is_deleted=False)
+        competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
         obj_list = []
         for competition in competitions:
+            if competition.is_deleted:
+                continue
             obj = {
                 "problem": Problem.objects.get(id=competition.problem_id.id),
                 "id": competition.id,
@@ -42,19 +47,22 @@ class CompetitionView(APIView, CustomPermissionMixin):
 
     # 06-01 대회 생성
     def post(self, request):
-
-        # permission check
-        if self.check_student(request.user.privilege):
-            return Response({'error':'Competition 생성 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
-
         data = request.data.copy()
+        data_str = data['data'].name.split('.')[-1]
+        solution_str = data['solution'].name.split('.')[-1]
+        if data_str != 'zip':
+            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        if solution_str != 'csv':
+            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+
+
         data['created_user'] = request.user
         check = CompetitionProblemCheckSerializer(data=data)
         if check.is_valid():
             # 문제 생성
             problem = ProblemSerializer(data=data)
             if problem.is_valid():
-                problem_obj = problem.save() # save() calls create() of the Serializer which returns an object instance
+                problem_obj = problem.save()
             else:
                 return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
             # 대회 생성
@@ -89,14 +97,11 @@ class CompetitionView(APIView, CustomPermissionMixin):
             return Response(competition.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(check.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CompetitionDetailView(APIView, CustomPermissionMixin):
-
+class CompetitionDetailView(APIView):
+    permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-02 대회 개별 조회
     def get(self, request, competition_id):
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_problem(competition.problem_id.id)
 
         data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
@@ -123,9 +128,6 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 수정 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         problem = get_problem(competition.problem_id.id)
 
         data = request.data
@@ -138,17 +140,24 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
             "public": False
         }
         if data['data']:
+            data_str = data['data'].name.split('.')[-1]
+            if data_str != 'zip':
+                return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
                 path = (problem.data.path).split("uploads/problem/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
         if data['solution']:
+            solution_str = data['solution'].name.split('.')[-1]
+            if solution_str != 'csv':
+                return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
                 path = (problem.solution.path).split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
+        
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
@@ -175,10 +184,6 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         if self.check_student(request.user.privilege):
             return Response({'error':'Competition 삭제 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        # problem 삭제 확인
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-","")
@@ -186,14 +191,16 @@ class CompetitionDetailView(APIView, CustomPermissionMixin):
         problem.save()
         return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
-class CompetitionUserView(APIView, CustomPermissionMixin):
-
+class CompetitionUserView(APIView):
+    #permission_classes =
     # 06-05-01 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+        time_check = timezone.now()
+        if (competition.start_time > time_check) or (competition.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
         # competition_user에 username이 이미 존재하는지 체크
         if CompetitionUser.objects.filter(username = request.user).filter(competition_id = competition_id).count():
             return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
@@ -213,21 +220,15 @@ class CompetitionUserView(APIView, CustomPermissionMixin):
     # 06-05-03 대회 참가자, 관리자 전체 조회
     def get(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
         user_list = CompetitionUser.objects.filter(competition_id = competition.id)
         competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
         return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
 
-class CompetitionTaView(APIView, CustomPermissionMixin):
-
+class CompetitionTaView(APIView):
+    permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-05-02 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
-        # problem 삭제 확인
-        if competition is False:
-            return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 0315
         # 기존 TA 삭제

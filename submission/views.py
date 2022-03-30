@@ -1,11 +1,7 @@
 from rest_framework.views import APIView
-from classes.models import Class
-from contest.models import Contest, ContestProblem
-from submission.models import SubmissionClass, SubmissionCompetition, Path
+from submission.models import SubmissionClass, SubmissionCompetition
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
-from competition.models import Competition, CompetitionUser
-from problem.models import Problem
-from account.models import User
+from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from utils.evaluation import EvaluationMixin
@@ -20,28 +16,36 @@ import uuid
 import mimetypes
 import os
 import urllib
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
+from django.utils import timezone
+from utils.permission import *
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
-
+    permission_classes = [IsClassUser]
     # 05-16
     def post(self, request, class_id, contest_id, cp_id):
-        # class_id = request.GET.get('class_id')
         class_ = get_class(class_id)
-        # contest_id = request.GET.get('contest_id')
         contest = get_contest(contest_id)
-        # cp_id = request.GET.get('cp_id')
         contest_problem = get_contest_problem(cp_id)
 
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
             return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
 
-        #
-        # csv, ipynb file check
-        #
+        time_check = timezone.now()
+        if (contest.start_time > time_check) or (contest.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
+        
+        csv_str = data['csv'].name.split('.')[-1]
+        ipynb_str = data['ipynb'].name.split('.')[-1]
+        if csv_str != 'csv':
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if ipynb_str != 'ipynb':
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+
+
         temp = str(uuid.uuid4()).replace("-","")
 
         path_json = {
@@ -81,27 +85,20 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
-    # pagination
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회
     def get(self, request):
-        username = request.GET.get('username', '')
-        cp_id = request.GET.get('cpid', '')
-
-        submission_class_list = SubmissionClass.objects.all()
-
-        if username:
-            submission_class_list = submission_class_list.filter(username=username).order_by('-created_time')
-        if cp_id:
-            submission_class_list = submission_class_list.filter(c_p_id=cp_id).order_by('-created_time')
+        cp_id = request.GET.get('cpid', 0)
+        contest_problem = get_contest_problem(cp_id)
+        submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(c_p_id=cp_id).order_by('-created_time')
 
         obj_list = []
 
         for submission in submission_class_list:
             csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
             ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
-            # print(csv_url)
+            
             obj = {
                 "id": submission.id,
                 "username": submission.username,
@@ -112,7 +109,6 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
                 "status": submission.status,
                 "on_leaderboard": submission.on_leaderboard
             }
-            print(obj)
             obj_list.append(obj)
 
         page = self.paginate_queryset(obj_list)
@@ -125,11 +121,8 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
 class SubmissionClassCheckView(APIView):
     # 05-17
     def patch(self, request, class_id, contest_id, cp_id):
-        # class_id = request.GET.get('class_id')
         class_ = get_class(class_id)
-        # contest_id = request.GET.get('contest_id')
         contest = get_contest(contest_id)
-        # cp_id = request.GET.get('cp_id')
         contest_problem = get_contest_problem(cp_id)
 
         data = request.data
@@ -154,41 +147,41 @@ class SubmissionClassCheckView(APIView):
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
 
-    def check_participation(self, competition_id, username):
-        user = get_username(username)
-        if CompetitionUser.objects.filter(username = username).filter(competition_id = competition_id).count() == 0:
-            return False
-        return user
-
     # 06-04 대회 유저 파일 제출
     def post(self, request, competition_id):
-        # competition_id = request.GET.get('competition_id')
         competition = get_competition(competition_id)
-
-        # problem check
-        # competition = get_competition(competition_id)
-        # if competition is False:
-        #     return Response({'error':"Problem이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-
         # permission check - 대회에 참가한 학생만 제출 가능
-        user = self.check_participation(username=request.user.username, competition_id=competition_id)
-        if user is False:
+
+        time_check = timezone.now()
+        if (competition.start_time > time_check) or (competition.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_username(request.user.username)
+        if CompetitionUser.objects.filter(username = request.user.username).filter(competition_id = competition_id).count() == 0:
             return Response({'error':"대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-        temp = str(uuid.uuid4()).replace("-","")
 
+        csv_str = data['csv'].name.split('.')[-1]
+        ipynb_str = data['ipynb'].name.split('.')[-1]
+        if csv_str != 'csv':
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if ipynb_str != 'ipynb':
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+
+        temp = str(uuid.uuid4()).replace("-","")
         path_json = {
             "path":temp
         }
+
         submission_json = {
-            "username": request.user,
-            "competition_id":competition.id,
-            "csv":data["csv"],
-            "ipynb":data["ipynb"],
-            "problem_id":competition.problem_id.id,
-            "score":None,
-            "ip_address":GetIpAddr(request)
+            "username" : request.user,
+            "competition_id" : competition.id,
+            "csv" : data["csv"],
+            "ipynb" : data["ipynb"],
+            "problem_id" : competition.problem_id.id,
+            "score" : None,
+            "ip_address" : GetIpAddr(request)
         }
 
         path_serializer = PathSerializer(data=path_json)
@@ -214,7 +207,6 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
 
     # 06-07 유저 submission 내역 조회
     def get(self, request, competition_id):
-        # competition_id = request.GET.get('competition_id')
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
         
@@ -251,7 +243,6 @@ class SubmissionCompetitionCheckView(APIView):
 
     # 06-06 submission 리더보드 체크
     def patch(self, request, competition_id):
-        # competition_id = request.GET.get('competition_id')
         competition = get_competition(competition_id)
 
         data = request.data
@@ -279,7 +270,6 @@ class SubmissionClassCsvDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, submission_id):
-        # submission_id = request.GET.get('submission_id')
         submission = get_submission_class(submission_id)
 
         # Define Django project base directory
@@ -305,7 +295,6 @@ class SubmissionClassIpynbDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, submission_id):
-        # submission_id = request.GET.get('submission_id')
         submission = get_submission_class(submission_id)
 
         # Define Django project base directory
@@ -331,7 +320,6 @@ class SubmissionCompetitionCsvDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, submission_id):
-        # submission_id = request.GET.get('submission_id')
         submission = get_submission_competition(submission_id)
 
         # Define Django project base directory
@@ -357,7 +345,6 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
     # permission_classes = [IsAuthenticated]
 
     def get(self, request, submission_id):
-        # submission_id = request.GET.get('submission_id')
         submission = get_submission_competition(submission_id)
 
         # Define Django project base directory

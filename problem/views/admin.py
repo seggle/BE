@@ -1,34 +1,30 @@
-from utils import permission
+
 from rest_framework.views import APIView
-from utils.get_obj import get_problem
+from utils.get_obj import *
 from ..models import Problem
-from classes.models import Class
-from ..serializers import ProblemSerializer, AllProblemSerializer
+from ..serializers import AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from django.db.models import Q
-from django.http import Http404, HttpResponse
 from rest_framework import status
-from rest_framework.parsers import MultiPartParser, JSONParser
 from utils.common import IP_ADDR
 import os
 import shutil
-
+from utils.permission import IsAdmin
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
 class AdminProblemView(APIView,PaginationHandlerMixin):
-    permission_classes = [permission.IsAdmin]
+    permission_classes = [IsAdmin]
     pagination_class = BasicPagination
 
     # 00-17
     def get(self, request):
-        problems = Problem.objects.filter(Q(is_deleted=False)&~Q(class_id=None))
+        problems = Problem.objects.filter(~Q(class_id=None)).active().order_by('-created_time')
 
         keyword = request.GET.get('keyword', '')
         if keyword:
@@ -43,12 +39,13 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
                 "id" : problem.id,
                 "title" : problem.title,
                 "created_time" : problem.created_time,
-                "created_user" : problem.created_user,
+                "created_user" : problem.created_user.username,
                 "data" : data_url,
                 "solution" : solution_url,
                 "public" : problem.public,
                 "class_id" : problem.class_id.id,
             }
+            
             new_problems.append(problem_json)
 
         page = self.paginate_queryset(new_problems)

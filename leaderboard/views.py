@@ -1,11 +1,8 @@
 from rest_framework.views import APIView
-from contest.models import Contest, ContestProblem
-from submission.models import SubmissionClass, SubmissionCompetition, Path
-from competition.models import Competition, CompetitionUser
+from submission.models import SubmissionClass, SubmissionCompetition
 from utils.get_obj import get_competition, get_contest_problem
 from .serializers import LeaderboardClassSerializer, LeaderboardCompetitionSerializer
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 from rest_framework import status
 from utils.common import IP_ADDR
 
@@ -57,7 +54,6 @@ class LeaderboardClassView(APIView):
 class LeaderboardCompetitionView(APIView):
 
     def get(self, request, competition_id):
-        print(1)
         competition = get_competition(competition_id)
         submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
 

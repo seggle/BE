@@ -1,19 +1,18 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination #pagination
 from utils.pagination import PaginationHandlerMixin #pagination
 from ..models import Announcement, User
 from ..serializers import AnnouncementSerializer, AnnouncementInfoSerializer, AnnouncementCheckSerializer
 from utils.get_obj import *
-
+from utils.permission import IsAdmin
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class AnnouncementAdminView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     # pagination
     pagination_class = BasicPagination
@@ -52,7 +51,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AnnouncementDetailAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     # 00-12 announcement_id인 announcement 조회
     def get(self, request, announcement_id):
@@ -84,7 +83,7 @@ class AnnouncementDetailAdminView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 class AnnouncementCheckAdminView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     # 00-11 announcement_id인 announcement 수정 (important, visible)
     def put(self, request, announcement_id):
