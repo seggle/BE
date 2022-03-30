@@ -71,9 +71,6 @@ INSTALLED_APPS = [
     'submission',
     'exam',
     'leaderboard',
-
-    # CORS
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
