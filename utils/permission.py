@@ -4,7 +4,8 @@ from account.models import User
 from classes.models import Class, ClassUser
 from problem.models import Problem
 from contest.models import Contest, ContestProblem
-from competition.models import Competition,CompetitionUser
+from competition.models import Competition, CompetitionUser
+
 
 class IsAdmin(permissions.BasePermission):
 
@@ -19,6 +20,7 @@ class IsProf(permissions.BasePermission):
         privilege = request.user.privilege
         return privilege == 1
 
+
 class IsProfAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -30,7 +32,6 @@ class IsProfAdminOrReadOnly(permissions.BasePermission):
                 return False
             else:
                 return True
-
 
 
 # username이라는 path variable이 존재 할 경우 사용가능
@@ -67,11 +68,13 @@ class IsProblemOwnerOrReadOnly(permissions.BasePermission):
                or problem.professor == request.user \
                or problem.created_user == request.user
 
+
 class IsProblemOwner(permissions.BasePermission):
     def has_permission(self, request, view):
-        problem = Problem.objects.get(id=view.kwargs.get('problem_id',None))
+        problem = Problem.objects.get(id=view.kwargs.get('problem_id', None))
 
         return problem.professor == request.user or problem.created_user == request.user
+
 
 # 해당 클래스에 속하는지
 class IsClassUser(permissions.BasePermission):
@@ -90,64 +93,67 @@ class IsClassUser(permissions.BasePermission):
         else:
             return False
 
+
 class ClassProfTAorReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        class_id = view.kwargs.get('class_id',None)
+        class_id = view.kwargs.get('class_id', None)
         if not class_id:
             return False
         try:
-            if ClassUser.objects.get(username=user,class_id=class_id) == 0:
+            if ClassUser.objects.get(username=user, class_id=class_id).privilege == 0:
                 return False
             else:
                 return True
         except:
             return False
+
 
 class ClassProfOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
         user = request.user
-        class_id = view.kwargs.get('class_id',None)
+        class_id = view.kwargs.get('class_id', None)
         if not class_id:
             return False
         try:
-            if ClassUser.objects.get(username=user,class_id=class_id) == 2:
+            if ClassUser.objects.get(username=user, class_id=class_id).privilege == 2:
                 return True
             else:
                 return False
         except:
             return False
+
 
 class IsClassProf(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        class_id = view.kwargs.get('class_id',None)
+        class_id = view.kwargs.get('class_id', None)
         if not class_id:
             return False
         try:
-            if ClassUser.objects.get(username=user,class_id=class_id) == 2:
+            if ClassUser.objects.get(username=user, class_id=class_id).privilege == 2:
                 return True
             else:
                 return False
         except:
             return False
+
 
 class IsClassProfOrTA(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
-        class_id = view.kwargs.get('class_id',None)
+        class_id = view.kwargs.get('class_id', None)
         if not class_id:
             return False
         try:
-            if ClassUser.objects.get(username=user,class_id=class_id) == 0:
+            if ClassUser.objects.get(username=user, class_id=class_id).privilege == 0:
                 return False
             else:
                 return True
         except:
             return False
-
 
 
 class IsCompetitionManagerOrReadOnly(permissions.BasePermission):
@@ -156,16 +162,17 @@ class IsCompetitionManagerOrReadOnly(permissions.BasePermission):
             return True
         else:
             user = request.user
-            competition_id = view.kwargs.get('competition_id',None)
+            competition_id = view.kwargs.get('competition_id', None)
             if not competition_id:
                 return False
             try:
-                if CompetitionUser.objects.get(username=user,competition_id=competition_id) == 0:
+                if CompetitionUser.objects.get(username=user, competition_id=competition_id).privilege == 0:
                     return False
                 else:
                     return True
             except:
                 return False
+
 
 class IsSafeMethod(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -173,6 +180,3 @@ class IsSafeMethod(permissions.BasePermission):
             return True
         else:
             return False
-
-
-
