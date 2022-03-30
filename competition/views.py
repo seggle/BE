@@ -19,6 +19,7 @@ import uuid
 from django.http import Http404
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from utils.message import *
 
 
 class CompetitionView(APIView):
@@ -46,11 +47,6 @@ class CompetitionView(APIView):
 
     # 06-01 대회 생성
     def post(self, request):
-
-        # permission check
-        if self.check_student(request.user.privilege):
-            return Response({'error':'Competition 생성 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
-
         data = request.data.copy()
         data_str = data['data'].name.split('.')[-1]
         solution_str = data['solution'].name.split('.')[-1]
