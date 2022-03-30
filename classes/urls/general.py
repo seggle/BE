@@ -28,5 +28,4 @@ urlpatterns = [
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/', ContestProblemInfoView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/check/', SubmissionClassCheckView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submission/', SubmissionClassView.as_view()),
-
 ]
