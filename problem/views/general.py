@@ -186,7 +186,7 @@ class ProblemVisibilityView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
-    permission_classes = [IsClassUser]
+    permission_classes = [IsProblemDownloadableUser]
     # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
