@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from utils.common import IP_ADDR
 from utils.permission import *
-
+from rest_framework.permissions import AllowAny
 
 def order(evaluation, obj_list):
     if evaluation in ["F1-score", "Accuracy"]:
@@ -53,7 +53,7 @@ class LeaderboardClassView(APIView):
 
 
 class LeaderboardCompetitionView(APIView):
-    permission_classes = [IsCompetitionUser]
+    permission_classes = [AllowAny]
 
     def get(self, request, competition_id):
         competition = get_competition(competition_id)
