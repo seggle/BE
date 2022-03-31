@@ -18,7 +18,7 @@ import shutil
 import uuid
 from django.http import Http404
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAuthenticated
 from utils.message import *
 
 
@@ -192,7 +192,7 @@ class CompetitionDetailView(APIView):
         return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
 class CompetitionUserView(APIView):
-    #permission_classes =
+    permission_classes = [IsAuthenticated]
     # 06-05-01 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
