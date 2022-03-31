@@ -1,7 +1,7 @@
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
-    CompetitionUserGetSerializer, CompetitionUserSerializer, 
+    CompetitionUserGetSerializer, CompetitionUserSerializer,
 )
 from problem.serializers import ProblemSerializer
 from competition.models import Competition, CompetitionUser
@@ -157,7 +157,7 @@ class CompetitionDetailView(APIView):
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data['solution']
-        
+
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
@@ -180,9 +180,6 @@ class CompetitionDetailView(APIView):
 
     # 06-03-02 대회 삭제
     def delete(self, request, competition_id):
-        # permission check
-        if self.check_student(request.user.privilege):
-            return Response({'error':'Competition 삭제 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
