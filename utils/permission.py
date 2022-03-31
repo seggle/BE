@@ -180,3 +180,33 @@ class IsSafeMethod(permissions.BasePermission):
             return True
         else:
             return False
+
+
+class IsCPUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        cp_id = view.kwargs.get('cp_id', None)
+
+        if not cp_id:
+            return False
+        else:
+            try:
+                class_id = ContestProblem.objects.get(id=cp_id).contest_id.class_id.id
+                if ClassUser.objects.filter(username=request.user, class_id=class_id).exists():
+                    return True
+                else:
+                    return False
+            except:
+                pass
+
+
+class IsCompetitionUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        competition_id = view.kwargs.get('competition_id', None)
+
+        if CompetitionUser.objects.filter(username=user, competition_id=competition_id).exists():
+            return True
+        else:
+            return False
+
+
