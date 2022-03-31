@@ -251,7 +251,7 @@ class UserCompetitionInfoView(APIView):
                 Q(competition_id=competition.competition_id.id) & Q(path__on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
                 # 정렬
-                if competition.competition_id.problem_id.evaluation in ["F1-score", "Accuracy"]:  # 내림차순
+                if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:  # 내림차순
                     leaderboard_list = leaderboard_list.order_by('-path__score')
                 else:
                     leaderboard_list = leaderboard_list.order_by('path__score')

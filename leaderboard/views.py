@@ -9,7 +9,7 @@ from utils.permission import *
 
 
 def order(evaluation, obj_list):
-    if evaluation in ["F1-score", "Accuracy"]:
+    if evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:
         # 내림차순 (User.object.order_by('-name'))
         pass
     else:
@@ -26,7 +26,7 @@ class LeaderboardClassView(APIView):
         submission_class_list = SubmissionClass.objects.filter(c_p_id=cp_id)
 
         # 정렬
-        if contest_problem.problem_id.evaluation in ["F1-score", "Accuracy"]:  # 내림차순
+        if contest_problem.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
             submission_class_list = submission_class_list.order_by('-score')
         else:
             submission_class_list = submission_class_list.order_by('score')
@@ -60,7 +60,7 @@ class LeaderboardCompetitionView(APIView):
         submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
 
         # 정렬
-        if competition.problem_id.evaluation in ["F1-score", "Accuracy"]:  # 내림차순
+        if competition.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
             submission_competition_list = submission_competition_list.order_by('-score')
         else:
             submission_competition_list = submission_competition_list.order_by('score')
