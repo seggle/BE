@@ -26,7 +26,6 @@ class EvaluationMixin(object):
             score = None
             y_true = solution_csv.iloc[:, -1].values.tolist()
             y_pred = submission_csv.iloc[:, -1].values.tolist()
-            evaluation = "AUC"
             if evaluation == "CategorizationAccuracy":
                 """ Categorization Accuracy
                 높을수록 1등
@@ -34,59 +33,65 @@ class EvaluationMixin(object):
                 checked
                 """
                 score = accuracy_score(y_true, y_pred)
-            if evaluation == "RMSE":
+            elif evaluation == "RMSE":
                 """ Root Mean Squared Error
                 낮을수록 1등
                 expected: double
                 checked
                 """
                 score = mean_squared_error(y_true, y_pred, squared=False)
-            if evaluation == "MAE":
+            elif evaluation == "MAE":
                 """ Mean Absolute Error
                 낮을수록 1등
                 expected: double
                 checked
                 """
                 score = mean_absolute_error(y_true, y_pred)
-            if evaluation == "MSE":
+            elif evaluation == "MSE":
                 """ Mean Squared Error
                 낮을수록 1등
                 expected: double
                 checked
                 """
                 score = mean_squared_error(y_true, y_pred)
-            if evaluation == "F1-score":
+            elif evaluation == "F1-score":
                 """ 높을수록 1등
                 expected: binary
                 checked
                 """
                 score = f1_score(y_true, y_pred, pos_label=1)
-            if evaluation == "Log-loss":
+            elif evaluation == "Log-loss":
                 """ Log Loss
                 낮을수록 1등
                 expected: double
                 checked
                 """
                 score = log_loss(y_true, y_pred)
-            if evaluation == "RMSLE":
+            elif evaluation == "RMSLE":
                 """ Root Mean Squared Logarithmic Error
                 낮을수록 1등
                 expected: double
                 checked
                 """
                 score = mean_squared_log_error(y_true, y_pred)
-            if evaluation == "mAP":
+            elif evaluation == "mAP":
                 """ MAP
                 높을수록 1등
                 expected: string
                 checked
                 """
                 score = average_precision_score(y_true, y_pred)
-
+            else:
+                submission.score = None
+                submission.status = 1 # 문제 있음
+                submission.save()
+                print(f'evaluation: {evaluation}')
+                return
             submission.score = score
 
         except: # 에러 발생
             print(traceback.format_exc())
+            print(f'evaluation: {evaluation}')
             submission.score = None
             submission.status = 1 # 문제 있음
 
