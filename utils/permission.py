@@ -197,3 +197,14 @@ class IsCPUser(permissions.BasePermission):
                     return False
             except:
                 pass
+
+
+class IsCompetitionUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        competition_id = view.kwargs.get('competition_id', None)
+
+        if CompetitionUser.objects.filter(username=user, competition_id=competition_id).exists():
+            return True
+        else:
+            return False
