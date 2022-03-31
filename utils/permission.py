@@ -208,3 +208,5 @@ class IsCompetitionUser(permissions.BasePermission):
             return True
         else:
             return False
+
+

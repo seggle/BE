@@ -5,6 +5,7 @@ from .serializers import LeaderboardClassSerializer, LeaderboardCompetitionSeria
 from rest_framework.response import Response
 from rest_framework import status
 from utils.common import IP_ADDR
+from utils.permission import *
 
 
 def order(evaluation, obj_list):
@@ -18,6 +19,8 @@ def order(evaluation, obj_list):
 
 
 class LeaderboardClassView(APIView):
+    permission_classes = [IsCPUser]
+
     def get(self, request, cp_id=None):
         contest_problem = get_contest_problem(cp_id)
         submission_class_list = SubmissionClass.objects.filter(c_p_id=cp_id)
@@ -50,6 +53,7 @@ class LeaderboardClassView(APIView):
 
 
 class LeaderboardCompetitionView(APIView):
+    permission_classes = [IsCompetitionUser]
 
     def get(self, request, competition_id):
         competition = get_competition(competition_id)

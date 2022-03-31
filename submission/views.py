@@ -19,6 +19,7 @@ import urllib
 from django.http import HttpResponse
 from django.utils import timezone
 from utils.permission import *
+from rest_framework.permissions import IsAuthenticated
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
@@ -85,6 +86,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회
@@ -120,6 +122,7 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
 
 class SubmissionClassCheckView(APIView):
     # 05-17
+    permission_classes = [IsClassUser]
     def patch(self, request, class_id, contest_id, cp_id):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
@@ -149,7 +152,7 @@ class SubmissionClassCheckView(APIView):
 
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
-
+    permission_classes = [IsCompetitionUser]
     # 06-04 대회 유저 파일 제출
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
@@ -243,7 +246,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class SubmissionCompetitionCheckView(APIView):
-
+    permission_classes = [IsCompetitionUser]
     # 06-06 submission 리더보드 체크
     def patch(self, request, competition_id):
         competition = get_competition(competition_id)
