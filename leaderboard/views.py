@@ -8,22 +8,14 @@ from utils.common import IP_ADDR
 from utils.permission import *
 from rest_framework.permissions import AllowAny
 
-def order(evaluation, obj_list):
-    if evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:
-        # 내림차순 (User.object.order_by('-name'))
-        pass
-    else:
-        # 올림차순
-        pass
-    return obj_list
-
-
 class LeaderboardClassView(APIView):
     permission_classes = [IsCPUser]
 
     def get(self, request, cp_id=None):
         contest_problem = get_contest_problem(cp_id)
+        class_id = contest_problem.contest_id.class_id.id
         submission_class_list = SubmissionClass.objects.filter(c_p_id=cp_id)
+
 
         # 정렬
         if contest_problem.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
@@ -45,6 +37,9 @@ class LeaderboardClassView(APIView):
                 "score": submission.score,
                 "created_time": submission.created_time,
             }
+            if ClassUser.objects.filter(username=submission.username, privilege=1, class_id=class_id).exists() or ClassUser.objects.filter(username=submission.username, privilege=2, class_id=class_id).exists():
+                obj["id"] = 0
+                count = count -1
             obj_list.append(obj)
             count = count + 1
 
@@ -78,7 +73,9 @@ class LeaderboardCompetitionView(APIView):
                 "score": submission.score,
                 "created_time": submission.created_time,
             }
-
+            if CompetitionUser.objects.filter(username=submission.username, privilege=1, competition_id=competition_id).exists() or CompetitionUser.objects.filter(username=submission.username, privilege=2, competition_id=competition_id).exists():
+                obj["id"] = 0
+                count = count -1
             obj_list.append(obj)
             count = count + 1
 
