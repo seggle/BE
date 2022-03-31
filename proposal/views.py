@@ -75,7 +75,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
     
         proposal = get_proposal(proposal_id)
 
-        if proposal.created_user == request.user:
+        if proposal.created_user == request.user or request.user.privilege == 2:
             proposal.delete()
             return Response(msg_success, status=status.HTTP_200_OK)
         else:
