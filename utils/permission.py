@@ -210,3 +210,28 @@ class IsCompetitionUser(permissions.BasePermission):
             return False
 
 
+class IsProblemDownloadableUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        problem_id = view.kwargs.get('problem_id', None)
+        problem = Problem.objects.get(id=problem_id)
+
+        class_ = problem.class_id
+        competition = problem.competition_set.all()
+
+        if class_:
+            class_id = problem.class_id.id
+
+            if ClassUser.objects.filter(username=user, class_id=class_id).exists():
+                return True
+            else:
+                return False
+        if competition.exists():
+            competition = competition.first().id
+
+            if CompetitionUser.objects.filter(competition_id=competition, username=user).exists():
+                return True
+            else:
+                return False
+
+        return False
