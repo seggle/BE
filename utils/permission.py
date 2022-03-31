@@ -181,3 +181,19 @@ class IsSafeMethod(permissions.BasePermission):
         else:
             return False
 
+
+class IsCPUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        cp_id = view.kwargs.get('cp_id', None)
+
+        if not cp_id:
+            return False
+        else:
+            try:
+                class_id = ContestProblem.objects.get(id=cp_id).contest_id.class_id.id
+                if ClassUser.objects.filter(username=request.user, class_id=class_id).exists():
+                    return True
+                else:
+                    return False
+            except:
+                pass
