@@ -124,9 +124,6 @@ class CompetitionDetailView(APIView):
 
     # 06-03-01 대회 개별 수정
     def put(self, request, competition_id):
-        # permission check
-        if self.check_student(request.user.privilege):
-            return Response({'error':'Competition 수정 권한 없음'}, status=status.HTTP_400_BAD_REQUEST)
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
