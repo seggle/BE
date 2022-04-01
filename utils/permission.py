@@ -5,7 +5,7 @@ from classes.models import Class, ClassUser
 from problem.models import Problem
 from contest.models import Contest, ContestProblem
 from competition.models import Competition, CompetitionUser
-
+from submission.models import *
 
 class IsAdmin(permissions.BasePermission):
 
@@ -214,24 +214,86 @@ class IsProblemDownloadableUser(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         problem_id = view.kwargs.get('problem_id', None)
-        problem = Problem.objects.get(id=problem_id)
+        try:
+            problem = Problem.objects.get(id=problem_id)
+        except:
+            return False
 
         class_ = problem.class_id
         competition = problem.competition_set.all()
 
         if class_:
             class_id = problem.class_id.id
+            cp_query = ContestProblem.objects.filter(problem_id=problem_id)
 
-            if ClassUser.objects.filter(username=user, class_id=class_id).exists():
-                return True
-            else:
-                return False
+            if cp_query.exists(): #problem이 cp화 되었다면
+                if ClassUser.objects.filter(username=user, class_id=class_id).exists():
+                    return True
+                else:
+                    return False
+            else: #problem이 cp화 되지 않았다면 (prof 또는 created user가 다운가능)
+                if user == problem.created_user or user == problem.professor:
+                    return True
+                else:
+                    return False
+
+
+
         if competition.exists():
-            competition = competition.first().id
+            competition_id = competition.first().id
 
-            if CompetitionUser.objects.filter(competition_id=competition, username=user).exists():
+            if CompetitionUser.objects.filter(competition_id=competition_id, username=user).exists():
                 return True
             else:
                 return False
 
         return False
+
+#수업의 조교 , 수업의 prof , 제출한 사람
+class IsSubClassDownloadableUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        submission_id = view.kwargs.get('submission_id', None)
+
+        try:
+            class_sub = SubmissionClass.objects.get(id=submission_id)
+        except:
+            return False
+
+        if user == class_sub.username:
+            return True
+
+        class_ = class_sub.class_id
+        prof = class_.created_user
+        if user == prof:
+            return True
+
+        if ClassUser.objects.get(username=user,class_id=class_.id).privilege == 1:
+            return True
+        return False
+
+
+#대회 조교 대회 생성자 , 제출한 사람
+class IsSubCompDownloadableUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        submission_id = view.kwargs.get('submission_id', None)
+
+        try:
+            comp_sub = SubmissionCompetition.objects.get(id=submission_id)
+        except:
+            return False
+
+        if user == comp_sub.username:
+            return True
+
+        competition = comp_sub.competition_id
+
+        try :
+            privilege = CompetitionUser.objects.get(username=user,competition_id=competition.id)
+            if privilege == 1 or privilege == 2:
+                return True
+            else:
+                return False
+        except:
+            return False
