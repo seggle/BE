@@ -221,10 +221,10 @@ class ProblemSolutionDownloadView(APIView):
         # result = /Users/ingyu/Desktop/BE/problem
         BASE_DIR = BASE_DIR.replace("/problem", "")
 
-        data_path = str(problem.solution.path).split('uploads/', 1)[1]
-        filename = data_path.split('/', 2)[2]
+        solution_path = str(problem.solution.path).split('uploads/', 1)[1]
+        filename = solution_path.split('/', 2)[2]
         filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + data_path
+        filepath = BASE_DIR + '/uploads/' + solution_path
 
         # Open the file for reading content
         path = open(filepath, 'r')
