@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
 from submission.models import SubmissionClass, SubmissionCompetition
-from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
+from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
+    SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from competition.models import CompetitionUser
-from rest_framework.pagination import PageNumberPagination #pagination
-from utils.pagination import PaginationHandlerMixin #pagination
+from rest_framework.pagination import PageNumberPagination  # pagination
+from utils.pagination import PaginationHandlerMixin  # pagination
 from utils.evaluation import EvaluationMixin
 from utils.get_ip import GetIpAddr
 from utils.get_obj import *
@@ -21,9 +22,11 @@ from django.utils import timezone
 from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 
+
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
     permission_classes = [IsClassUser]
+
     # 05-16
     def post(self, request, class_id, contest_id, cp_id):
         class_ = get_class(class_id)
@@ -46,8 +49,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if ipynb_str != 'ipynb':
             return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
 
-
-        temp = str(uuid.uuid4()).replace("-","")
+        temp = str(uuid.uuid4()).replace("-", "")
 
         path_json = {
             "path": temp
@@ -82,8 +84,10 @@ class SubmissionClassView(APIView, EvaluationMixin):
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticated]
@@ -93,7 +97,8 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
     def get(self, request):
         cp_id = request.GET.get('cpid', 0)
         contest_problem = get_contest_problem(cp_id)
-        submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(c_p_id=cp_id).order_by('-created_time')
+        submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(
+            c_p_id=cp_id).order_by('-created_time')
 
         obj_list = []
 
@@ -120,9 +125,11 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
             serializer = SumissionClassListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class SubmissionClassCheckView(APIView):
     # 05-17
     permission_classes = [IsClassUser]
+
     def patch(self, request, class_id, contest_id, cp_id):
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
@@ -137,7 +144,7 @@ class SubmissionClassCheckView(APIView):
             class_submission_list.append(class_submission)
 
         # on_leaderboard를 모두 False로 설정
-        submission_list = SubmissionClass.objects.filter(username = request.user.username).filter(c_p_id=cp_id)
+        submission_list = SubmissionClass.objects.filter(username=request.user.username).filter(c_p_id=cp_id)
         for submission in submission_list:
             submission.on_leaderboard = False
             submission.save()
@@ -153,6 +160,7 @@ class SubmissionClassCheckView(APIView):
 # submission-competition 관련
 class SubmissionCompetitionView(APIView, EvaluationMixin):
     permission_classes = [IsCompetitionUser]
+
     # 06-04 대회 유저 파일 제출
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
@@ -163,8 +171,9 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_username(request.user.username)
-        if CompetitionUser.objects.filter(username = request.user.username).filter(competition_id = competition_id).count() == 0:
-            return Response({'error':"대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        if CompetitionUser.objects.filter(username=request.user.username).filter(
+                competition_id=competition_id).count() == 0:
+            return Response({'error': "대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
 
@@ -175,19 +184,19 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         if ipynb_str != 'ipynb':
             return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
 
-        temp = str(uuid.uuid4()).replace("-","")
+        temp = str(uuid.uuid4()).replace("-", "")
         path_json = {
-            "path":temp
+            "path": temp
         }
 
         submission_json = {
-            "username" : request.user,
-            "competition_id" : competition.id,
-            "csv" : data["csv"],
-            "ipynb" : data["ipynb"],
-            "problem_id" : competition.problem_id.id,
-            "score" : None,
-            "ip_address" : GetIpAddr(request)
+            "username": request.user,
+            "competition_id": competition.id,
+            "csv": data["csv"],
+            "ipynb": data["ipynb"],
+            "problem_id": competition.problem_id.id,
+            "score": None,
+            "ip_address": GetIpAddr(request)
         }
 
         path_serializer = PathSerializer(data=path_json)
@@ -206,8 +215,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
 
+class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     # pagination
     pagination_class = BasicPagination
 
@@ -216,7 +225,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id = competition_id)
+        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
 
@@ -245,8 +254,10 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
             serializer = SumissionCompetitionListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class SubmissionCompetitionCheckView(APIView):
     permission_classes = [IsCompetitionUser]
+
     # 06-06 submission 리더보드 체크
     def patch(self, request, competition_id):
         competition = get_competition(competition_id)
@@ -260,7 +271,8 @@ class SubmissionCompetitionCheckView(APIView):
             competition_submission_list.append(competition_submission)
 
         # on_leaderboard를 모두 False로 설정
-        submission_list = SubmissionCompetition.objects.filter(username = request.user.username).filter(competition_id=competition.id)
+        submission_list = SubmissionCompetition.objects.filter(username=request.user.username).filter(
+            competition_id=competition.id)
 
         for submission in submission_list:
             submission.on_leaderboard = False
@@ -274,9 +286,8 @@ class SubmissionCompetitionCheckView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 
-
 class SubmissionClassCsvDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsSubClassDownloadableUser]
 
     def get(self, request, submission_id):
         submission = get_submission_class(submission_id)
@@ -300,8 +311,9 @@ class SubmissionClassCsvDownloadView(APIView):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
+
 class SubmissionClassIpynbDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsSubClassDownloadableUser]
 
     def get(self, request, submission_id):
         submission = get_submission_class(submission_id)
@@ -325,8 +337,9 @@ class SubmissionClassIpynbDownloadView(APIView):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
+
 class SubmissionCompetitionCsvDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsSubCompDownloadableUser]
 
     def get(self, request, submission_id):
         submission = get_submission_competition(submission_id)
@@ -350,8 +363,9 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
+
 class SubmissionCompetitionIpynbDownloadView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsSubCompDownloadableUser]
 
     def get(self, request, submission_id):
         submission = get_submission_competition(submission_id)

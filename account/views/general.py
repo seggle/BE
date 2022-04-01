@@ -17,7 +17,7 @@ from rest_framework_simplejwt.views import (
 )
 from utils.get_obj import *
 
-from utils import permission
+from utils.permission import *
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
@@ -49,7 +49,7 @@ class UserRegisterView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -74,7 +74,7 @@ class RefreshView(TokenRefreshView):
 
 
 class UserInfoView(APIView):
-    permission_classes = [permission.IsRightUser]
+    permission_classes = [IsRightUser]
 
     # 01-07 유저 조회
     def get(self, request, username, format=None):
