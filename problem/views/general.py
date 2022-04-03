@@ -44,16 +44,16 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+            # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+            # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
             problem_json = {
                 "id": problem.id,
                 "title": problem.title,
                 "created_time" : problem.created_time,
                 "created_user" : problem.created_user.username,
-                "data" : data_url,
-                "solution" : solution_url,
+                # "data" : data_url,
+                # "solution" : solution_url,
                 "public" : problem.public,
                 "class_id" : problem.class_id.id
             }
@@ -103,8 +103,8 @@ class ProblemDetailView(APIView):
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
-        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+        # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+        # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         cp_json = {
             "id": problem.id,
@@ -112,9 +112,9 @@ class ProblemDetailView(APIView):
             "description": problem.description,
             "created_time": problem.created_time,
             "created_user": problem.created_user.username,
-            "data": data_url,
+            # "data": data_url,
             "data_description": problem.data_description,
-            "solution": solution_url,
+            # "solution": solution_url,
             "evaluation": problem.evaluation,
             "public": problem.public,
             "class_id": problem.class_id.id

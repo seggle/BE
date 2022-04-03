@@ -19,7 +19,7 @@ class ListUsersView(APIView, PaginationHandlerMixin):
     # 00-00 유저 전체 조회
     def get(self, request, format = None):
         users = User.objects.exclude(is_active=False)
-
+        users = users.order_by('-date_joined').order_by('-privilege')
         # keyword - username
         keyword = request.GET.get('keyword', '')
         if keyword:

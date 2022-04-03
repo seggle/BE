@@ -104,8 +104,8 @@ class CompetitionDetailView(APIView):
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
-        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-        solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+        # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+        # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         obj = {
             "id":competition.id,
@@ -114,9 +114,9 @@ class CompetitionDetailView(APIView):
             "start_time":competition.start_time,
             "end_time":competition.end_time,
             "description":problem.description,
-            "data":data_url,
+            # "data":data_url,
             "data_description":problem.data_description,
-            "solution":solution_url,
+            # "solution":solution_url,
             "evaluation":problem.evaluation
         }
 
@@ -266,9 +266,7 @@ class CompetitionTaView(APIView):
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            users_datas = CompetitionUser.objects.filter(competition_id=competition.id)
-            competition_Userlist_serializer = CompetitionUserGetSerializer(users_datas, many=True)
-            return Response(competition_Userlist_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 

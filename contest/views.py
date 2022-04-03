@@ -236,7 +236,7 @@ class ContestProblemInfoView(APIView):
 
         problem = Problem.objects.get(id=contest_problem.problem_id.id)
         
-        data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+        # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         cp_json = {
             "id": contest_problem.id,
             "contest_id": contest_problem.contest_id.id,
@@ -247,7 +247,7 @@ class ContestProblemInfoView(APIView):
             "start_time": contest_problem.contest_id.start_time,
             "end_time": contest_problem.contest_id.end_time,
             "evaluation": contest_problem.problem_id.evaluation,
-            "problem_data": data_url,
+            # "problem_data": data_url,
         }
 
         return Response(cp_json, status=status.HTTP_200_OK)

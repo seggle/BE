@@ -32,16 +32,16 @@ class AdminProblemView(APIView,PaginationHandlerMixin):
 
         new_problems = []
         for problem in problems:
-            data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-            solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
+            # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
+            # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
             problem_json = {
                 "id" : problem.id,
                 "title" : problem.title,
                 "created_time" : problem.created_time,
                 "created_user" : problem.created_user.username,
-                "data" : data_url,
-                "solution" : solution_url,
+                # "data" : data_url,
+                # "solution" : solution_url,
                 "public" : problem.public,
                 "class_id" : problem.class_id.id,
             }

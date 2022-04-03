@@ -103,15 +103,15 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
         obj_list = []
 
         for submission in submission_class_list:
-            csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
-            ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
+            # csv_url = "http://{0}/api/submissions/class/{1}/download/csv".format(IP_ADDR, submission.id)
+            # ipynb_url = "http://{0}/api/submissions/class/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
             obj = {
                 "id": submission.id,
                 "username": submission.username,
                 "score": submission.score,
-                "csv": csv_url,
-                "ipynb": ipynb_url,
+                # "csv": csv_url,
+                # "ipynb": ipynb_url,
                 "created_time": submission.created_time,
                 "status": submission.status,
                 "on_leaderboard": submission.on_leaderboard
@@ -232,15 +232,15 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         obj_list = []
 
         for submission in submission_comptition_list:
-            csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
-            ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
+            # csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
+            # ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
             obj = {
                 "id": submission.id,
                 "username": submission.username,
                 "score": submission.score,
-                "csv": csv_url,
-                "ipynb": ipynb_url,
+                # "csv": csv_url,
+                # "ipynb": ipynb_url,
                 "created_time": submission.created_time,
                 "status": submission.status,
                 "on_leaderboard": submission.on_leaderboard
