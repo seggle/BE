@@ -242,13 +242,16 @@ class CompetitionTaView(APIView):
         datas = request.data
         for data in datas:
             is_check_user = User.objects.filter(username = data['username']).count()
-            is_check_competition_user = CompetitionUser.objects.filter(username = data['username']).filter(competition_id = competition_id).count()
+            is_check_competition_user_ta = CompetitionUser.objects.filter(username = data['username']).filter(competition_id = competition_id).filter(privilege = 1).count()
             if is_check_user == 0:
                 user_does_not_exist['does_not_exist'].append(data['username'])
                 continue
-            if is_check_competition_user != 0:
+            if is_check_competition_user_ta:
                 user_does_not_exist['is_existed'].append(data['username'])
                 continue
+            is_check_competition_user = CompetitionUser.objects.filter(username = data['username']).filter(competition_id = competition_id).filter(privilege = 0)
+            if is_check_competition_user.count():
+                is_check_competition_user[0].delete()
 
             obj = {
                 "username" : data['username'],
