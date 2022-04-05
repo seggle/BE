@@ -20,16 +20,14 @@ class PathSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SumissionClassListSerializer(serializers.ModelSerializer):
-    csv = serializers.CharField()
-    ipynb = serializers.CharField()
+
 
     class Meta:
         model = SubmissionClass
         fields = ["id", "username", "score", "created_time", "status", "on_leaderboard"]
 
 class SumissionCompetitionListSerializer(serializers.ModelSerializer):
-    csv = serializers.CharField()
-    ipynb = serializers.CharField()
+
     
     class Meta:
         model = SubmissionCompetition
