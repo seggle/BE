@@ -290,7 +290,7 @@ class IsSubCompDownloadableUser(permissions.BasePermission):
         competition = comp_sub.competition_id
 
         try :
-            privilege = CompetitionUser.objects.get(username=user,competition_id=competition.id)
+            privilege = CompetitionUser.objects.get(username=user,competition_id=competition.id).privilege
             if privilege == 1 or privilege == 2:
                 return True
             else:
