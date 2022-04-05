@@ -25,7 +25,7 @@ class SumissionClassListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubmissionClass
-        fields = ["id", "username", "score", "csv", "ipynb", "created_time", "status", "on_leaderboard"]
+        fields = ["id", "username", "score", "created_time", "status", "on_leaderboard"]
 
 class SumissionCompetitionListSerializer(serializers.ModelSerializer):
     csv = serializers.CharField()
@@ -33,4 +33,4 @@ class SumissionCompetitionListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SubmissionCompetition
-        fields = ["id", "username", "score", "csv", "ipynb", "created_time", "status", "on_leaderboard"]
+        fields = ["id", "username", "score", "created_time", "status", "on_leaderboard"]
