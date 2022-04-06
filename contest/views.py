@@ -37,7 +37,7 @@ class ContestView(APIView):
     def get(self, request, class_id):
         class_ = get_class(class_id)
         contest = []
-        contest_lists = Contest.objects.filter(class_id=class_id).active()
+        contest_lists = Contest.objects.filter(class_id=class_id).order_by("start_time").active()
         for contest_list in contest_lists:
             contest_list_serializer = ContestSerializer(contest_list)
             contest.append(contest_list_serializer.data)
