@@ -95,7 +95,7 @@ class UserInfoView(APIView):
                "competition": competition,
                "classes": classes
                }
-        
+
         serializer = UserInfoClassCompetitionSerializer(obj)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -191,12 +191,12 @@ class ContributionsView(APIView):
 
         if submission_class.count() != 0:
             for submission in submission_class:
-                date = str(submission.path.created_time).split(' ')[0]
+                date = str(submission.created_time).split(' ')[0]
                 date_list.append(date)
 
         if submission_competition.count() != 0:
             for submission in submission_competition:
-                date = str(submission.path.created_time).split(' ')[0]
+                date = str(submission.created_time).split(' ')[0]
                 date_list.append(date)
         date_list.sort()
 
@@ -222,6 +222,7 @@ class UserCompetitionInfoView(APIView):
     # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
         user = get_username(username)
+
         # permission check
         if request.user.username != user.username:
             return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
@@ -248,13 +249,13 @@ class UserCompetitionInfoView(APIView):
             obj["rank"] = None
 
             leaderboard_list = SubmissionCompetition.objects.filter(
-                Q(competition_id=competition.competition_id.id) & Q(path__on_leaderboard=True))
+                Q(competition_id=competition.competition_id.id) & Q(on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
                 # 정렬
                 if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:  # 내림차순
-                    leaderboard_list = leaderboard_list.order_by('-path__score')
+                    leaderboard_list = leaderboard_list.order_by('-score')
                 else:
-                    leaderboard_list = leaderboard_list.order_by('path__score')
+                    leaderboard_list = leaderboard_list.order_by('score')
                 temp_list = []
                 for temp in leaderboard_list:
                     temp_list.append(temp.username.username)

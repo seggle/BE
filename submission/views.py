@@ -41,7 +41,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         # exam인 경우
-        if contest.is_exam:
+        is_class_student = ClassUser.objects.filter(username=request.user, privilege=0).exists()
+        if contest.is_exam and is_class_student:
             # ip 중복 체크
             exam = Exam.objects.get(user=request.user, contest=contest)
             if exam.is_duplicated: # 중복이면 에러
