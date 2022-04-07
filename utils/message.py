@@ -44,5 +44,7 @@ msg_ProblemView_post_e_3 = {"error": "올바른 정답 파일을 업로드 해�
 msg_SubmissionCheckView_patch_e_1 = {"error": "username"}
 msg_SubmissionClassView_post_e_1 = {"error": "올바른 csv 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_2 = {"error": "올바른 ipynb 파일을 업로드 해주세요."}
+msg_SubmissionClassView_post_e_3 = {"error": "ip가 중복입니다"}
+
 # uploads
 

@@ -40,6 +40,13 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if (contest.start_time > time_check) or (contest.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
+        # exam인 경우
+        if contest.is_exam:
+            # ip 중복 체크
+            exam = Exam.objects.get(user=request.user, contest=contest)
+            if exam.is_duplicated: # 중복이면 에러
+                return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data.copy()
 
         csv_str = data['csv'].name.split('.')[-1]
