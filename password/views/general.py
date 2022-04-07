@@ -68,7 +68,7 @@ class ResetPasswordToken(APIView):
         try:
             user = User.objects.get(reset_password_token=data["token"])
         except:
-            return Response({'error': "Token does not exist"}, status=status.HTTP_400_BAD_REQUEST)# self.error("Token does not exist")
+            return Response({'error': "인증코드가 일치하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)# self.error("Token does not exist")
         if user.reset_password_token_expire_time < now():
             return Response({'error': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({'success': "token valid"}, status=status.HTTP_200_OK)
