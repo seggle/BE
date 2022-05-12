@@ -4,6 +4,7 @@ from competition.models import Competition
 from classes.serializers import ClassUserGetInfoSerializer
 from competition.serializers import CompetitionUserGetInfoSerializer
 from classes.models import ClassUser
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 
@@ -56,8 +57,19 @@ class UserCompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
         fields = ['id', "problem_id", "title", "start_time", "end_time", "user_total", "rank"]
+        
 class UserClassPrivilege(serializers.ModelSerializer):
 
     class Meta:
         model = ClassUser
         fields = ['privilege']
+
+class ObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super(ObtainPairSerializer, self).validate(attrs)
+        # data.update({'refresh': ''})
+        # data.update({'access': ''})
+        # data.update({'error': 'exam_mode'})
+        # data.update({'user': self.user.username})
+        # data.update({'id': self.user.id})
+        return data

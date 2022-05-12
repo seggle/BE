@@ -7,12 +7,13 @@ from rest_framework import status
 from django.contrib.auth.hashers import check_password
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer
+    UserCompetitionSerializer, ObtainPairSerializer
 from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
 from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
     TokenRefreshView,
 )
 from utils.get_obj import *
@@ -68,6 +69,10 @@ class LogoutView(APIView):
 #         for token in tokens:
 #             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 #         return Response(status=status.HTTP_205_RESET_CONTENT)
+
+class ObtainPairView(TokenObtainPairView):
+    serializer_class = ObtainPairSerializer
+    # permission_classes = [AllowAny]
 
 class RefreshView(TokenRefreshView):
     permission_classes = [AllowAny]

@@ -3,7 +3,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from account.views.general import (
     LogoutView, UserCompetitionInfoView, UserRegisterView,
-    UserInfoView, ClassInfoView, RefreshView, ContributionsView,UserClassPrivilege,UserCompetitionPrivilege
+    UserInfoView, ClassInfoView, ObtainPairView, RefreshView, ContributionsView,UserClassPrivilege,UserCompetitionPrivilege
 )
 
 
@@ -16,7 +16,7 @@ from rest_framework_simplejwt.views import(
 app_name = "account"
 urlpatterns = [
     path('', UserRegisterView.as_view()),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('login/', ObtainPairView.as_view(), name='token_obtain_pair'),
     path('login/refresh/', RefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutView.as_view(), name='auth_logout'),
     path('class/', ClassInfoView.as_view()),

@@ -45,6 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, error_messages=msg_user_model_email_unique)
     name = models.CharField(max_length=20, null=True)
     privilege = models.IntegerField(default=0)
+    exam_mode = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True) # 유저 모델의 필수 필드
     is_admin = models.BooleanField(default=False) # 유저 모델의 필수 필드
     is_staff = models.BooleanField(default=False) # 유저 모델의 필수 필드

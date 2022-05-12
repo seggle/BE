@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from .models import Exam
-from .serializer import ExamSerializer, ExamGenerateSerializer , ExamIDGenerateSerializer
+from .serializer import ExamSerializer # , ExamGenerateSerializer , ExamIDGenerateSerializer
 from rest_framework.generics import get_object_or_404
 from django.http import Http404, HttpResponse
 from rest_framework.response import Response

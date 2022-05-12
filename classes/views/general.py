@@ -5,7 +5,9 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 from ..models import ClassUser
 from account.models import User
+from exam.models import Exam
 from ..serializers import ClassSerializer, ClassPatchSerializer, ClassUserSerializer, ClassUserGetSerializer
+from exam.serializer import ExamSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.permission import *
@@ -96,18 +98,44 @@ class ClassStdView(APIView):
 
         class_ = get_class(class_id)
         # 기존 std 삭제
-        if class_.created_user == request.user:
-            classuser_list = ClassUser.objects.filter(class_id=class_id)
-            for classuser in classuser_list:
-                if classuser.privilege == 0:
-                    classuser.delete()
+        # if class_.created_user != request.user:
+        #     raise Http404()
+        
+        datas = request.data
+
+        # examuser_list = Exam.objects.filter(class_id=class_id)
+        for data in datas:
+            is_check_user = User.objects.filter(username=data['username']).count()
+            is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
+            if is_check_user == 0:
+                continue
+            if is_check_ClassUser != 0:
+                continue
+            obj = {
+                'ip_address': None,
+                'user': User.objects.get(username=data['username']),
+                'class_id': class_id,
+                'contest': None,
+                'exception': False,
+                'state': False,
+                'start_time': None,
+            }
+            serializer = ExamSerializer(data=obj)
+            if serializer.is_valid():
+                serializer.save()
+        # 중간에 삭제된 user 는 exam db에 남아있음
+
+        classuser_list = ClassUser.objects.filter(class_id=class_id)
+        for classuser in classuser_list:
+            if classuser.privilege == 0:
+                classuser.delete()
 
         # std 추가
         user_does_not_exist = {
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data
+        
         for data in datas:
             is_check_user = User.objects.filter(username=data['username']).count()
             is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
@@ -116,6 +144,7 @@ class ClassStdView(APIView):
                 continue
             if is_check_ClassUser != 0:
                 user_does_not_exist['is_existed'].append(data['username'])
+                print(1)
                 continue
 
             data = {
@@ -124,12 +153,14 @@ class ClassStdView(APIView):
                 "privilege": 0,
                 "class_id": class_id
             }
+
             serializer = ClassUserSerializer(data=data)
 
             if serializer.is_valid():
                 serializer.save()
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
@@ -153,11 +184,11 @@ class ClassTaView(APIView):
     def post(self, request, class_id):
         class_ = get_class(class_id)
         # 기존 ta 삭제
-        if class_.created_user == request.user:
-            classuser_list = ClassUser.objects.filter(class_id=class_id)
-            for classuser in classuser_list:
-                if classuser.privilege == 1:
-                    classuser.delete()
+        # if class_.created_user == request.user:
+        classuser_list = ClassUser.objects.filter(class_id=class_id)
+        for classuser in classuser_list:
+            if classuser.privilege == 1:
+                classuser.delete()
 
         # ta 추가
         user_does_not_exist = {
