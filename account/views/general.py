@@ -253,9 +253,9 @@ class UserCompetitionInfoView(APIView):
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
                 # 정렬
                 if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:  # 내림차순
-                    leaderboard_list = leaderboard_list.order_by('-score')
+                    leaderboard_list = leaderboard_list.order_by('-score', 'created_time')
                 else:
-                    leaderboard_list = leaderboard_list.order_by('score')
+                    leaderboard_list = leaderboard_list.order_by('score', 'created_time')
                 temp_list = []
                 for temp in leaderboard_list:
                     temp_list.append(temp.username.username)

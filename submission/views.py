@@ -233,7 +233,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
+        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by('-created_time')
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
 

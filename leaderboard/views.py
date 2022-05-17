@@ -19,9 +19,9 @@ class LeaderboardClassView(APIView):
 
         # 정렬
         if contest_problem.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
-            submission_class_list = submission_class_list.order_by('-score')
+            submission_class_list = submission_class_list.order_by('-score', 'created_time')
         else:
-            submission_class_list = submission_class_list.order_by('score')
+            submission_class_list = submission_class_list.order_by('score', 'created_time')
 
         obj_list = []
         count = 1
@@ -56,9 +56,9 @@ class LeaderboardCompetitionView(APIView):
 
         # 정렬
         if competition.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
-            submission_competition_list = submission_competition_list.order_by('-score')
+            submission_competition_list = submission_competition_list.order_by('-score', 'created_time')
         else:
-            submission_competition_list = submission_competition_list.order_by('score')
+            submission_competition_list = submission_competition_list.order_by('score', 'created_time')
 
         obj_list = []
         count = 1
