@@ -15,6 +15,7 @@ envvv
 migrations/
 .DS_Store
 .idea
+*.pem
 # uploads/problem
 # uploads/solution
 # uploads/submission
