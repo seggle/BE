@@ -13,6 +13,8 @@ secrets.json
 uploads
 envvv
 migrations/
+.DS_Store
+.idea
 # uploads/problem
 # uploads/solution
 # uploads/submission
