@@ -19,7 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('api/', include('django.contrib.auth.urls')),
     path('api/', include('password.urls.general')),
-    path('api/admin/', admin.site.urls),
     path('api/admin/users/', include('account.urls.admin')),
     path('api/admin/faqs/', include('faq.urls.admin')),
     path('api/users/', include('account.urls.general')),
@@ -36,4 +35,6 @@ urlpatterns = [
     path('api/api-auth/', include('rest_framework.urls')),
     path('api/class/<int:class_id>/contests/<int:contest_id>/exam/',include('exam.urls')),
     path('api/admin/problems/',include('problem.urls.admin')),
+
+    path('api/admin/', admin.site.urls),
 ]
