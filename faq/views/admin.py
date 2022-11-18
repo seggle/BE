@@ -10,6 +10,8 @@ from utils.message import *
 from ..models import Faq
 from ..serializers import FaqSerializer, FaqAllGetSerializer, FaqPatchSerializer
 from utils.permission import IsAdmin
+
+
 # Create your views here.
 
 class FaqAdminView(APIView):
@@ -17,7 +19,12 @@ class FaqAdminView(APIView):
 
     def post(self,request):
         data = request.data
+
+        # https://stackoverflow.com/questions/44717442/this-querydict-instance-is-immutable
+        data._mutable = True
         data["created_user"] = request.user
+        data._mutable = False
+
         serializer = FaqSerializer(data=data)
 
         if serializer.is_valid():
