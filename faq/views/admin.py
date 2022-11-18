@@ -1,6 +1,7 @@
 from multiprocessing import context
 from pickle import TRUE
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -17,7 +18,7 @@ from utils.permission import IsAdmin
 class FaqAdminView(APIView):
     permission_classes = [IsAdmin]
 
-    def post(self,request):
+    def post(self, request: Request) -> Response:
         data = request.data
 
         # https://stackoverflow.com/questions/44717442/this-querydict-instance-is-immutable
@@ -33,26 +34,26 @@ class FaqAdminView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, faq_id=None):
+    def get(self, request: Request, faq_id: int = None) -> Response:
         if faq_id is None:
             faq_list = Faq.objects.all()
             faq_list_serializer = FaqAllGetSerializer(faq_list, many=True)
-            
+
             return Response(faq_list_serializer.data, status=status.HTTP_200_OK)
         else:
             faq = get_faq(faq_id)
             serializer = FaqSerializer(faq)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, faq_id=None):
+    def patch(self, request: Request, faq_id: int = None) -> Response:
         if faq_id is None:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
         faq = get_faq(faq_id)
         data = request.data
-        obj = {
-            "question" : data["question"],
-            "answer" : data["answer"],
-            "visible" : data["visible"]
+        obj ={
+            "question": data["question"],
+            "answer": data["answer"],
+            "visible": data["visible"]
         }
         if faq.created_user == request.user:
             serializer = FaqPatchSerializer(faq, data=obj)
@@ -62,7 +63,7 @@ class FaqAdminView(APIView):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, faq_id=None):
+    def delete(self, request: Request, faq_id:int = None) -> Response:
         if faq_id is None:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
         faq = get_faq(faq_id)
@@ -71,10 +72,11 @@ class FaqAdminView(APIView):
             return Response(msg_success, status=status.HTTP_200_OK)
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
+
 class FaqCheckAdminView(APIView):
     permission_classes = [IsAdmin]
 
-    def post(self,request):
+    def post(self, request: Request) -> Response:
         data = request.data
 
         faq_id = data['id']
