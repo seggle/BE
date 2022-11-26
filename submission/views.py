@@ -51,10 +51,18 @@ class SubmissionClassView(APIView, EvaluationMixin):
             if exam.is_duplicated: # 중복이면 에러
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
+        data = request.data
 
-        csv_str = data['csv'].name.split('.')[-1]
-        ipynb_str = data['ipynb'].name.split('.')[-1]
+        csv_file = data.get('csv')
+        if csv_file is None:
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        csv_str = csv_file.name.split('.')[-1]
+
+        ipynb_file = data.get('ipynb')
+        if ipynb_file is None:
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        ipynb_str = ipynb_file.name.split('.')[-1]
+
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -71,8 +79,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
             "class_id": contest_problem.contest_id.class_id.id,
             "contest_id": contest_problem.contest_id.id,
             "c_p_id": contest_problem.id,
-            "csv": data['csv'],
-            "ipynb": data['ipynb'],
+            "csv": csv_file,
+            "ipynb": ipynb_file,
             "problem_id": contest_problem.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -186,10 +194,18 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 competition_id=competition_id).count() == 0:
             return Response({'error': "대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
+        data = request.data
 
-        csv_str = data['csv'].name.split('.')[-1]
-        ipynb_str = data['ipynb'].name.split('.')[-1]
+        csv_file = data.get('csv')
+        if csv_file is None:
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        csv_str = csv_file.name.split('.')[-1]
+
+        ipynb_file = data.get('ipynb')
+        if ipynb_file is None:
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        ipynb_str = ipynb_file.name.split('.')[-1]
+
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -203,8 +219,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         submission_json = {
             "username": request.user,
             "competition_id": competition.id,
-            "csv": data["csv"],
-            "ipynb": data["ipynb"],
+            "csv": csv_file,
+            "ipynb": ipynb_file,
             "problem_id": competition.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -306,15 +322,13 @@ class SubmissionClassCsvDownloadView(APIView):
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -332,15 +346,13 @@ class SubmissionClassIpynbDownloadView(APIView):
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -358,15 +370,15 @@ class SubmissionCompetitionCsvDownloadView(APIView):
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
+        # It should be considered what operating system is running
+
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -385,15 +397,13 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
