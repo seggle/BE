@@ -25,7 +25,7 @@ from utils.message import *
 class CompetitionView(APIView):
     permissions = [IsProfAdminOrReadOnly]
     # 06-00 대회 리스트 조회
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
@@ -46,10 +46,19 @@ class CompetitionView(APIView):
         return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
 
     # 06-01 대회 생성
-    def post(self, request):
-        data = request.data.copy()
-        data_str = data['data'].name.split('.')[-1]
-        solution_str = data['solution'].name.split('.')[-1]
+    def post(self, request: Request) -> Response:
+        data = request.data
+        data._mutable = True
+
+        d_data = data.get('data')
+        if d_data is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        data_str = d_data.name.split('.')[-1]
+
+        d_solution = data.get('solution')
+        if d_solution is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        solution_str = d_solution.name.split('.')[-1]
         if data_str != 'zip':
             return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
         if solution_str != 'csv':
@@ -100,7 +109,7 @@ class CompetitionView(APIView):
 class CompetitionDetailView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-02 대회 개별 조회
-    def get(self, request, competition_id):
+    def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
@@ -123,7 +132,7 @@ class CompetitionDetailView(APIView):
         return Response(obj, status=status.HTTP_200_OK)
 
     # 06-03-01 대회 개별 수정
-    def put(self, request, competition_id):
+    def put(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
@@ -176,7 +185,7 @@ class CompetitionDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 06-03-02 대회 삭제
-    def delete(self, request, competition_id):
+    def delete(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
@@ -188,7 +197,7 @@ class CompetitionDetailView(APIView):
 class CompetitionUserView(APIView):
     permission_classes = [IsAuthenticated]
     # 06-05-01 대회 유저 참가
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         time_check = timezone.now()
@@ -221,7 +230,7 @@ class CompetitionUserView(APIView):
 class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
     # 06-05-02 대회 유저 참가
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         # 0315
