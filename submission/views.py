@@ -215,15 +215,17 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             path_obj = path_serializer.save()
             submission_json["path"] = path_obj.id
             submission_serializer = SubmissionCompetitionSerializer(data=submission_json)
+
             if submission_serializer.is_valid():
                 submission = submission_serializer.save()
                 # evaluation
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
-
                 return Response(msg_success, status=status.HTTP_200_OK)
+
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -263,6 +265,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
             serializer = self.get_paginated_response(SumissionCompetitionListSerializer(page, many=True).data)
         else:
             serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -276,7 +279,7 @@ class SubmissionCompetitionCheckView(APIView):
         data = request.data
         competition_submission_list = []
         for submission in data:
-            competition_submission = get_submission_competition(id=submission["id"])
+            competition_submission = get_submission_competition(id=submission.get("id"))
             if competition_submission.username.username != request.user.username:
                 return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
             competition_submission_list.append(competition_submission)
@@ -372,6 +375,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
@@ -398,4 +402,5 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
