@@ -23,3 +23,30 @@ def upload_to_solution(instance, filename):
 
 def upload_to_submission(instance, filename):
     return "uploads/submission/{0}/{1}".format(instance.path.path, filename)
+
+
+# OS에 맞춰 파일 이름을 추출해 반환
+def get_filename(filepath: str) -> str:
+    if platform.system() == 'Windows':
+        filename = filepath.split('\\')[-1]
+    else:
+        filename = filepath.split('/')[-1]
+
+    return filename
+
+
+# Regular Expression을 이용해 datetime을 2010-3-1 이런 식으로 바꿔서 파일 이름을 만듦
+def get_archive_filename(path: str, file_date: datetime.datetime, extension: str) -> str:
+    elems = re.split('[ :\-.]', str(file_date))
+    name = path + '/' + '-'.join(elems) + extension
+
+    return name
+
+
+# 여러 층에 걸쳐 디렉토리를 만듦
+def make_mult_level_dir(current_path: Path, target: str) -> None:
+    dirs = target.split('/')
+    for d in dirs:
+        current_path /= d
+        if current_path.is_dir() is False:
+            current_path.mkdir()
