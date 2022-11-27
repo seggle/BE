@@ -14,40 +14,49 @@ from django.http import Http404
 
 # is_deleted 고려해주세요ㅎㅎ사랑합니다~~~~
 
+
 # faq
-def get_faq(id):
+def get_faq(id: int) -> Faq:
     faq = get_object_or_404(Faq, id = id)
     return faq
 
+
 # username
-def get_username(username): 
+def get_username(username: str) -> User:
     user = get_object_or_404(User, username=username)
     return user
 
+
 # announcement
-def get_announcement(id):
+def get_announcement(id: int) -> Announcement:
     announcement = get_object_or_404(Announcement, id = id)
     return announcement
 
+
 # proposal
-def get_proposal(id):
+def get_proposal(id: int) -> Proposal:
     proposal = get_object_or_404(Proposal, id = id)
     return proposal
 
+
 # faq
-def get_faq(id):
+'''
+def get_faq(id: int) -> Faq:
     faq = get_object_or_404(Faq, id = id)
     return faq
+'''
+
 
 # class
-def get_class(id):
+def get_class(id: int) -> Class:
     _class = get_object_or_404(Class, id = id)
     if _class.is_deleted:
         raise Http404()
     return _class
 
+
 # competition
-def get_competition(id):
+def get_competition(id: int) -> Competition:
     competition = get_object_or_404(Competition, id=id)
     if competition.is_deleted:
         raise Http404()
@@ -57,22 +66,25 @@ def get_competition(id):
     else:
         return competition
 
+
 # problem
-def get_problem(id):
+def get_problem(id: int) -> Problem:
     problem = get_object_or_404(Problem, id=id)
     if problem.is_deleted:
         raise Http404()
     return problem
 
+
 # contest
-def get_contest(id):
+def get_contest(id: int) -> Contest:
     contest = get_object_or_404(Contest, id = id)
     if contest.is_deleted:
         raise Http404()
     return contest
 
+
 # contest_problem
-def get_contest_problem(id):
+def get_contest_problem(id: int) -> ContestProblem:
     contestproblem = get_object_or_404(ContestProblem, id=id)
     if contestproblem.is_deleted:
         raise Http404()
@@ -80,14 +92,17 @@ def get_contest_problem(id):
         raise Http404()
     return contestproblem
 
-def get_submission_class(id):
+
+def get_submission_class(id: int) -> SubmissionClass:
     class_submission = get_object_or_404(SubmissionClass, id=id)
     return class_submission
 
-def get_submission_competition(id):
+
+def get_submission_competition(id: int) -> SubmissionCompetition:
     competition_submission = get_object_or_404(SubmissionCompetition, id=id)
     return competition_submission
 
-def get_exam(id):
+
+def get_exam(id: int) -> Exam:
     exam = get_object_or_404(Exam, id=id)
     return exam
