@@ -1,8 +1,11 @@
 import urllib
+from pathlib import Path, PureWindowsPath, PurePosixPath
 
-from submission.models import SubmissionCompetition
+from competition.models import Competition
 
+# TODO : Convert these file to respond the convenient pathlib library
 
+# For Windows
 def csv_download_windows(submission_path: str, base_dir: str | bytes) -> (str, str):
     base_dir = base_dir.replace("\\submission", "")
     csv_path = str(submission_path).split('uploads\\', 1)[1]
@@ -13,6 +16,7 @@ def csv_download_windows(submission_path: str, base_dir: str | bytes) -> (str, s
     return filename, filepath
 
 
+# For Unix or Unix-compatible operating systems
 def csv_download_nix(submission_path: str, base_dir: str | bytes) -> (str, str):
     base_dir = base_dir.replace("/submission", "")
 
