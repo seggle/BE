@@ -1,3 +1,5 @@
+import zipfile
+
 from rest_framework.views import APIView
 from submission.models import SubmissionClass, SubmissionCompetition
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
@@ -19,11 +21,14 @@ import mimetypes
 import os
 import platform
 import urllib
+import pathlib
 from django.http import HttpResponse
 from django.utils import timezone
 from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 import submission.download as download
+from datetime import datetime
+from utils.common import get_filename, get_archive_filename, make_mult_level_dir
 
 
 # submission-class 관련
@@ -412,5 +417,54 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
+        return response
+
+
+# 대회 제출 자료를 압축해서 다운로드
+class SubmissionCompetitionDownloadAllView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+    # IsAdmin, IsProf, IsTA, IsCompetitionManagerOrReadOnly
+
+    def get(self, request: Request, competition_id: int) -> HttpResponse:
+
+        # Retrieve targeted files
+        submission_targets = SubmissionCompetition.objects.filter(competition_id=competition_id)
+        usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
+        competition_info = get_competition(competition_id)
+
+        # Leave a compressed file after downloading as a cache when the competition is over
+        is_temp = False if datetime.now() > competition_info.end_time else True
+
+        # Setting path of the archive file
+        base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
+        base_dir = base_dir_obj
+        base_dir_obj /= 'uploads/zipcache/competition'
+        if os.path.exists(str(base_dir_obj)) is False:
+            make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
+
+        zip_filename = base_dir_obj / ('comp_' + str(competition_info.id) + '.zip')
+        takeout_file = zipfile.ZipFile(zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
+
+        for user in usernames:
+            takeout_file.mkdir(user)
+            user_submissions = submission_targets.filter(username=user)
+
+            for material in user_submissions:
+                arc_filename = Path(get_archive_filename('./' + user, material.created_time, '.ipynb'))
+                path = base_dir / str(material.ipynb)
+                takeout_file.write(filename=str(path), arcname=str(arc_filename))
+                arc_filename = Path(get_archive_filename('./' + user, material.created_time, '.csv'))
+                path = base_dir / str(material.csv)
+                takeout_file.write(filename=str(path), arcname=str(arc_filename))
+
+        takeout_file.close()
+        # Open the file for reading content
+        path = open(zip_filename, 'r')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(zip_filename)
+        response = HttpResponse(path, content_type=mime_type)
+        # Set the HTTP header for sending to browser
+        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % zip_filename
 
         return response

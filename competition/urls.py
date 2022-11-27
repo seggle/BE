@@ -9,6 +9,7 @@ from submission.views import (
     SubmissionCompetitionView,
     SubmissionCompetitionListView,
     SubmissionCompetitionCheckView,
+    SubmissionCompetitionDownloadAllView,
 )
 
 app_name = "competition"
@@ -19,5 +20,6 @@ urlpatterns = [
     path('<int:competition_id>/participation/ta/', CompetitionTaView.as_view(), name='competition_ta'),
     path('<int:competition_id>/submission/', SubmissionCompetitionView.as_view(), name='competition_submission'),
     path('<int:competition_id>/submissions/', SubmissionCompetitionListView.as_view(), name='competition_submission_list'),
+    path('<int:competition_id>/submissions/download/all/', SubmissionCompetitionDownloadAllView.as_view(), name='download_all_submissions'),
     path('<int:competition_id>/check/', SubmissionCompetitionCheckView.as_view(), name='competition_leaderboard_check'),
 ]
