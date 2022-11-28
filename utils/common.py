@@ -35,10 +35,17 @@ def get_filename(filepath: str) -> str:
     return filename
 
 
+# Convert datetime format with user requested separator and regular expression
+def convert_date_format(date: datetime.datetime, separator: str = '-', rexp: str = None) -> str:
+    rexp = rexp if rexp is not None else '[ :\-.]'
+    elems = re.split(rexp, str(date))
+
+    return separator.join(elems)
+
+
 # Regular Expression을 이용해 datetime을 2010-3-1 이런 식으로 바꿔서 파일 이름을 만듦
 def get_archive_filename(path: str, file_date: datetime.datetime, extension: str) -> str:
-    elems = re.split('[ :\-.]', str(file_date))
-    name = path + '/' + '-'.join(elems) + extension
+    name = path + '/' + convert_date_format(file_date) + extension
 
     return name
 
