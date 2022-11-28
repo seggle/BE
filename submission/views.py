@@ -1,18 +1,14 @@
 import zipfile
 
 from rest_framework.views import APIView
-from submission.models import SubmissionClass, SubmissionCompetition
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
     SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
-from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination  # pagination
 from utils.pagination import PaginationHandlerMixin  # pagination
 from utils.evaluation import EvaluationMixin
 from utils.get_ip import GetIpAddr
 from utils.get_obj import *
 from utils.message import *
-from utils.common import IP_ADDR
-from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
@@ -20,15 +16,14 @@ import uuid
 import mimetypes
 import os
 import platform
-import urllib
 import pathlib
 from django.http import HttpResponse
 from django.utils import timezone
 from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
-import submission.download as download
+import utils.download as download
 from datetime import datetime
-from utils.common import get_filename, get_archive_filename, make_mult_level_dir
+from utils.common import get_archive_filename, make_mult_level_dir
 
 
 # submission-class 관련
@@ -464,12 +459,6 @@ class SubmissionCompetitionDownloadAllView(APIView):
                 path = base_dir / str(material.csv)
                 takeout_file.write(filename=str(path), arcname=str(arc_filename))
         takeout_file.close()
-        # Open the file for reading content
-        path = open(zip_filepath, 'rb')
-        # Set the mime type
-        mime_type, _ = mimetypes.guess_type(zip_filepath)
-        response = HttpResponse(path, content_type=mime_type)
-        # Set the HTTP header for sending to browser
-        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % zip_filename
 
-        return response
+        mime_type = download.get_mimetype(zip_filepath)
+        return download.get_attachment_response(zip_filepath, mime_type)
