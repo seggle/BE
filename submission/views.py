@@ -443,8 +443,9 @@ class SubmissionCompetitionDownloadAllView(APIView):
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
 
-        zip_filename = base_dir_obj / ('comp_' + str(competition_info.id) + '.zip')
-        takeout_file = zipfile.ZipFile(zip_filename, mode='w', compression=zipfile.ZIP_DEFLATED)
+        zip_filename = 'comp_' + str(competition_id) + '.zip'
+        zip_filepath = base_dir_obj / zip_filename
+        takeout_file = zipfile.ZipFile(zip_filepath, mode='w', compression=zipfile.ZIP_DEFLATED)
 
         for user in usernames:
             takeout_file.mkdir(user)
@@ -460,9 +461,9 @@ class SubmissionCompetitionDownloadAllView(APIView):
 
         takeout_file.close()
         # Open the file for reading content
-        path = open(zip_filename, 'r')
+        path = open(zip_filepath, 'rb')
         # Set the mime type
-        mime_type, _ = mimetypes.guess_type(zip_filename)
+        mime_type, _ = mimetypes.guess_type(zip_filepath)
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % zip_filename
