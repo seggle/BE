@@ -440,11 +440,16 @@ class SubmissionCompetitionDownloadAllView(APIView):
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
         base_dir_obj /= 'uploads/zipcache/competition'
-        if os.path.exists(str(base_dir_obj)) is False:
-            make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
 
         zip_filename = 'comp_' + str(competition_id) + '.zip'
         zip_filepath = base_dir_obj / zip_filename
+
+        if os.path.exists(str(base_dir_obj)) is False:
+            make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
+        elif os.path.exists(str(zip_filepath)) is True:
+            mime_type = download.get_mimetype(zip_filepath)
+            return download.get_attachment_response(zip_filepath, mime_type)
+
         takeout_file = zipfile.ZipFile(zip_filepath, mode='w', compression=zipfile.ZIP_DEFLATED)
 
         for user in usernames:
@@ -458,7 +463,6 @@ class SubmissionCompetitionDownloadAllView(APIView):
                 arc_filename = Path(get_archive_filename('./' + user, material.created_time, '.csv'))
                 path = base_dir / str(material.csv)
                 takeout_file.write(filename=str(path), arcname=str(arc_filename))
-
         takeout_file.close()
         # Open the file for reading content
         path = open(zip_filepath, 'rb')
