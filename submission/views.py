@@ -452,7 +452,42 @@ class SubmissionCompetitionDownloadAllView(APIView):
         # elif is_temp is True:
         #    update_archive()
         else:
-            creat_archive(zip_filepath, zip_filename, base_dir, submission_targets, usernames, competition_info)
+            creat_archive(zip_filepath, base_dir, submission_targets, usernames)
+
+        mime_type = download.get_mimetype(zip_filepath)
+        return download.get_attachment_response(zip_filepath, mime_type)
+
+
+class SubmissionCompetitionDownloadLatestView(APIView):
+    permission_classes = [IsProf | IsTA | IsAdmin]
+
+    def get(self, request: Request, competition_id: int) -> HttpResponse:
+
+        # Retrieve targeted files
+        submission_targets = SubmissionCompetition.objects.filter(competition_id=competition_id)
+        usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
+        competition_info = get_competition(competition_id)
+
+        # Leave a compressed file after downloading as a cache when the competition is over
+        is_temp = False if datetime.now() > competition_info.end_time else True
+
+        # Setting path of the archive file
+        base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
+        base_dir = base_dir_obj
+        base_dir_obj /= ZIP_ARCHIVE_PATH
+
+        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + \
+                       '_latest' + '.zip'
+        zip_filepath = base_dir_obj / zip_filename
+
+        if os.path.exists(str(base_dir_obj)) is False:
+            make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
+
+        if os.path.exists(str(zip_filepath)) is True and is_temp is False:
+            mime_type = download.get_mimetype(zip_filepath)
+            return download.get_attachment_response(zip_filepath, mime_type)
+
+        creat_archive(zip_filepath, base_dir, submission_targets, usernames, is_latest_only=True)
 
         mime_type = download.get_mimetype(zip_filepath)
         return download.get_attachment_response(zip_filepath, mime_type)
