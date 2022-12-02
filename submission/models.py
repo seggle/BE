@@ -8,6 +8,7 @@ from utils.common import upload_to_submission
 
 # Create your models here.
 
+
 class Path(models.Model):
     path = models.TextField()
 
@@ -16,6 +17,7 @@ class Path(models.Model):
 
     class Meta:
         db_table = "path"
+
 
 class SubmissionClass(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")
@@ -37,6 +39,7 @@ class SubmissionClass(models.Model):
 
     class Meta:
         db_table = "submission_class"
+
 
 class SubmissionCompetition(models.Model):
     username = models.ForeignKey(User, on_delete=models.CASCADE, db_column="username", to_field="username")

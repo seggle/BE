@@ -29,6 +29,7 @@ from utils.common import make_mult_level_dir, convert_date_format
 
 ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
 
+
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
     permission_classes = [IsClassUser]
@@ -51,7 +52,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if contest.is_exam and is_class_student:
             # ip 중복 체크
             exam = Exam.objects.get(user=request.user, contest=contest)
-            if exam.is_duplicated: # 중복이면 에러
+            if exam.is_duplicated:  # 중복이면 에러
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
@@ -194,7 +195,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         user = get_username(request.user.username)
         if CompetitionUser.objects.filter(username=request.user.username).filter(
-                competition_id=competition_id).count() == 0:
+                                          competition_id=competition_id).count() == 0:
             return Response({'error': "대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
@@ -257,7 +258,8 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by('-created_time')
+        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by(
+            '-created_time')
         if username:
             submission_comptition_list = submission_comptition_list.filter(username=username)
 
@@ -422,7 +424,6 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
 # 대회 제출 자료를 압축해서 다운로드
 class SubmissionCompetitionDownloadAllView(APIView):
     permission_classes = [IsProf | IsTA | IsAdmin]
-    # IsAdmin, IsProf, IsTA, IsCompetitionManagerOrReadOnly
 
     def get(self, request: Request, competition_id: int) -> HttpResponse:
 
