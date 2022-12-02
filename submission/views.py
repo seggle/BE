@@ -421,7 +421,7 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
 
 # 대회 제출 자료를 압축해서 다운로드
 class SubmissionCompetitionDownloadAllView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsProf | IsTA | IsAdmin]
     # IsAdmin, IsProf, IsTA, IsCompetitionManagerOrReadOnly
 
     def get(self, request: Request, competition_id: int) -> HttpResponse:
