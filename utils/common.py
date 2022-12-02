@@ -3,6 +3,8 @@ import platform
 import uuid
 import re
 from pathlib import Path
+from django.utils import timezone
+import tzdata
 
 IP_ADDR = "15.165.30.200:8000"
 
@@ -50,3 +52,8 @@ def make_mult_level_dir(current_path: Path, target: str) -> None:
         current_path /= d
         if current_path.is_dir() is False:
             current_path.mkdir()
+
+
+# 현재 시간보다 이전에 끝난 경우 False를 반환
+def is_temp(date: datetime.datetime) -> bool:
+    return False if datetime.datetime.now() > date else True

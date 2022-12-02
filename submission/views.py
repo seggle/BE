@@ -25,7 +25,7 @@ from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 import utils.download as download
 from datetime import datetime
-from utils.common import make_mult_level_dir, convert_date_format
+from utils.common import make_mult_level_dir, convert_date_format, is_temp
 
 ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
 
@@ -433,7 +433,7 @@ class SubmissionCompetitionDownloadAllView(APIView):
         competition_info = get_competition(competition_id)
 
         # Leave a compressed file after downloading as a cache when the competition is over
-        is_temp = False if datetime.now() > competition_info.end_time else True
+        temp_flag = is_temp(competition_info.end_time)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
@@ -446,7 +446,7 @@ class SubmissionCompetitionDownloadAllView(APIView):
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
 
-        if os.path.exists(str(zip_filepath)) is True and is_temp is False:
+        if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
         # elif is_temp is True:
@@ -469,7 +469,7 @@ class SubmissionCompetitionDownloadLatestView(APIView):
         competition_info = get_competition(competition_id)
 
         # Leave a compressed file after downloading as a cache when the competition is over
-        is_temp = False if datetime.now() > competition_info.end_time else True
+        temp_flag = is_temp(competition_info.end_time)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
@@ -483,7 +483,7 @@ class SubmissionCompetitionDownloadLatestView(APIView):
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
 
-        if os.path.exists(str(zip_filepath)) is True and is_temp is False:
+        if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
 
