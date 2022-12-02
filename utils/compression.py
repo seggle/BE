@@ -20,7 +20,7 @@ def creat_archive(filepath: Path, filename: str, base_dir: Path, submission_targ
     with zipfile.ZipFile(archive_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
         extra_str = None if is_latest_only is False else 'latest'
         for user in usernames:
-            front_str = None
+            front_str = user
             pre_dir = '.'
             user_submissions = submission_targets.filter(username=user)
             if is_latest_only is True:
