@@ -27,6 +27,7 @@ import utils.download as download
 from datetime import datetime
 from utils.common import make_mult_level_dir, convert_date_format
 
+ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
@@ -436,13 +437,13 @@ class SubmissionCompetitionDownloadAllView(APIView):
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
-        base_dir_obj /= 'uploads/zipcache/competition'
+        base_dir_obj /= ZIP_ARCHIVE_PATH
 
         zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
-            make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
+            make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
 
         if os.path.exists(str(zip_filepath)) is True and is_temp is False:
             mime_type = download.get_mimetype(zip_filepath)
