@@ -44,8 +44,15 @@ def convert_date_format(date: datetime.datetime, separator: str = '-', rexp: str
 
 
 # Regular Expression을 이용해 datetime을 2010-3-1 이런 식으로 바꿔서 파일 이름을 만듦
-def get_archive_filename(path: str, file_date: datetime.datetime, extension: str) -> str:
-    name = path + '/' + convert_date_format(file_date) + extension
+def get_archive_filename(path: str, file_date: datetime.datetime, extension: str,
+                         extra_str: str = None, front_str: str = None) -> str:
+    name = path + '/'
+    if front_str is not None:
+        name += front_str + '_'
+    name += convert_date_format(file_date)
+    if extra_str is not None:
+        name += '_' + extra_str
+    name += extension
 
     return name
 
