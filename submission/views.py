@@ -1,6 +1,8 @@
 import zipfile
 
 from rest_framework.views import APIView
+
+from utils.compression import creat_archive
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
     SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from rest_framework.pagination import PageNumberPagination  # pagination
@@ -23,7 +25,7 @@ from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 import utils.download as download
 from datetime import datetime
-from utils.common import get_archive_filename, make_mult_level_dir
+from utils.common import make_mult_level_dir, convert_date_format
 
 
 # submission-class 관련
@@ -436,29 +438,19 @@ class SubmissionCompetitionDownloadAllView(APIView):
         base_dir = base_dir_obj
         base_dir_obj /= 'uploads/zipcache/competition'
 
-        zip_filename = 'comp_' + str(competition_id) + '.zip'
+        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, 'uploads/zipcache/competition')
-        elif os.path.exists(str(zip_filepath)) is True:
+
+        if os.path.exists(str(zip_filepath)) is True and is_temp is False:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
-
-        takeout_file = zipfile.ZipFile(zip_filepath, mode='w', compression=zipfile.ZIP_DEFLATED)
-
-        for user in usernames:
-            takeout_file.mkdir(user)
-            user_submissions = submission_targets.filter(username=user)
-
-            for material in user_submissions:
-                arc_filename = Path(get_archive_filename('./' + user, material.created_time, '.ipynb'))
-                path = base_dir / str(material.ipynb)
-                takeout_file.write(filename=str(path), arcname=str(arc_filename))
-                arc_filename = Path(get_archive_filename('./' + user, material.created_time, '.csv'))
-                path = base_dir / str(material.csv)
-                takeout_file.write(filename=str(path), arcname=str(arc_filename))
-        takeout_file.close()
+        # elif is_temp is True:
+        #    update_archive()
+        else:
+            creat_archive(zip_filepath, zip_filename, base_dir, submission_targets, usernames, competition_info)
 
         mime_type = download.get_mimetype(zip_filepath)
         return download.get_attachment_response(zip_filepath, mime_type)
