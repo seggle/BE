@@ -22,7 +22,9 @@ print(secrets.token_urlsafe())
 그런 다음 secrets.json을 루트에 만들고 다음과 같이 적어 준다.
 ```json
 {
-  "SECRET_KEY": "[생성한 secret key]"
+  "SECRET_KEY": "[생성한 secret key]",
+  "EMAIL_HOST_USER": "asdf@asdf.com",
+  "EMAIL_HOST_PASSWORD": "asdf"
 }
 ```
 
@@ -36,7 +38,7 @@ print(secrets.token_urlsafe())
 [client]
 database = [설정한 데이터베이스]
 user = [설정한 사용자명]
-password = [설정한 비밀번호
+password = [설정한 비밀번호]
 default-character-set = utf8
 host = 127.0.0.1
 port = 3306
