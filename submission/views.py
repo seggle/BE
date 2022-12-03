@@ -1,5 +1,6 @@
 import zipfile
 
+from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 
 from utils.compression import creat_archive
@@ -425,12 +426,15 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
 class SubmissionCompetitionDownloadAllView(APIView):
     permission_classes = [IsProf | IsTA | IsAdmin]
 
-    def get(self, request: Request, competition_id: int) -> HttpResponse:
+    def get(self, request: Request, competition_id: int) -> HttpResponse | Response:
 
         # Retrieve targeted files
         submission_targets = SubmissionCompetition.objects.filter(competition_id=competition_id)
         usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
         competition_info = get_competition(competition_id)
+
+        if len(usernames) == 0:
+            return Response(data=msg_submission_download_unavailable, status=HTTP_404_NOT_FOUND)
 
         # Leave a compressed file after downloading as a cache when the competition is over
         temp_flag = is_temp(competition_info.end_time)
@@ -461,12 +465,15 @@ class SubmissionCompetitionDownloadAllView(APIView):
 class SubmissionCompetitionDownloadLatestView(APIView):
     permission_classes = [IsProf | IsTA | IsAdmin]
 
-    def get(self, request: Request, competition_id: int) -> HttpResponse:
+    def get(self, request: Request, competition_id: int) -> HttpResponse | Response:
 
         # Retrieve targeted files
         submission_targets = SubmissionCompetition.objects.filter(competition_id=competition_id)
         usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
         competition_info = get_competition(competition_id)
+
+        if len(usernames) == 0:
+            return Response(data=msg_submission_download_unavailable, status=HTTP_404_NOT_FOUND)
 
         # Leave a compressed file after downloading as a cache when the competition is over
         temp_flag = is_temp(competition_info.end_time)
