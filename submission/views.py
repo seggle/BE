@@ -3,7 +3,7 @@ import zipfile
 from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 
-from utils.compression import creat_archive
+from utils.compression import creat_archive, SubmissionArchiveMode
 from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
     SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from rest_framework.pagination import PageNumberPagination  # pagination
@@ -28,8 +28,8 @@ import utils.download as download
 from datetime import datetime
 from utils.common import make_mult_level_dir, convert_date_format, is_temp
 
-ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
-
+COMPETITION_ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
+# CLASS_PROBLEM_ZIP_ARCHIVE_PATH
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
@@ -442,13 +442,13 @@ class SubmissionCompetitionDownloadAllView(APIView):
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
-        base_dir_obj /= ZIP_ARCHIVE_PATH
+        base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
         zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
-            make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
+            make_mult_level_dir(base_dir, COMPETITION_ZIP_ARCHIVE_PATH)
 
         if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
             mime_type = download.get_mimetype(zip_filepath)
@@ -481,20 +481,58 @@ class SubmissionCompetitionDownloadLatestView(APIView):
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
-        base_dir_obj /= ZIP_ARCHIVE_PATH
+        base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
         zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + \
                        '_latest' + '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
-            make_mult_level_dir(base_dir, ZIP_ARCHIVE_PATH)
+            make_mult_level_dir(base_dir, COMPETITION_ZIP_ARCHIVE_PATH)
 
         if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
 
-        creat_archive(zip_filepath, base_dir, submission_targets, usernames, is_latest_only=True)
+        creat_archive(zip_filepath, base_dir, submission_targets, usernames, SubmissionArchiveMode.LATEST)
+
+        mime_type = download.get_mimetype(zip_filepath)
+        return download.get_attachment_response(zip_filepath, mime_type)
+
+
+class SubmissionCompetitionDownloadHighestView(APIView):
+    permission_classes = [IsProf | IsTA | IsAdmin]
+
+    def get(self, request: Request, competition_id: int) -> HttpResponse | Response:
+
+        # Retrieve targeted files
+        submission_targets = SubmissionCompetition.objects.filter(competition_id=competition_id)
+        usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
+        competition_info = get_competition(competition_id)
+
+        if len(usernames) == 0:
+            return Response(data=msg_submission_download_unavailable, status=HTTP_404_NOT_FOUND)
+
+        # Leave a compressed file after downloading as a cache when the competition is over
+        temp_flag = is_temp(competition_info.end_time)
+
+        # Setting path of the archive file
+        base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
+        base_dir = base_dir_obj
+        base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
+
+        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + \
+                       '_highest' + '.zip'
+        zip_filepath = base_dir_obj / zip_filename
+
+        if os.path.exists(str(base_dir_obj)) is False:
+            make_mult_level_dir(base_dir, COMPETITION_ZIP_ARCHIVE_PATH)
+
+        if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
+            mime_type = download.get_mimetype(zip_filepath)
+            return download.get_attachment_response(zip_filepath, mime_type)
+
+        creat_archive(zip_filepath, base_dir, submission_targets, usernames, SubmissionArchiveMode.HIGHEST)
 
         mime_type = download.get_mimetype(zip_filepath)
         return download.get_attachment_response(zip_filepath, mime_type)
