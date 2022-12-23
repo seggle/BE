@@ -50,8 +50,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
 
         data = request.data.copy()
 
-        csv_str = data['csv'].name.split('.')[-1]
-        ipynb_str = data['ipynb'].name.split('.')[-1]
+        csv_str = data.get('csv', '').name.split('.')[-1]
+        ipynb_str = data.get('ipynb' ,'').name.split('.')[-1]
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -189,8 +189,12 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         data = request.data.copy()
 
-        csv_str = data['csv'].name.split('.')[-1]
-        ipynb_str = data['ipynb'].name.split('.')[-1]
+        csv_str = data.get('csv', '')
+        if csv_str != '':
+            csv_str = csv_str.name.split('.')[-1]
+        ipynb_str = data.get('ipynb', '')
+        if ipynb_str != '':
+            ipynb_str = ipynb_str.name.split('.')[-1]
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
