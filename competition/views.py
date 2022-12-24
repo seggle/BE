@@ -136,29 +136,24 @@ class CompetitionDetailView(APIView):
             "evaluation": data.get("evaluation"),
             "public": False
         }
-        if data.get('data') != '':
-            data_str = data.get('data','')
-            if data_str != '':
-                data_str = data_str.name.split('.')[-1]
+        if data.get('data', '') != '':
+            data_str = data.get('data').name.split('.')[-1]
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
-                path = os.path.normpath((problem.data.path).split('problem')[1])
-                # 윈도우 실행
-                path = path.split("\\")[1]
-                shutil.rmtree('./uploads/problem/' + path + '/') # 폴더 삭제 명령어 - shutil
+                path = (problem.data.path).split("uploads/problem/")
+                path = path[1].split("/", 1)
+                shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
-        if data.get('solution') != '':
-            solution_str = data.get('solution','')
-            if solution_str != '':
-                solution_str = solution_str.name.split('.')[-1]
+        if data.get('solution', '') != '':
+            solution_str = data.get('solution').name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
-                # 윈도우 실행
-                path = os.path.normpath((problem.solution.path).split('solution')[1])
-                path = path.split("\\")[1]
-                shutil.rmtree('./uploads/solution/' + path + '/') # 폴더 삭제 명령어 - shutil
+                path = (problem.solution.path).split("uploads/solution/")
+                path = path[1].split("/", 1)
+                shutil.rmtree('./uploads/solution/' + path[0] + '/')
+
             obj['solution'] = data['solution']
 
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
