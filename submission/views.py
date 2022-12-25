@@ -29,7 +29,7 @@ from datetime import datetime
 from utils.common import make_mult_level_dir, convert_date_format, is_temp
 
 COMPETITION_ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
-# CLASS_PROBLEM_ZIP_ARCHIVE_PATH
+CLASS_PROBLEM_ZIP_ARCHIVE_PATH = 'uploads/zipcache/class'
 
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
@@ -179,6 +179,52 @@ class SubmissionClassCheckView(APIView):
             class_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
+
+
+class SubmissionClassDownloadAllView(APIView):
+    permission_classes = [IsProf | IsTA | IsAdmin]
+
+    def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> HttpResponse | Response:
+
+        # Retrieve targeted files
+        submission_targets = SubmissionClass.objects.filter(contest_id=contest_id, c_p_id=cp_id, class_id=class_id)
+        usernames = list(submission_targets.values_list('username', flat=True).order_by('username').distinct())
+
+        class_info = get_class(class_id)
+        contest_info = get_contest(contest_id)
+        problem_info = get_contest_problem(cp_id)
+
+        if len(usernames) == 0:
+            return Response(data=msg_submission_download_unavailable, status=HTTP_404_NOT_FOUND)
+
+        # Leave a compressed file after downloading as a cache when the competition is over
+        temp_flag = is_temp(contest_info.end_time)
+
+        # Setting path of the archive file
+        base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
+        base_dir = base_dir_obj
+        base_dir_obj /= CLASS_PROBLEM_ZIP_ARCHIVE_PATH
+        base_dir_obj /= str(class_id)
+        base_dir_obj /= str(contest_id)
+
+        zip_filename = f'c_{class_id}_t_{str(contest_id)}_p_{cp_id}_' \
+                       f'{convert_date_format(contest_info.start_time)}.zip'
+        zip_filepath = base_dir_obj / zip_filename
+
+        if os.path.exists(str(base_dir_obj)) is False:
+            make_mult_level_dir(base_dir, f'{CLASS_PROBLEM_ZIP_ARCHIVE_PATH}/{str(class_id)}/{str(contest_id)}')
+
+        if os.path.exists(str(zip_filepath)) is True and temp_flag is False:
+            mime_type = download.get_mimetype(zip_filepath)
+            return download.get_attachment_response(zip_filepath, mime_type)
+        # elif is_temp is True:
+        #    update_archive()
+        else:
+            creat_archive(zip_filepath, base_dir, submission_targets, usernames)
+
+        mime_type = download.get_mimetype(zip_filepath)
+        return download.get_attachment_response(zip_filepath, mime_type)
+
 
 
 # submission-competition 관련
