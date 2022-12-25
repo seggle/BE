@@ -25,6 +25,7 @@ from utils.message import *
 
 class CompetitionView(APIView):
     permissions = [IsProfAdminOrReadOnly]
+
     # 06-00 대회 리스트 조회
     def get(self, request: Request) -> Response:
         competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
@@ -290,4 +291,3 @@ class CompetitionTaView(APIView):
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
-
