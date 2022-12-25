@@ -25,6 +25,7 @@ from utils.message import *
 
 class CompetitionView(APIView):
     permissions = [IsProfAdminOrReadOnly]
+
     # 06-00 대회 리스트 조회
     def get(self, request: Request) -> Response:
         competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
@@ -49,7 +50,6 @@ class CompetitionView(APIView):
     # 06-01 대회 생성
     def post(self, request: Request) -> Response:
         data = request.data
-        data._mutable = True
 
         d_data = data.get('data')
         if d_data is None:
@@ -153,17 +153,17 @@ class CompetitionDetailView(APIView):
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
-                path = (problem.data.path).split("uploads/problem/")
+                path = problem.data.path.split("uploads/problem/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
-            obj['data'] = data['data']
+            obj['data'] = data.get('data')
 
         if data.get('solution') is not None:
             solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
-                path = (problem.solution.path).split("uploads/solution/")
+                path = problem.solution.path.split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
             obj['solution'] = data.get('solution')
@@ -231,13 +231,14 @@ class CompetitionUserView(APIView):
     # 06-05-03 대회 참가자, 관리자 전체 조회
     def get(self, request, competition_id):
         competition = get_competition(competition_id)
-        user_list = CompetitionUser.objects.filter(competition_id = competition.id)
+        user_list = CompetitionUser.objects.filter(competition_id=competition.id)
         competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
         return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
 
 
 class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
+
     # 06-05-02 대회 유저 참가
     def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
@@ -290,4 +291,3 @@ class CompetitionTaView(APIView):
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
-

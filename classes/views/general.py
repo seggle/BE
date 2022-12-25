@@ -1,4 +1,7 @@
 from pickle import TRUE
+
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -14,16 +17,23 @@ from utils.permission import *
 
 # Create your views here.
 
+
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+
+
 class ClassView(APIView):
     permission_classes = [IsProf | IsAdmin]
 
     # 05-01
-    def post(self, request):
+    def post(self, request: Request) -> Response:
 
         data = request.data
+        data._mutable = True
 
         data['created_user'] = request.user
         serializer = ClassSerializer(data=data)
+        data._mutable = False
 
         if serializer.is_valid():
             class_ = serializer.save()
@@ -80,6 +90,7 @@ class ClassDetailView(APIView):
         else:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ClassStdView(APIView):
     permission_classes = [IsClassProfOrTA]
 
@@ -119,7 +130,7 @@ class ClassStdView(APIView):
                 continue
 
             data = {
-                "username": data['username'],
+                "username": data.get('username'),
                 "is_show": True,
                 "privilege": 0,
                 "class_id": class_id
@@ -176,7 +187,7 @@ class ClassTaView(APIView):
                 continue
 
             data = {
-                "username": data['username'],
+                "username": data.get('username'),
                 "is_show": True,
                 "privilege": 1,
                 "class_id": class_id

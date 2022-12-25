@@ -1,3 +1,4 @@
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from ..models import Problem
 from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemPutSerializer
@@ -32,7 +33,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 03-01
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if request.user.privilege == 0:
             problems = Problem.objects.filter(Q(created_user=request.user)).active()
         else:
@@ -50,12 +51,12 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem_json = {
                 "id": problem.id,
                 "title": problem.title,
-                "created_time" : problem.created_time,
-                "created_user" : problem.created_user.username,
+                "created_time": problem.created_time,
+                "created_user": problem.created_user.username,
                 # "data" : data_url,
                 # "solution" : solution_url,
-                "public" : problem.public,
-                "class_id" : problem.class_id.id
+                "public": problem.public,
+                "class_id": problem.class_id.id
             }
             new_problems.append(problem_json)
 
@@ -67,24 +68,27 @@ class ProblemView(APIView, PaginationHandlerMixin):
         return Response(serializer.data)
 
     # 03-02
-    def post(self, request):
-        data = request.data.copy()
+    def post(self, request: Request) -> Response:
+        data = request.data
 
-        if data['data'] == '':
+        d_data = data.get('data')
+        if d_data is None:
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
-        if data['solution'] == '':
-            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        data_str = d_data.name.split('.')[-1]
 
-        data_str = data['data'].name.split('.')[-1]
-        solution_str = data['solution'].name.split('.')[-1]
+        d_solution = data.get('solution')
+        if d_solution is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        solution_str = d_solution.name.split('.')[-1]
         if data_str != 'zip':
             return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
         if solution_str != 'csv':
             return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
         data['created_user'] = request.user
-
-        class_ = get_class(data['class_id'])
+        class_ = get_class(data.get('class_id'))
+        if class_ is None:
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
         data['professor'] = class_.created_user
         problem = ProblemSerializer(data=data)
@@ -97,10 +101,10 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 
 class ProblemDetailView(APIView):
-    permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
+    permission_classes = [IsProblemOwnerOrReadOnly | IsAdmin]
 
     # 03-04
-    def get(self, request, problem_id):
+    def get(self, request: Request, problem_id: int) -> Response:
         problem = get_problem(problem_id)
 
         # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
@@ -123,37 +127,37 @@ class ProblemDetailView(APIView):
         return Response(cp_json, status=status.HTTP_200_OK)
 
     # 03-03
-    def put(self, request, problem_id):
+    def put(self, request: Request, problem_id: int) -> Response:
         problem = get_problem(problem_id)
         
         data = request.data
         obj = {
-            "title": data["title"],
-            "description": data["description"],
-            "data_description": data["data_description"],
-            "evaluation": data["evaluation"],
-            "public": data["public"]
+            "title": data.get("title"),
+            "description": data.get("description"),
+            "data_description": data.get("data_description"),
+            "evaluation": data.get("evaluation"),
+            "public": data.get("public")
         }
 
-        if data['data']:
+        if data.get('data') is not None:
             data_str = data['data'].name.split('.')[-1]
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
-            # 폴더 삭제
             if os.path.isfile(problem.data.path):
-                path = (problem.data.path).split("uploads/problem/")
+                path = problem.data.path.split("uploads/problem/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
-            obj['data'] = data['data']
-        if data['solution']:
+            obj['data'] = data.get('data')
+
+        if data.get('solution') is not None:
             solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
-                path = (problem.solution.path).split("uploads/solution/")
+                path = problem.solution.path.split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
-            obj['solution'] = data['solution']
+            obj['solution'] = data.get('solution')
 
         serializer = ProblemPutSerializer(problem, data=obj, partial=True)
 
@@ -163,12 +167,13 @@ class ProblemDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # 03-05
-    def delete(self, request, problem_id):
+    def delete(self, request: Request, problem_id: int) -> Response:
         problem = get_problem(problem_id)
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-", "")
         problem.title = problem.title + ' - ' + temp
         problem.save()
+
         return Response(msg_ProblemDetailView_delete_e_1, status=status.HTTP_200_OK)
 
 
@@ -176,7 +181,7 @@ class ProblemVisibilityView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly]
 
     # 03-06
-    def post(self, request, problem_id):
+    def post(self, request: Request, problem_id: int) -> Response:
         problem = get_problem(problem_id)
         if problem.public:
             problem.public = False
@@ -185,11 +190,12 @@ class ProblemVisibilityView(APIView):
         problem.save()
         return Response(msg_success, status=status.HTTP_200_OK)
 
+
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
     # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
-    def get(self, request, problem_id):
+    def get(self, request: Request, problem_id: int) -> HttpResponse:
         problem = get_problem(problem_id)
 
         # Define Django project base directory
@@ -210,10 +216,11 @@ class ProblemDataDownloadView(APIView):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
         return response
 
+
 class ProblemSolutionDownloadView(APIView):
     permission_classes = [IsProblemOwner]
 
-    def get(self, request, problem_id):
+    def get(self, request: Request, problem_id: int) -> HttpResponse:
         problem = get_problem(problem_id)
 
         # Define Django project base directory
