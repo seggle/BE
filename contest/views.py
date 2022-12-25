@@ -103,11 +103,11 @@ class ContestProblemView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                
-        if(len(error['Error_problem_id'])) == 0:
+
+        if len(error.get('Error_problem_id')) == 0 and len(error.keys()) > 1:
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
-            return Response(error, status=status.HTTP_201_CREATED)
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
     # 05-12
     def get(self, request: Request, class_id: int, contest_id: int) -> Response:
