@@ -31,6 +31,7 @@ from utils.common import make_mult_level_dir, convert_date_format, is_temp
 COMPETITION_ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
 CLASS_PROBLEM_ZIP_ARCHIVE_PATH = 'uploads/zipcache/class'
 
+
 # submission-class 관련
 class SubmissionClassView(APIView, EvaluationMixin):
     permission_classes = [IsClassUser]
@@ -111,6 +112,41 @@ class SubmissionClassView(APIView, EvaluationMixin):
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+
+
+class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsProf | IsTA | IsAdmin]
+    pagination_class = BasicPagination
+
+    def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
+        submissions = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id, c_p_id=cp_id)\
+            .order_by('-created_time')
+
+        if submissions.count() == 0:
+            return Response('Not found', status=status.HTTP_404_NOT_FOUND)
+
+        outputs = []
+
+        for submission in submissions:
+            obj = {
+                "id": submission.id,
+                "username": submission.username,
+                "score": submission.score,
+                # "csv": csv_url,
+                # "ipynb": ipynb_url,
+                "created_time": submission.created_time,
+                "status": submission.status,
+                "on_leaderboard": submission.on_leaderboard
+            }
+            outputs.append(obj)
+
+        page = self.paginate_queryset(outputs)
+
+        if page is not None:
+            serializer = self.get_paginated_response(SumissionClassListSerializer(page, many=True).data)
+        else:
+            serializer = SumissionClassListSerializer(outputs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
@@ -579,7 +615,7 @@ class SubmissionCompetitionDownloadAllView(APIView):
         base_dir = base_dir_obj
         base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
-        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + '.zip'
+        zip_filename = f'comp_{str(competition_id)}_{convert_date_format(competition_info.start_time)}.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
@@ -618,8 +654,7 @@ class SubmissionCompetitionDownloadLatestView(APIView):
         base_dir = base_dir_obj
         base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
-        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + \
-                       '_latest' + '.zip'
+        zip_filename = f'comp_{str(competition_id)}_{convert_date_format(competition_info.start_time)}_latest.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
@@ -656,8 +691,7 @@ class SubmissionCompetitionDownloadHighestView(APIView):
         base_dir = base_dir_obj
         base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
-        zip_filename = 'comp_' + str(competition_id) + '_' + convert_date_format(competition_info.start_time) + \
-                       '_highest' + '.zip'
+        zip_filename = f'comp_{str(competition_id)}_{convert_date_format(competition_info.start_time)}_highest.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:

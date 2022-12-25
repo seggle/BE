@@ -11,8 +11,7 @@ from contest.views import (
 
 from submission.views import (
     SubmissionClassView, SubmissionClassCheckView, SubmissionClassDownloadAllView,
-    SubmissionClassDownloadLatestView, SubmissionClassDownloadHighestView,
-    # SubmissionClassPerProblemListView,
+    SubmissionClassDownloadLatestView, SubmissionClassDownloadHighestView, SubmissionClassPerProblemListView
 )
 
 app_name = "class"
@@ -33,11 +32,12 @@ urlpatterns = [
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/check/', SubmissionClassCheckView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submission/', SubmissionClassView.as_view()),
 
+    path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submissions/',
+         SubmissionClassPerProblemListView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submissions/download/all/',
          SubmissionClassDownloadAllView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submissions/download/latest/',
          SubmissionClassDownloadLatestView.as_view()),
     path('<int:class_id>/contests/<int:contest_id>/<int:cp_id>/submissions/download/highest/',
          SubmissionClassDownloadHighestView.as_view()),
-
 ]
