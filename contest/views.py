@@ -68,24 +68,24 @@ class ContestProblemView(APIView):
     permission_classes = [IsSafeMethod | IsClassProfOrTA]
 
     # 05-13-01
-    def post(self, request, class_id, contest_id):
-        # permission 해당 Class의 ClassUser privilege 2 이상 & admin 
-        class_ = get_class(class_id)
-        contest = get_contest(contest_id)
+    def post(self, request: Request, class_id: int, contest_id: int) -> Response:
+        # permission 해당 Class의 ClassUser privilege 2 이상 & admin
 
         datas = request.data
         error = {
             "Error_problem_id": []
         }
-        for data in datas:
+        for data in datas.get('problem_id'):
+            pro_id = int(data)
             # exist and Problem id and public and is_deleted is not checking
             # problem_id 가 존재하지 않거나, 이미 등록된 경우
-            if (Problem.objects.filter(id=data['problem_id']).active().count() == 0) or (ContestProblem.objects.filter(contest_id=contest_id).filter(problem_id=data['problem_id']).active().count() != 0):
-                error['Error_problem_id'].append(data['problem_id'])
+            if Problem.objects.filter(id=pro_id).active().count() == 0 or \
+               ContestProblem.objects.filter(contest_id=contest_id).filter(problem_id=pro_id).active().count() != 0:
+                error['Error_problem_id'].append(data)
                 continue
 
             order = ContestProblem.objects.filter(contest_id=contest_id).active().count() + 1
-            problem = Problem.objects.get(id=data['problem_id'])
+            problem = Problem.objects.get(id=pro_id)
             # 0315 수정 필요
             # if ((problem.public != 1) or (problem.is_deleted != 0)):
             #     error['Error_problem_id'].append(data['problem_id'])
