@@ -5,6 +5,7 @@
 msg_success = {"success":"성공했습니다"}
 msg_error = {"error":"실패"}
 msg_error_id = {"error": "올바르지 않은 URL 입니다."}
+msg_error_diff_user = {"error": "작성자만 수정/삭제 가능합니다."}
 msg_time_error = {'error': '제한된 시간입니다.'}
 msg_user_model_username_unique = {'unique' : '중복된 ID 입니다.'}
 msg_user_model_email_unique = {'unique' : '중복된 email 입니다.'}
