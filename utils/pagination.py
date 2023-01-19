@@ -1,3 +1,6 @@
+from rest_framework.pagination import PageNumberPagination
+
+
 class PaginationHandlerMixin(object):
     @property
     def paginator(self):
@@ -20,3 +23,7 @@ class PaginationHandlerMixin(object):
     def get_paginated_response(self, data):
         assert self.paginator is not None
         return self.paginator.get_paginated_response(data)
+
+
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
