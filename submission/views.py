@@ -49,9 +49,12 @@ class SubmissionClassView(APIView, EvaluationMixin):
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
-
-        csv_str = data.get('csv', '').name.split('.')[-1]
-        ipynb_str = data.get('ipynb' ,'').name.split('.')[-1]
+        csv_str = data.get('csv', '')
+        if csv_str != '':
+            csv_str = csv_str.name.split('.')[-1]
+        ipynb_str = data.get('ipynb', '')
+        if ipynb_str != '':
+            ipynb_str = ipynb_str.name.split('.')[-1]
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -146,7 +149,8 @@ class SubmissionClassCheckView(APIView):
         data = request.data
         class_submission_list = []
         for submission in data:
-            class_submission = get_submission_class(submission['id'])
+            sub_id = submission.id
+            class_submission = get_submission_class(sub_id)
             if class_submission.username.username != request.user.username:
                 return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
             class_submission_list.append(class_submission)

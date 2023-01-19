@@ -117,7 +117,7 @@ class ProblemDetailView(APIView):
             # "solution": solution_url,
             "evaluation": problem.evaluation,
             "public": problem.public,
-            "class_id": problem.class_id.id
+            "class_id": problem.class_id
         }
 
         return Response(cp_json, status=status.HTTP_200_OK)
@@ -135,7 +135,7 @@ class ProblemDetailView(APIView):
             "public": data["public"]
         }
 
-        if data['data']:
+        if data.get('data', '') != '':
             data_str = data['data'].name.split('.')[-1]
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
@@ -145,7 +145,7 @@ class ProblemDetailView(APIView):
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
-        if data['solution']:
+        if data.get('solution', '') != '':
             solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
@@ -187,7 +187,6 @@ class ProblemVisibilityView(APIView):
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
-    # 0315 정범님 퍼미션 부탁드립니다. ㅎㅎ
 
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
