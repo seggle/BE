@@ -1,3 +1,6 @@
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
+
 from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
@@ -10,6 +13,8 @@ from account.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from utils.pagination import PaginationHandlerMixin, BasicPagination
 from utils.permission import *
 from utils.get_obj import *
 from utils.common import IP_ADDR
@@ -22,14 +27,17 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly,IsAuthenticated
 from utils.message import *
 
 
-class CompetitionView(APIView):
+class CompetitionView(APIView, PaginationHandlerMixin):
     permissions = [IsProfAdminOrReadOnly]
+    pagination_class = BasicPagination
+
     # 06-00 대회 리스트 조회
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         competitions = Competition.objects.filter(problem_id__is_deleted=False).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
-            competitions = competitions.filter(problem_id__title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
+            # 제목에 keyword가 포함되어 있는 레코드만 필터링
+            competitions = competitions.filter(problem_id__title__icontains=keyword)
         obj_list = []
         for competition in competitions:
             if competition.is_deleted:
@@ -41,12 +49,18 @@ class CompetitionView(APIView):
                 "end_time": competition.end_time
             }
             obj_list.append(obj)
-        competition_detail_serializer = CompetitionDetailSerializer(obj_list, many=True)
+
+        page = self.paginate_queryset(obj_list)
+        if page is not None:
+            competition_detail_serializer = self.get_paginated_response\
+                (CompetitionDetailSerializer(page, many=True).data)
+        else:
+            competition_detail_serializer = CompetitionDetailSerializer(obj_list)
 
         return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
 
     # 06-01 대회 생성
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         data = request.data.copy()
         data_str = data['data'].name.split('.')[-1]
         solution_str = data['solution'].name.split('.')[-1]
@@ -97,10 +111,12 @@ class CompetitionView(APIView):
             return Response(competition.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(check.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class CompetitionDetailView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
+
     # 06-02 대회 개별 조회
-    def get(self, request, competition_id):
+    def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
@@ -123,7 +139,7 @@ class CompetitionDetailView(APIView):
         return Response(obj, status=status.HTTP_200_OK)
 
     # 06-03-01 대회 개별 수정
-    def put(self, request, competition_id):
+    def put(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
 
@@ -173,22 +189,41 @@ class CompetitionDetailView(APIView):
             "end_time":competition_obj.end_time
         }
         serializer = CompetitionDetailSerializer(obj2)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 06-03-02 대회 삭제
-    def delete(self, request, competition_id):
+    def delete(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-","")
         problem.title = problem.title + ' - ' + temp
         problem.save()
+
         return Response({"success": "competition 삭제 완료"}, status=status.HTTP_200_OK)
 
-class CompetitionUserView(APIView):
+
+class CompetitionUserView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticated]
+    pagination_class = BasicPagination
+
+    # 06-05-03 대회 참가자, 관리자 전체 조회
+    def get(self, request: Request, competition_id: int) -> Response:
+        competition = get_competition(competition_id)
+        user_list = CompetitionUser.objects.filter(competition_id=competition.id)
+
+        page = self.paginate_queryset(user_list)
+        if page is not None:
+            competition_userlist_serializer = self.get_paginated_response \
+                (CompetitionUserGetSerializer(page, many=True).data)
+        else:
+            competition_userlist_serializer = CompetitionUserGetSerializer(user_list)
+
+        return Response(competition_userlist_serializer.data, status=status.HTTP_200_OK)
+
     # 06-05-01 대회 유저 참가
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         time_check = timezone.now()
@@ -197,7 +232,7 @@ class CompetitionUserView(APIView):
 
         # competition_user에 username이 이미 존재하는지 체크
         if CompetitionUser.objects.filter(username = request.user).filter(competition_id = competition_id).count():
-            return Response({"error":"이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = {
             "username": request.user.username,
@@ -211,12 +246,6 @@ class CompetitionUserView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # 06-05-03 대회 참가자, 관리자 전체 조회
-    def get(self, request, competition_id):
-        competition = get_competition(competition_id)
-        user_list = CompetitionUser.objects.filter(competition_id = competition.id)
-        competition_Userlist_serializer = CompetitionUserGetSerializer(user_list, many=True)
-        return Response(competition_Userlist_serializer.data, status=status.HTTP_200_OK)
 
 class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
@@ -272,4 +301,3 @@ class CompetitionTaView(APIView):
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
-
