@@ -239,7 +239,9 @@ class ContributionsView(APIView,PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserCompetitionInfoView(APIView):
+class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
     # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
         user = get_username(username)
@@ -251,20 +253,19 @@ class UserCompetitionInfoView(APIView):
         competition_list = CompetitionUser.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
-            return Response([], status=status.HTTP_200_OK)
+            return Response({"count": 0, "next": None, "previous": None}, status=status.HTTP_200_OK)
 
         obj_list = []
         for competition in competition_list:
 
             if competition.competition_id.is_deleted:
                 continue
-            obj = {
-                "id": competition.competition_id.id,
-                "problem_id": competition.competition_id.problem_id,
-                "title": competition.competition_id.problem_id.title,
-                "start_time": competition.competition_id.start_time,
-                "end_time": competition.competition_id.end_time,
-            }
+            obj = {}
+            obj["id"] = competition.competition_id.id
+            obj["problem_id"] = competition.competition_id.problem_id
+            obj["title"] = competition.competition_id.problem_id.title
+            obj["start_time"] = competition.competition_id.start_time
+            obj["end_time"] = competition.competition_id.end_time
             obj["user_total"] = CompetitionUser.objects.filter(
                 Q(competition_id=competition.competition_id.id) & Q(privilege=0)).count()
             obj["rank"] = None
@@ -285,7 +286,12 @@ class UserCompetitionInfoView(APIView):
 
             obj_list.append(obj)
 
-        serializer = UserCompetitionSerializer(obj_list, many=True)
+        page = self.paginate_queryset(obj_list)
+
+        if page is not None:
+            serializer = self.get_paginated_response(UserCompetitionSerializer(page, many=True).data)
+        else:
+            serializer = UserCompetitionSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
