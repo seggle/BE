@@ -1,10 +1,13 @@
 from multiprocessing import context
 from pickle import TRUE
+
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from django.utils import timezone
 from problem.models import Problem
+from utils.pagination import PaginationHandlerMixin, BasicPagination
 from .models import Contest, ContestProblem
 from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
 from utils.get_obj import *
@@ -15,8 +18,23 @@ from utils.permission import *
 
 # Create your views here.
 
-class ContestView(APIView):
+class ContestView(APIView, PaginationHandlerMixin):
     permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    pagination_class = BasicPagination
+
+    # 05-07
+    # 비공개 관련 처리 필요함
+    def get(self, request: Request, class_id: int) -> Response:
+        class_ = get_class(class_id)
+        contest_lists = Contest.objects.filter(class_id=class_id).order_by("start_time").active()
+
+        page = self.paginate_queryset(contest_lists)
+        if page is not None:
+            serializer = self.get_paginated_response(ContestSerializer(page, many=True).data)
+        else:
+            serializer = ContestSerializer(contest_lists)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     #05-08
     def post(self,request, class_id):
