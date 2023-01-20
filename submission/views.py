@@ -251,13 +251,14 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by('-created_time')
+        submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by(
+            '-created_time')
         if username:
-            submission_comptition_list = submission_comptition_list.filter(username=username)
+            submission_competition_list = submission_competition_list.filter(username=username)
 
         obj_list = []
 
-        for submission in submission_comptition_list:
+        for submission in submission_competition_list:
             # csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
             # ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
