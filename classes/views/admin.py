@@ -34,6 +34,8 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
                 serializer = ClassSerializer(class_list)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # TODO : Fix 'unable to get repr' problem and apply pagination
         else:
             class_name_list = []
             class_lists = ClassUser.objects.filter(username=uid).order_by('-id')

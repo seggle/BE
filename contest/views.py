@@ -74,6 +74,8 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 05-12
+    # TODO : Apply pagination for the generated list
+
     def get(self, request: Request, class_id: int, contest_id: int) -> Response:
         contest = get_contest(contest_id)
 
@@ -103,8 +105,6 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
                 "order": contest_problem.order
             }
             contest_problem_list.append(contest_problem_json)
-
-            page = self.paginate_list
 
         return Response(contest_problem_list, status=status.HTTP_200_OK)
 
