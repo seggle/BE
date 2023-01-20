@@ -63,8 +63,8 @@ class ContestView(APIView, PaginationHandlerMixin):
 class ContestCheckView(APIView):
     permission_classes = [IsClassProfOrTA]
 
-    #05-09
-    def patch(self, request, class_id, contest_id):
+    # 05-09
+    def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
         # 0315 permission
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
@@ -121,9 +121,8 @@ class ContestProblemView(APIView):
         else:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-    #05-11
-    def patch(self, request, class_id, contest_id):
-        class_ = get_class(class_id)
+    # 05-11
+    def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
@@ -137,8 +136,7 @@ class ContestProblemView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-13
-    def delete(self, request, class_id, contest_id):
-        class_ = get_class(class_id)
+    def delete(self, request: Request, class_id: int, contest_id: int) -> Response:
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
@@ -152,10 +150,8 @@ class ContestProblemView(APIView):
 class ContestProblemOrderView(APIView):
     permission_classes = [IsClassProfOrTA]
 
-    #05-13-02
-    def patch(self, request, class_id, contest_id):
-        class_ = get_class(class_id)
-        contest = get_contest(contest_id)
+    # 05-13-02
+    def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
 
         datas = request.data
 
@@ -177,10 +173,8 @@ class ContestProblemOrderView(APIView):
 class ContestProblemTitleDescptView(APIView):
     permission_classes = [IsClassProfOrTA]
 
-    #05-13-03
-    def patch(self, request, class_id, contest_id, cp_id):
-        class_ = get_class(class_id)
-        contest = get_contest(contest_id)
+    # 05-13-03
+    def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         contest_problem = get_contest_problem(cp_id)
 
         data = request.data
@@ -209,10 +203,8 @@ class ContestProblemTitleDescptView(APIView):
 class ContestProblemInfoView(APIView):
     permission_classes = [IsSafeMethod | IsClassProfOrTA]
 
-    #05-14
-    def get(self, request, class_id, contest_id, cp_id):
-        class_ = get_class(class_id)
-        contest = get_contest(contest_id)
+    # 05-14
+    def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         contest_problem = get_contest_problem(cp_id)
 
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
@@ -240,10 +232,8 @@ class ContestProblemInfoView(APIView):
 
         return Response(cp_json, status=status.HTTP_200_OK)
 
-    #05-15
-    def delete(self, request, class_id, contest_id, cp_id):
-        class_ = get_class(class_id)
-        contest = get_contest(contest_id)
+    # 05-15
+    def delete(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         contest_problem = get_contest_problem(cp_id)
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)

@@ -116,6 +116,7 @@ class CompetitionView(APIView, PaginationHandlerMixin):
                 else:
                     return Response(competition_user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(competition.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(check.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -224,8 +225,8 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
 
         page = self.paginate_queryset(user_list)
         if page is not None:
-            competition_userlist_serializer = self.get_paginated_response \
-                (CompetitionUserGetSerializer(page, many=True).data)
+            competition_userlist_serializer = self\
+                .get_paginated_response(CompetitionUserGetSerializer(page, many=True).data)
         else:
             competition_userlist_serializer = CompetitionUserGetSerializer(user_list)
 
@@ -260,7 +261,7 @@ class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
 
     # 06-05-02 대회 유저 참가
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         # 0315
