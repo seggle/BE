@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from submission.models import SubmissionClass, SubmissionCompetition
 
-
 class LeaderboardClassSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
     score = serializers.FloatField()
