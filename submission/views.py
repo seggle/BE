@@ -51,13 +51,18 @@ class SubmissionClassView(APIView, EvaluationMixin):
             if exam.is_duplicated:  # 중복이면 에러
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
-        csv_str = data.get('csv', '')
-        if csv_str != '':
-            csv_str = csv_str.name.split('.')[-1]
-        ipynb_str = data.get('ipynb', '')
-        if ipynb_str != '':
-            ipynb_str = ipynb_str.name.split('.')[-1]
+        data = request.data
+
+        csv_file = data.get('csv')
+        if csv_file is None:
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        csv_str = csv_file.name.split('.')[-1]
+
+        ipynb_file = data.get('ipynb')
+        if ipynb_file is None:
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        ipynb_str = ipynb_file.name.split('.')[-1]
+
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -187,8 +192,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         user = get_username(request.user.username)
         if CompetitionUser.objects.filter(username=request.user.username).filter(
-                competition_id=competition_id).count() == 0:
-            return Response({'error': "대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                                          competition_id=competition_id).count() == 0:
+            return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
 
