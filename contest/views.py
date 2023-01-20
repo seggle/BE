@@ -52,16 +52,6 @@ class ContestView(APIView, PaginationHandlerMixin):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # 05-07
-    # 비공개 관련 처리 필요함
-    def get(self, request, class_id):
-        class_ = get_class(class_id)
-        contest = []
-        contest_lists = Contest.objects.filter(class_id=class_id).order_by("start_time").active()
-        for contest_list in contest_lists:
-            contest_list_serializer = ContestSerializer(contest_list)
-            contest.append(contest_list_serializer.data)
-        return Response(contest, status=status.HTTP_200_OK)
 
 class ContestCheckView(APIView):
     permission_classes = [IsClassProfOrTA]
@@ -69,7 +59,6 @@ class ContestCheckView(APIView):
     # 05-09
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
         # 0315 permission
-        class_ = get_class(class_id)
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
@@ -79,8 +68,45 @@ class ContestCheckView(APIView):
         contest = contest.save()
         return Response(msg_success, status=status.HTTP_200_OK)
 
-class ContestProblemView(APIView):
+
+class ContestProblemView(APIView, PaginationHandlerMixin):
     permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    pagination_class = BasicPagination
+
+    # 05-12
+    def get(self, request: Request, class_id: int, contest_id: int) -> Response:
+        contest = get_contest(contest_id)
+
+        # time_check = timezone.now()
+        # if (contest.start_time > time_check) or (contest.end_time < time_check):
+        #     return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
+        contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
+        contest_problem_list = []
+
+        if contest_problem_lists.count() == 0:
+            return Response(contest_problem_list, status=status.HTTP_200_OK)
+
+        if contest_problem_lists[0].contest_id.class_id.id != class_id:
+            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+
+        for contest_problem in contest_problem_lists:
+            if contest_problem.problem_id.is_deleted:
+                continue
+            contest_problem_json = {
+                "id": contest_problem.id,
+                "contest_id": contest_problem.contest_id.id,
+                "problem_id": contest_problem.problem_id.id,
+                "title": contest_problem.title,
+                "start_time": contest.start_time,
+                "end_time": contest.end_time,
+                "order": contest_problem.order
+            }
+            contest_problem_list.append(contest_problem_json)
+
+            page = self.paginate_list
+
+        return Response(contest_problem_list, status=status.HTTP_200_OK)
 
     # 05-13-01
     def post(self, request: Request, class_id: int, contest_id: int) -> Response:
