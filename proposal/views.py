@@ -20,7 +20,8 @@ class ProposalView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = BasicPagination
 
-    def post(self,request):
+    # 08-01 건의 작성
+    def post(self, request):
         data = request.data
         data["created_user"] = request.user
 
@@ -32,7 +33,9 @@ class ProposalView(APIView, PaginationHandlerMixin):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
     def get(self, request, proposal_id=None):
+        # 08-00 건의 게시판 전체 리스트
         if proposal_id is None:
             proposal_list = Proposal.objects.all().order_by('-created_time')
             
@@ -45,11 +48,13 @@ class ProposalView(APIView, PaginationHandlerMixin):
             
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
+            # 08-02 건의 글 세부 조회
             proposal = get_proposal(proposal_id)
 
             proposal_list_serializer = ProposalSerializer(proposal)
             return Response(proposal_list_serializer.data, status=status.HTTP_200_OK)
 
+    # 08-03 건의 글 수정
     def patch(self, request, proposal_id=None):
         if proposal_id is None:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
@@ -57,8 +62,8 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
         data = request.data
         obj = {
-            "title" : data["title"],
-            "context" : data["context"],
+            "title" : data.get("title"),
+            "context" : data.get("context"),
         }
         if proposal.created_user == request.user:
             serializer = ProposalPatchSerializer(proposal, data=obj)
@@ -66,9 +71,9 @@ class ProposalView(APIView, PaginationHandlerMixin):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
-        return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
 
-
+    # 08-04 건의 글 삭제
     def delete(self, request, proposal_id=None):
         if proposal_id is None:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
@@ -79,4 +84,4 @@ class ProposalView(APIView, PaginationHandlerMixin):
             proposal.delete()
             return Response(msg_success, status=status.HTTP_200_OK)
         else:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)

@@ -130,14 +130,14 @@ class CompetitionDetailView(APIView):
         data = request.data
         # problem 수정
         obj = {
-            "title": data["title"],
-            "description": data["description"],
-            "data_description": data["data_description"],
-            "evaluation":data["evaluation"],
+            "title": data.get("title"),
+            "description": data.get("description"),
+            "data_description": data.get("data_description"),
+            "evaluation": data.get("evaluation"),
             "public": False
         }
-        if data['data']:
-            data_str = data['data'].name.split('.')[-1]
+        if data.get('data', '') != '':
+            data_str = data.get('data').name.split('.')[-1]
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
@@ -145,14 +145,15 @@ class CompetitionDetailView(APIView):
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
             obj['data'] = data['data']
-        if data['solution']:
-            solution_str = data['solution'].name.split('.')[-1]
+        if data.get('solution', '') != '':
+            solution_str = data.get('solution').name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
                 path = (problem.solution.path).split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
+
             obj['solution'] = data['solution']
 
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
