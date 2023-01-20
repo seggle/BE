@@ -24,7 +24,7 @@ class ContestView(APIView, PaginationHandlerMixin):
     permission_classes = [IsSafeMethod | IsClassProfOrTA]
     pagination_class = BasicPagination
 
-    # 05-07
+    # 05-08
     # 비공개 관련 처리 필요함
     def get(self, request: Request, class_id: int) -> Response:
         contest_lists = Contest.objects.filter(class_id=class_id).order_by("start_time").active()
@@ -37,7 +37,7 @@ class ContestView(APIView, PaginationHandlerMixin):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 05-08
+    # 05-09
     def post(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
 
@@ -58,7 +58,7 @@ class ContestView(APIView, PaginationHandlerMixin):
 class ContestCheckView(APIView):
     permission_classes = [IsClassProfOrTA]
 
-    # 05-09
+    # 05-10
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
         # 0315 permission
         contest = get_contest(contest_id)

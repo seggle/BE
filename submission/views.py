@@ -4,7 +4,7 @@ from .serializers import PathSerializer, SubmissionClassSerializer, SumissionCla
     SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination  # pagination
-from utils.pagination import PaginationHandlerMixin  # pagination
+from utils.pagination import BasicPagination, PaginationHandlerMixin  # pagination
 from utils.evaluation import EvaluationMixin
 from utils.get_ip import GetIpAddr
 from utils.get_obj import *
@@ -12,13 +12,16 @@ from utils.message import *
 from utils.common import IP_ADDR
 from django.db.models import Q
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework import status
 import uuid
 import mimetypes
 import os
+import platform
 import urllib
 from django.http import HttpResponse
 from django.utils import timezone
+import utils.download as download
 from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 
@@ -28,7 +31,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
     permission_classes = [IsClassUser]
 
     # 05-16
-    def post(self, request, class_id, contest_id, cp_id):
+    def post(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
@@ -45,16 +48,21 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if contest.is_exam and is_class_student:
             # ip 중복 체크
             exam = Exam.objects.get(user=request.user, contest=contest)
-            if exam.is_duplicated: # 중복이면 에러
+            if exam.is_duplicated:  # 중복이면 에러
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
-        data = request.data.copy()
-        csv_str = data.get('csv', '')
-        if csv_str != '':
-            csv_str = csv_str.name.split('.')[-1]
-        ipynb_str = data.get('ipynb', '')
-        if ipynb_str != '':
-            ipynb_str = ipynb_str.name.split('.')[-1]
+        data = request.data
+
+        csv_file = data.get('csv')
+        if csv_file is None:
+            return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        csv_str = csv_file.name.split('.')[-1]
+
+        ipynb_file = data.get('ipynb')
+        if ipynb_file is None:
+            return Response(msg_SubmissionClassView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        ipynb_str = ipynb_file.name.split('.')[-1]
+
         if csv_str != 'csv':
             return Response(msg_SubmissionClassView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if ipynb_str != 'ipynb':
@@ -71,8 +79,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
             "class_id": contest_problem.contest_id.class_id.id,
             "contest_id": contest_problem.contest_id.id,
             "c_p_id": contest_problem.id,
-            "csv": data['csv'],
-            "ipynb": data['ipynb'],
+            "csv": csv_file,
+            "ipynb": ipynb_file,
             "problem_id": contest_problem.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -96,16 +104,12 @@ class SubmissionClassView(APIView, EvaluationMixin):
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
-
-
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         cp_id = request.GET.get('cpid', 0)
         contest_problem = get_contest_problem(cp_id)
         submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(
@@ -141,7 +145,7 @@ class SubmissionClassCheckView(APIView):
     # 05-17
     permission_classes = [IsClassUser]
 
-    def patch(self, request, class_id, contest_id, cp_id):
+    def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
@@ -178,7 +182,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
     permission_classes = [IsCompetitionUser]
 
     # 06-04 대회 유저 파일 제출
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
@@ -188,8 +192,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
         user = get_username(request.user.username)
         if CompetitionUser.objects.filter(username=request.user.username).filter(
-                competition_id=competition_id).count() == 0:
-            return Response({'error': "대회에 참가하지 않았습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                                          competition_id=competition_id).count() == 0:
+            return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
 
@@ -212,8 +216,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         submission_json = {
             "username": request.user,
             "competition_id": competition.id,
-            "csv": data["csv"],
-            "ipynb": data["ipynb"],
+            "csv": data.get("csv"),
+            "ipynb": data.get("ipynb"),
             "problem_id": competition.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -224,6 +228,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             path_obj = path_serializer.save()
             submission_json["path"] = path_obj.id
             submission_serializer = SubmissionCompetitionSerializer(data=submission_json)
+
             if submission_serializer.is_valid():
                 submission = submission_serializer.save()
                 # evaluation
@@ -233,6 +238,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 return Response(msg_success, status=status.HTTP_200_OK)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -241,17 +247,18 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 06-07 유저 submission 내역 조회
-    def get(self, request, competition_id):
+    def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_comptition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by('-created_time')
+        submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by(
+            '-created_time')
         if username:
-            submission_comptition_list = submission_comptition_list.filter(username=username)
+            submission_competition_list = submission_competition_list.filter(username=username)
 
         obj_list = []
 
-        for submission in submission_comptition_list:
+        for submission in submission_competition_list:
             # csv_url = "http://{0}/api/submissions/competition/{1}/download/csv".format(IP_ADDR, submission.id)
             # ipynb_url = "http://{0}/api/submissions/competition/{1}/download/ipynb".format(IP_ADDR, submission.id)
 
@@ -272,6 +279,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
             serializer = self.get_paginated_response(SumissionCompetitionListSerializer(page, many=True).data)
         else:
             serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -279,13 +287,13 @@ class SubmissionCompetitionCheckView(APIView):
     permission_classes = [IsCompetitionUser]
 
     # 06-06 submission 리더보드 체크
-    def patch(self, request, competition_id):
+    def patch(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         data = request.data
         competition_submission_list = []
         for submission in data:
-            competition_submission = get_submission_competition(id=submission["id"])
+            competition_submission = get_submission_competition(id=submission.get("id"))
             if competition_submission.username.username != request.user.username:
                 return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
             competition_submission_list.append(competition_submission)
@@ -313,18 +321,16 @@ class SubmissionCompetitionCheckView(APIView):
 class SubmissionClassCsvDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
+
+        os_info = platform.system()
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -333,24 +339,24 @@ class SubmissionClassCsvDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
 class SubmissionClassIpynbDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
-    def get(self, request, submission_id):
+    # 
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
+
+        os_info = platform.system()
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -359,24 +365,25 @@ class SubmissionClassIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
 class SubmissionCompetitionCsvDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
+
+        # It should be considered what operating system is running
+
+        os_info = platform.system()
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -385,24 +392,23 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
 class SubmissionCompetitionIpynbDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
+
+        os_info = platform.system()
 
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -411,4 +417,5 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
