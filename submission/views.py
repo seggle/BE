@@ -48,7 +48,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
         if contest.is_exam and is_class_student:
             # ip 중복 체크
             exam = Exam.objects.get(user=request.user, contest=contest)
-            if exam.is_duplicated: # 중복이면 에러
+            if exam.is_duplicated:  # 중복이면 에러
                 return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data.copy()
@@ -318,15 +318,13 @@ class SubmissionClassCsvDownloadView(APIView):
     def get(self, request, submission_id):
         submission = get_submission_class(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -345,15 +343,13 @@ class SubmissionClassIpynbDownloadView(APIView):
     def get(self, request, submission_id):
         submission = get_submission_class(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -372,15 +368,15 @@ class SubmissionCompetitionCsvDownloadView(APIView):
     def get(self, request, submission_id):
         submission = get_submission_competition(submission_id)
 
+        # It should be considered what operating system is running
+
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.csv.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -399,15 +395,13 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
     def get(self, request, submission_id):
         submission = get_submission_competition(submission_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/submission", "")
 
-        csv_path = str(submission.ipynb.path).split('uploads/', 1)[1]
-        filename = csv_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + csv_path
+        (filename, filepath) = download.ipynb_download_windows(submission.ipynb.path, BASE_DIR) \
+            if os_info == 'Windows' else download.ipynb_download_nix(submission.ipynb.path, BASE_DIR)
 
         # Open the file for reading content
         path = open(filepath, 'r')
