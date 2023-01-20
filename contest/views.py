@@ -40,7 +40,10 @@ class ContestView(APIView, PaginationHandlerMixin):
         class_ = get_class(class_id)
 
         data = request.data
+        data._mutable = True
         data['class_id'] = class_id
+        data._mutable = False
+
         serializer = ContestSerializer(data=data)
 
         if serializer.is_valid():
