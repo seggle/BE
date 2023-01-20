@@ -20,6 +20,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdmin]
     pagination_class = BasicPagination
 
+    # 00-19
     def get(self, request: Request) -> Response or JsonResponse:
         uid = request.GET.get('uid', None)
         if uid is None:
@@ -38,20 +39,21 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         else:
-            class_name_list = []
-            class_lists = ClassUser.objects.filter(username=uid).order_by('-id')
-            for class_list in class_lists:
-                class_add = {}
-                class_ = get_class(class_list.class_id)
-                class_list_serializer = ClassSerializer(class_)
-                if class_list_serializer.is_valid():
-                    class_add = class_list_serializer.data
-                    class_add = {
-                            "privilege": class_list.privilege,
-                            "is_show": class_list.is_show
-                    }
-                    class_name_list.append(class_add)
+            class_result_list = []
+            created_user = get_object_or_404(ClassUser, username=uid)
+            class_lists = Class.objects.filter(created_user=created_user.username).order_by('-id')
+
+            for class_elem in class_lists:
+                cur_class = get_class(id=class_elem.id)
+
+                class_serializer = ClassSerializer(cur_class)
+
+                class_info = class_serializer.data
+                class_info['privilege'] = created_user.privilege
+                class_info['is_show'] = created_user.is_show
+                class_result_list.append(class_info)
 
             list_paginator = ListPagination(request)
-            return list_paginator.paginate_list(class_name_list, seggle.settings.REST_FRAMEWORK
+
+            return list_paginator.paginate_list(class_result_list, seggle.settings.REST_FRAMEWORK
                                                 .get('PAGE_SIZE', 15), request.GET.get('page', 1))

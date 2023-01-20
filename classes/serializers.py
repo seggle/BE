@@ -8,6 +8,7 @@ class ClassSerializer(serializers.ModelSerializer):
         # fields = "__all__"
         fields = ["id", "name", "year", "semester", "created_user"]
 
+
 class ClassGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Class
