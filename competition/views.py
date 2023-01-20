@@ -61,14 +61,21 @@ class CompetitionView(APIView, PaginationHandlerMixin):
 
     # 06-01 대회 생성
     def post(self, request: Request) -> Response:
-        data = request.data.copy()
-        data_str = data['data'].name.split('.')[-1]
-        solution_str = data['solution'].name.split('.')[-1]
+        data = request.data
+
+        d_data = data.get('data')
+        if d_data is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        data_str = d_data.name.split('.')[-1]
+
+        d_solution = data.get('solution')
+        if d_solution is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        solution_str = d_solution.name.split('.')[-1]
         if data_str != 'zip':
             return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
         if solution_str != 'csv':
             return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
-
 
         data['created_user'] = request.user
         check = CompetitionProblemCheckSerializer(data=data)
@@ -81,9 +88,9 @@ class CompetitionView(APIView, PaginationHandlerMixin):
                 return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
             # 대회 생성
             obj = {
-                "problem_id" : problem_obj.id,
-                "start_time" : data['start_time'],
-                "end_time" : data['end_time']
+                "problem_id": problem_obj.id,
+                "start_time": data.get('start_time'),
+                "end_time": data.get('end_time')
             }
             competition = CompetitionSerializer(data=obj)
             if competition.is_valid():
@@ -124,16 +131,16 @@ class CompetitionDetailView(APIView):
         # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
 
         obj = {
-            "id":competition.id,
-            "problem_id":problem.id,
-            "title":problem.title,
-            "start_time":competition.start_time,
-            "end_time":competition.end_time,
-            "description":problem.description,
+            "id": competition.id,
+            "problem_id": problem.id,
+            "title": problem.title,
+            "start_time": competition.start_time,
+            "end_time": competition.end_time,
+            "description": problem.description,
             # "data":data_url,
-            "data_description":problem.data_description,
+            "data_description": problem.data_description,
             # "solution":solution_url,
-            "evaluation":problem.evaluation
+            "evaluation": problem.evaluation
         }
 
         return Response(obj, status=status.HTTP_200_OK)
@@ -146,36 +153,39 @@ class CompetitionDetailView(APIView):
         data = request.data
         # problem 수정
         obj = {
-            "title": data["title"],
-            "description": data["description"],
-            "data_description": data["data_description"],
-            "evaluation":data["evaluation"],
+            "title": data.get('title'),
+            "description": data.get('description'),
+            "data_description": data.get('data_description'),
+            "evaluation": data.get('evaluation'),
             "public": False
         }
-        if data['data']:
+
+        if data.get('data') is not None:
             data_str = data['data'].name.split('.')[-1]
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.data.path):
-                path = (problem.data.path).split("uploads/problem/")
+                path = problem.data.path.split("uploads/problem/")
                 path = path[1].split("/", 1)
-                shutil.rmtree('./uploads/problem/' + path[0] + '/') # 폴더 삭제 명령어 - shutil
-            obj['data'] = data['data']
-        if data['solution']:
+                shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
+            obj['data'] = data.get('data')
+
+        if data.get('solution') is not None:
             solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
                 return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
             if os.path.isfile(problem.solution.path):
-                path = (problem.solution.path).split("uploads/solution/")
+                path = problem.solution.path.split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
-            obj['solution'] = data['solution']
+            obj['solution'] = data.get('solution')
 
         problem_serializer = ProblemSerializer(problem, data=obj, partial=True)
         if problem_serializer.is_valid():
             problem_obj = problem_serializer.save()
         else:
             return Response(problem_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         # competition 수정
         competition_serializer = CompetitionPutSerializer(competition, data=data)
         if competition_serializer.is_valid():
@@ -183,13 +193,12 @@ class CompetitionDetailView(APIView):
         else:
             return Response(competition_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         obj2 = {
-            "problem":problem_obj,
-            "id":competition_obj.id,
-            "start_time":competition_obj.start_time,
-            "end_time":competition_obj.end_time
+            "problem": problem_obj,
+            "id": competition_obj.id,
+            "start_time": competition_obj.start_time,
+            "end_time": competition_obj.end_time
         }
         serializer = CompetitionDetailSerializer(obj2)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 06-03-02 대회 삭제
@@ -197,7 +206,7 @@ class CompetitionDetailView(APIView):
         competition = get_competition(id=competition_id)
         problem = get_problem(competition.problem_id.id)
         problem.is_deleted = True
-        temp = str(uuid.uuid4()).replace("-","")
+        temp = str(uuid.uuid4()).replace("-", "")
         problem.title = problem.title + ' - ' + temp
         problem.save()
 
@@ -231,7 +240,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         # competition_user에 username이 이미 존재하는지 체크
-        if CompetitionUser.objects.filter(username = request.user).filter(competition_id = competition_id).count():
+        if CompetitionUser.objects.filter(username=request.user).filter(competition_id=competition_id).count():
             return Response({"error": "이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         data = {
@@ -249,6 +258,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
 
 class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
+
     # 06-05-02 대회 유저 참가
     def post(self, request, competition_id):
         competition = get_competition(competition_id)
@@ -261,7 +271,7 @@ class CompetitionTaView(APIView):
                 if users.privilege == 1:
                     users.delete()
         else:
-            return Response({'error':"추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': "추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # TA 추가
         user_does_not_exist = {
@@ -270,27 +280,31 @@ class CompetitionTaView(APIView):
         }
         datas = request.data
         for data in datas:
-            is_check_user = User.objects.filter(username = data['username']).count()
-            is_check_competition_user_ta = CompetitionUser.objects.filter(username = data['username']).filter(competition_id = competition_id).filter(privilege = 1).count()
+
+            username = data.get('username')
+
+            is_check_user = User.objects.filter(username=username).count()
+            is_check_competition_user_ta = CompetitionUser.objects\
+                .filter(username=username).filter(competition_id=competition_id).filter(privilege=1).count()
             if is_check_user == 0:
-                user_does_not_exist['does_not_exist'].append(data['username'])
+                user_does_not_exist['does_not_exist'].append(username)
                 continue
             if is_check_competition_user_ta:
-                user_does_not_exist['is_existed'].append(data['username'])
+                user_does_not_exist['is_existed'].append(username)
                 continue
-            is_check_competition_user = CompetitionUser.objects.filter(username = data['username']).filter(competition_id = competition_id).filter(privilege = 0)
+            is_check_competition_user = CompetitionUser.objects.filter(username=username)\
+                .filter(competition_id=competition_id).filter(privilege=0)
             if is_check_competition_user.count():
                 is_check_competition_user[0].delete()
 
             obj = {
-                "username" : data['username'],
-                "is_show" : True,
-                "privilege" : 1,
-                "competition_id" : competition_id
+                "username": username,
+                "is_show": True,
+                "privilege": 1,
+                "competition_id": competition_id
             }
 
             serializer = CompetitionUserSerializer(data=obj)
-
             if serializer.is_valid():
                 serializer.save()
             else:
