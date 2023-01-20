@@ -31,7 +31,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
     permission_classes = [IsClassUser]
 
     # 05-16
-    def post(self, request, class_id, contest_id, cp_id):
+    def post(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
@@ -109,7 +109,7 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 07-00 유저 submission 내역 조회
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         cp_id = request.GET.get('cpid', 0)
         contest_problem = get_contest_problem(cp_id)
         submission_class_list = SubmissionClass.objects.all().filter(username=request.user).filter(
@@ -145,7 +145,7 @@ class SubmissionClassCheckView(APIView):
     # 05-17
     permission_classes = [IsClassUser]
 
-    def patch(self, request, class_id, contest_id, cp_id):
+    def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         class_ = get_class(class_id)
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
@@ -182,7 +182,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
     permission_classes = [IsCompetitionUser]
 
     # 06-04 대회 유저 파일 제출
-    def post(self, request, competition_id):
+    def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
@@ -247,7 +247,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 06-07 유저 submission 내역 조회
-    def get(self, request, competition_id):
+    def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
@@ -286,7 +286,7 @@ class SubmissionCompetitionCheckView(APIView):
     permission_classes = [IsCompetitionUser]
 
     # 06-06 submission 리더보드 체크
-    def patch(self, request, competition_id):
+    def patch(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
         data = request.data
@@ -320,7 +320,7 @@ class SubmissionCompetitionCheckView(APIView):
 class SubmissionClassCsvDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
         os_info = platform.system()
@@ -345,7 +345,8 @@ class SubmissionClassCsvDownloadView(APIView):
 class SubmissionClassIpynbDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
-    def get(self, request, submission_id):
+    # 
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
         os_info = platform.system()
@@ -370,7 +371,7 @@ class SubmissionClassIpynbDownloadView(APIView):
 class SubmissionCompetitionCsvDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
         # It should be considered what operating system is running
@@ -397,7 +398,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
 class SubmissionCompetitionIpynbDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
-    def get(self, request, submission_id):
+    def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
         os_info = platform.system()
