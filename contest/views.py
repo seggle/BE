@@ -1,13 +1,15 @@
 from multiprocessing import context
 from pickle import TRUE
 
+from django.http import JsonResponse
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from django.utils import timezone
+import seggle.settings
 from problem.models import Problem
-from utils.pagination import PaginationHandlerMixin, BasicPagination
+from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination
 from .models import Contest, ContestProblem
 from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
 from utils.get_obj import *
@@ -74,9 +76,7 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 05-12
-    # TODO : Apply pagination for the generated list
-
-    def get(self, request: Request, class_id: int, contest_id: int) -> Response:
+    def get(self, request: Request, class_id: int, contest_id: int) -> Response or JsonResponse:
         contest = get_contest(contest_id)
 
         # time_check = timezone.now()
@@ -106,7 +106,11 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
             }
             contest_problem_list.append(contest_problem_json)
 
-        return Response(contest_problem_list, status=status.HTTP_200_OK)
+            list_paginator = ListPagination(request)
+            p_size = seggle.settings.REST_FRAMEWORK.get('PAGE_SIZE')
+
+            return list_paginator.paginate_list(
+                contest_problem_list, p_size, request.GET.get('page', default=1))
 
     # 05-13-01
     def post(self, request: Request, class_id: int, contest_id: int) -> Response:
