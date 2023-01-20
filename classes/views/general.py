@@ -1,4 +1,6 @@
 from pickle import TRUE
+
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -9,18 +11,21 @@ from ..serializers import ClassSerializer, ClassPatchSerializer, ClassUserSerial
 from utils.get_obj import *
 from utils.message import *
 from utils.permission import *
+from utils.pagination import PaginationHandlerMixin, BasicPagination
 
 # from utils.user_permission import user_perm, class_user_check
 
 # Create your views here.
 
+
 class ClassView(APIView):
     permission_classes = [IsProf | IsAdmin]
 
     # 05-01
-    def post(self, request):
+    def post(self, request: Request) -> Response:
 
         data = request.data
+        data._mutable = True
 
         data['created_user'] = request.user
         serializer = ClassSerializer(data=data)
@@ -51,13 +56,13 @@ class ClassDetailView(APIView):
     permission_classes = [ClassProfOrReadOnly]
 
     # 05-02
-    def get(self, request, class_id):
+    def get(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
         serializer = ClassSerializer(class_)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-03
-    def patch(self, request, class_id):
+    def patch(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
         data = request.data
 
@@ -71,7 +76,7 @@ class ClassDetailView(APIView):
         return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
     # 05-04
-    def delete(self, request, class_id):
+    def delete(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
         if class_.created_user == request.user:
             class_.is_deleted = True
@@ -80,19 +85,25 @@ class ClassDetailView(APIView):
         else:
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-class ClassStdView(APIView):
-    permission_classes = [IsClassProfOrTA]
 
+class ClassStdView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsClassProfOrTA]
+    pagination_class = BasicPagination
 
     # 05-05-01
-    def get(self, request, class_id):
-        class_ = get_class(class_id)
+    def get(self, request: Request, class_id: int) -> Response:
         datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=0)
-        serializer = ClassUserGetSerializer(datas, many=True)
+
+        page = self.paginate_queryset(datas)
+        if page is not None:
+            serializer = self.get_paginated_response(ClassUserGetSerializer(page, many=True).data)
+        else:
+            serializer = ClassUserGetSerializer(datas, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-06
-    def post(self, request, class_id):
+    def post(self, request: Request, class_id: int) -> Response:
 
         class_ = get_class(class_id)
         # 기존 std 삭제
@@ -109,17 +120,18 @@ class ClassStdView(APIView):
         }
         datas = request.data
         for data in datas:
-            is_check_user = User.objects.filter(username=data['username']).count()
-            is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
+            username = data['username']
+            is_check_user = User.objects.filter(username=username).count()
+            is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
-                user_does_not_exist['does_not_exist'].append(data['username'])
+                user_does_not_exist['does_not_exist'].append(username)
                 continue
             if is_check_ClassUser != 0:
-                user_does_not_exist['is_existed'].append(data['username'])
+                user_does_not_exist['is_existed'].append(data.get('username'))
                 continue
 
             data = {
-                "username": data['username'],
+                "username": data.get('username'),
                 "is_show": True,
                 "privilege": 0,
                 "class_id": class_id
@@ -138,18 +150,23 @@ class ClassStdView(APIView):
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 
 
-class ClassTaView(APIView):
+class ClassTaView(APIView, PaginationHandlerMixin):
     permission_classes = [IsClassProf]
+    pagination_class = BasicPagination
 
     # 05-05-02
-    def get(self, request, class_id):
-        class_ = get_class(class_id)
+    def get(self, request: Request, class_id: int) -> Response:
         datas = ClassUser.objects.filter(class_id=class_id).filter(privilege=1)
-        serializer = ClassUserGetSerializer(datas, many=True)
+
+        page = self.paginate_queryset(datas)
+        if page is not None:
+            serializer = self.get_paginated_response(ClassUserGetSerializer(page, many=True).data)
+        else:
+            serializer = ClassUserGetSerializer(datas, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-07
-
     def post(self, request, class_id):
         class_ = get_class(class_id)
         # 기존 ta 삭제
