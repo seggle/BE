@@ -4,7 +4,7 @@ from .serializers import PathSerializer, SubmissionClassSerializer, SumissionCla
     SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
 from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination  # pagination
-from utils.pagination import PaginationHandlerMixin  # pagination
+from utils.pagination import BasicPagination, PaginationHandlerMixin  # pagination
 from utils.evaluation import EvaluationMixin
 from utils.get_ip import GetIpAddr
 from utils.get_obj import *
@@ -12,13 +12,16 @@ from utils.message import *
 from utils.common import IP_ADDR
 from django.db.models import Q
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework import status
 import uuid
 import mimetypes
 import os
+import platform
 import urllib
 from django.http import HttpResponse
 from django.utils import timezone
+import utils.download as download
 from utils.permission import *
 from rest_framework.permissions import IsAuthenticated
 
@@ -71,8 +74,8 @@ class SubmissionClassView(APIView, EvaluationMixin):
             "class_id": contest_problem.contest_id.class_id.id,
             "contest_id": contest_problem.contest_id.id,
             "c_p_id": contest_problem.id,
-            "csv": data['csv'],
-            "ipynb": data['ipynb'],
+            "csv": csv_file,
+            "ipynb": ipynb_file,
             "problem_id": contest_problem.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -94,10 +97,6 @@ class SubmissionClassView(APIView, EvaluationMixin):
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 
 class SubmissionClassListView(APIView, PaginationHandlerMixin):
@@ -212,8 +211,8 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         submission_json = {
             "username": request.user,
             "competition_id": competition.id,
-            "csv": data["csv"],
-            "ipynb": data["ipynb"],
+            "csv": data.get("csv"),
+            "ipynb": data.get("ipynb"),
             "problem_id": competition.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
@@ -224,6 +223,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
             path_obj = path_serializer.save()
             submission_json["path"] = path_obj.id
             submission_serializer = SubmissionCompetitionSerializer(data=submission_json)
+
             if submission_serializer.is_valid():
                 submission = submission_serializer.save()
                 # evaluation
@@ -233,6 +233,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 return Response(msg_success, status=status.HTTP_200_OK)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -272,6 +273,7 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
             serializer = self.get_paginated_response(SumissionCompetitionListSerializer(page, many=True).data)
         else:
             serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -285,7 +287,7 @@ class SubmissionCompetitionCheckView(APIView):
         data = request.data
         competition_submission_list = []
         for submission in data:
-            competition_submission = get_submission_competition(id=submission["id"])
+            competition_submission = get_submission_competition(id=submission.get("id"))
             if competition_submission.username.username != request.user.username:
                 return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
             competition_submission_list.append(competition_submission)
@@ -333,6 +335,7 @@ class SubmissionClassCsvDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
@@ -359,6 +362,7 @@ class SubmissionClassIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
@@ -385,6 +389,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 
@@ -411,4 +416,5 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
         response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
