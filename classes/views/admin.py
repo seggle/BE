@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination #pagination
-from utils.pagination import PaginationHandlerMixin, BasicPagination #pagination
+
+import seggle.settings
+from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination  # pagination
 from ..models import Class, ClassUser
 from ..serializers import ClassSerializer
 from utils.get_obj import *
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from utils.permission import IsAdmin
 
 
@@ -18,7 +20,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdmin]
     pagination_class = BasicPagination
 
-    def get(self, request: Request) -> Response:
+    def get(self, request: Request) -> Response or JsonResponse:
         uid = request.GET.get('uid', None)
         if uid is None:
             keyword = request.GET.get('keyword', '')
@@ -35,7 +37,6 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        # TODO : Fix 'unable to get repr' problem and apply pagination
         else:
             class_name_list = []
             class_lists = ClassUser.objects.filter(username=uid).order_by('-id')
@@ -50,4 +51,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
                             "is_show": class_list.is_show
                     }
                     class_name_list.append(class_add)
-            return Response(class_name_list, status=status.HTTP_200_OK)
+
+            list_paginator = ListPagination(request)
+            return list_paginator.paginate_list(class_name_list, seggle.settings.REST_FRAMEWORK
+                                                .get('PAGE_SIZE', 15), request.GET.get('page', 1))
