@@ -5,9 +5,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from django.contrib.auth.hashers import check_password
+from rest_framework.pagination import PageNumberPagination
+from utils.pagination import PaginationHandlerMixin
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer
+    UserCompetitionSerializer, UserGetClassInfo
 from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
@@ -18,6 +20,11 @@ from rest_framework_simplejwt.views import (
 from utils.get_obj import *
 
 from utils.permission import *
+
+
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
@@ -134,7 +141,9 @@ class UserInfoView(APIView):
             return Response({'error': "현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ClassInfoView(APIView):
+class ClassInfoView(APIView, PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
     # 01-09 유저 Class 조회
     def get(self, request):
         class_name_list = []
@@ -148,7 +157,13 @@ class ClassInfoView(APIView):
             class_add_is_show["privilege"] = class_list.privilege
             class_add_is_show["is_show"] = class_list.is_show
             class_name_list.append(class_add_is_show)
-        return Response(class_name_list, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(class_name_list)
+
+        if page is not None:
+            serializer = self.get_paginated_response(UserGetClassInfo(page, many=True).data)
+        else:
+            serializer = UserGetClassInfo(class_name_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request):
         datas = request.data
@@ -177,7 +192,8 @@ class ClassInfoView(APIView):
             return Response(does_not_exist, status=status.HTTP_200_OK)
 
 
-class ContributionsView(APIView):
+class ContributionsView(APIView,PaginationHandlerMixin):
+    pagination_class = BasicPagination
     # 01-12 유저 잔디밭 조회
     def get(self, request, username):
         user = get_username(username)
@@ -214,11 +230,18 @@ class ContributionsView(APIView):
             temp["count"] = val
             sort_list.append(temp)
 
-        serializer = ContributionsSerializer(sort_list, many=True)
+        page = self.paginate_queryset(sort_list)
+
+        if page is not None:
+            serializer = self.get_paginated_response(ContributionsSerializer(page,many=True).data)
+        else:
+            serializer = ContributionsSerializer(sort_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserCompetitionInfoView(APIView):
+class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
     # 01-11 user참가 대회 리스트 조회
     def get(self, request, username):
         user = get_username(username)
@@ -230,20 +253,19 @@ class UserCompetitionInfoView(APIView):
         competition_list = CompetitionUser.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
-            return Response([], status=status.HTTP_200_OK)
+            return Response({"count": 0, "next": None, "previous": None}, status=status.HTTP_200_OK)
 
         obj_list = []
         for competition in competition_list:
 
             if competition.competition_id.is_deleted:
                 continue
-            obj = {
-                "id": competition.competition_id.id,
-                "problem_id": competition.competition_id.problem_id,
-                "title": competition.competition_id.problem_id.title,
-                "start_time": competition.competition_id.start_time,
-                "end_time": competition.competition_id.end_time,
-            }
+            obj = {}
+            obj["id"] = competition.competition_id.id
+            obj["problem_id"] = competition.competition_id.problem_id
+            obj["title"] = competition.competition_id.problem_id.title
+            obj["start_time"] = competition.competition_id.start_time
+            obj["end_time"] = competition.competition_id.end_time
             obj["user_total"] = CompetitionUser.objects.filter(
                 Q(competition_id=competition.competition_id.id) & Q(privilege=0)).count()
             obj["rank"] = None
@@ -252,7 +274,8 @@ class UserCompetitionInfoView(APIView):
                 Q(competition_id=competition.competition_id.id) & Q(on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
                 # 정렬
-                if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]:  # 내림차순
+                if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score",
+                                                                        "mAP"]:  # 내림차순
                     leaderboard_list = leaderboard_list.order_by('-score', 'created_time')
                 else:
                     leaderboard_list = leaderboard_list.order_by('score', 'created_time')
@@ -263,7 +286,12 @@ class UserCompetitionInfoView(APIView):
 
             obj_list.append(obj)
 
-        serializer = UserCompetitionSerializer(obj_list, many=True)
+        page = self.paginate_queryset(obj_list)
+
+        if page is not None:
+            serializer = self.get_paginated_response(UserCompetitionSerializer(page, many=True).data)
+        else:
+            serializer = UserCompetitionSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
