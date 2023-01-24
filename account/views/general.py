@@ -19,6 +19,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView, TokenObtainPairView,
 )
 from utils.get_obj import *
+
 from utils.permission import *
 from utils.pagination import BasicPagination, PaginationHandlerMixin
 
@@ -162,6 +163,7 @@ class ClassInfoView(APIView, PaginationHandlerMixin):
             serializer = UserGetClassInfo(class_name_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # 01-10 유저 수업 리스트 is_show 수정
     def patch(self, request: Request) -> Response:
         datas = request.data
 
@@ -296,6 +298,7 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
 
 class UserClassPrivilege(APIView):
 
+    # 01-13 유저의 클래스 내 권한 조회
     def get(self, request: Request, class_id: int) -> Response:
         _class = get_class(class_id)
         username = request.user
@@ -310,6 +313,7 @@ class UserClassPrivilege(APIView):
 
 class UserCompetitionPrivilege(APIView):
 
+    # 01-14 유저의 competition 내 권한 조회
     def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         username = request.user
