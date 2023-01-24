@@ -120,18 +120,18 @@ class ClassStdView(APIView, PaginationHandlerMixin):
         }
         datas = request.data
         for data in datas:
-            username = data['username']
+            username = data.get('username')
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
                 user_does_not_exist['does_not_exist'].append(username)
                 continue
             if is_check_ClassUser != 0:
-                user_does_not_exist['is_existed'].append(data.get('username'))
+                user_does_not_exist['is_existed'].append(username)
                 continue
 
             data = {
-                "username": data.get('username'),
+                "username": username,
                 "is_show": True,
                 "privilege": 0,
                 "class_id": class_id
@@ -144,7 +144,7 @@ class ClassStdView(APIView, PaginationHandlerMixin):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
-        if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
+        if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
@@ -183,17 +183,19 @@ class ClassTaView(APIView, PaginationHandlerMixin):
         }
         datas = request.data
         for data in datas:
-            is_check_user = User.objects.filter(username=data['username']).count()
-            is_check_ClassUser = ClassUser.objects.filter(username=data['username']).filter(class_id=class_id).count()
+
+            username = data.get('username')
+            is_check_user = User.objects.filter(username=username).count()
+            is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
-                user_does_not_exist['does_not_exist'].append(data['username'])
+                user_does_not_exist['does_not_exist'].append(username)
                 continue
             if is_check_ClassUser != 0:
-                user_does_not_exist['is_existed'].append(data['username'])
+                user_does_not_exist['is_existed'].append(data.get(username))
                 continue
 
             data = {
-                "username": data['username'],
+                "username": username,
                 "is_show": True,
                 "privilege": 1,
                 "class_id": class_id
@@ -207,7 +209,7 @@ class ClassTaView(APIView, PaginationHandlerMixin):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
-        if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
+        if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
