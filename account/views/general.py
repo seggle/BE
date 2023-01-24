@@ -19,12 +19,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView, TokenObtainPairView,
 )
 from utils.get_obj import *
-
 from utils.permission import *
-
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
+from utils.pagination import BasicPagination, PaginationHandlerMixin
 
 
 class UserRegisterView(APIView):
