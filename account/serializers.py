@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
 from competition.models import Competition
 from classes.serializers import ClassUserGetInfoSerializer
@@ -68,6 +69,7 @@ class UserClassPrivilege(serializers.ModelSerializer):
         model = ClassUser
         fields = ['privilege']
 
+
 class UserGetClassInfo(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()
@@ -75,3 +77,12 @@ class UserGetClassInfo(serializers.Serializer):
     semester = serializers.IntegerField()
     privilege = serializers.IntegerField()
     is_show = serializers.BooleanField()
+
+
+class TokenObtainResultSerializer(TokenObtainPairSerializer):
+
+    def validate(self, attrs) -> None:
+        data = super().validate(attrs)
+        data['username'] = self.user.username
+
+        return data

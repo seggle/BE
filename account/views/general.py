@@ -9,13 +9,13 @@ from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer, UserGetClassInfo
+    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer
 from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
 from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
-    TokenRefreshView,
+    TokenRefreshView, TokenObtainPairView,
 )
 from utils.get_obj import *
 
@@ -320,3 +320,10 @@ class UserCompetitionPrivilege(APIView):
         data = {'privilege': privilege}
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+# TokenObtainPairView with username field
+class TokenObtainResultView(TokenObtainPairView):
+
+    serializer_class = TokenObtainResultSerializer
+    token_obtain_pair = TokenObtainPairView.as_view()
