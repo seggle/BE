@@ -10,7 +10,7 @@ from utils.pagination import PaginationHandlerMixin #pagination
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
-
+from rest_framework.exceptions import APIException
 # Create your views here.
 
 class BasicPagination(PageNumberPagination):
@@ -31,8 +31,8 @@ class ProposalView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise APIException(detail="ParseError", code=400)
 
     def get(self, request, proposal_id=None):
         # 08-00 건의 게시판 전체 리스트

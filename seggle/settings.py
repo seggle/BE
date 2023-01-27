@@ -173,6 +173,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination', # pagenation 관련 설정
     'PAGE_SIZE': 15,
+    'EXCEPTION_HANDLER': 'seggle.exceptions.api_exception.custom_exception_handler'
+
 }
 
 # simple jwt
