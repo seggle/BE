@@ -2,6 +2,7 @@
 # ex) msg_ListUsers_get_s = {"success":"성공했습니다"}
 # ex) msg_ListUsers_get_e = {"error":"처리에 실패했습니다"}
 
+msg_success = {"success":"성공했습니다"}
 msg_success_create = {"code": 201, "message": "성공했습니다"}
 msg_success_delete = {"code": 204, "message": "성공했습니다"}
 msg_error = {"error": "실패"}
