@@ -10,7 +10,7 @@ from utils.pagination import PaginationHandlerMixin #pagination
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import ParseError, PermissionDenied
 # Create your views here.
 
 class BasicPagination(PageNumberPagination):
@@ -29,10 +29,9 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
         if serializer.is_valid():
             serializer.save()
-            return Response(msg_success, status=status.HTTP_201_CREATED)
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
-            #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            raise APIException(detail="ParseError", code=400)
+            raise ParseError(detail="ParseError")
 
     def get(self, request, proposal_id=None):
         # 08-00 건의 게시판 전체 리스트
@@ -56,32 +55,27 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
     # 08-03 건의 글 수정
     def patch(self, request, proposal_id=None):
-        if proposal_id is None:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
         proposal = get_proposal(proposal_id)
 
         data = request.data
         obj = {
-            "title" : data.get("title"),
-            "context" : data.get("context"),
+            "title": data.get("title"),
+            "context": data.get("context"),
         }
         if proposal.created_user == request.user:
             serializer = ProposalPatchSerializer(proposal, data=obj)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
-        return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+            raise ParseError(detail="ParseError")
+        raise PermissionDenied(detail="PermissionDenied")
 
     # 08-04 건의 글 삭제
     def delete(self, request, proposal_id=None):
-        if proposal_id is None:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
-    
         proposal = get_proposal(proposal_id)
 
         if proposal.created_user == request.user or request.user.privilege == 2:
             proposal.delete()
-            return Response(msg_success, status=status.HTTP_200_OK)
+            return Response(msg_success_delete, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+            raise PermissionDenied(detail="PermissionDenied")
