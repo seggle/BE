@@ -75,7 +75,9 @@ def creat_archive(filepath: Path, base_dir: Path, submission_targets: QuerySet[S
                                    front_str, extra_str)
 
     with open(filepath, 'wb') as f:
+        portalocker.portalocker.lock(f, portalocker.LockFlags.EXCLUSIVE)
         f.write(archive_buffer.read())
+        portalocker.portalocker.unlock(f)
 
 
 def put_archive_object(archive: zipfile.ZipFile, material: Any, file_field: str, extension: str, pre_dir: str,
