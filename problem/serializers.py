@@ -8,6 +8,11 @@ class ProblemSerializer(serializers.ModelSerializer):
         # fields = "__all__"
         fields = ["id", "title", "description", "created_time", "created_user", "data", "solution", "data_description", "public", "evaluation", "class_id", "is_deleted", "professor"]
 
+class ProblemDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problem
+        fields =["id", "title", "description", "created_time", "created_user", "data_description", "evaluation", "public", "class_id", "is_deleted"]
+
 class ProblemPutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem

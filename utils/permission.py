@@ -7,6 +7,8 @@ from contest.models import Contest, ContestProblem
 from competition.models import Competition, CompetitionUser
 from submission.models import *
 
+from rest_framework.exceptions import NotFound
+
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -62,8 +64,9 @@ class IsTA(permissions.BasePermission):
 
 class IsProblemOwnerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        problem = Problem.objects.get(id=view.kwargs.get('problem_id', None))
-
+        problem = Problem.objects.filter(id=view.kwargs.get('problem_id')).first()
+        if problem is None:
+            return False
         return request.method in permissions.SAFE_METHODS \
                or problem.professor == request.user \
                or problem.created_user == request.user
