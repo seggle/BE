@@ -65,7 +65,6 @@ def creat_archive(filepath: Path, base_dir: Path, submission_targets: QuerySet[S
                                    front_str, extra_str)
                 continue
 
-            archive.mkdir(user)
             pre_dir += '/' + user
 
             for material in user_submissions:
