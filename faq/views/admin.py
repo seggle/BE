@@ -22,6 +22,8 @@ class FaqAdminView(APIView, PaginationHandlerMixin):
     # 00-06
     def post(self, request: Request) -> Response:
         data = request.data
+        data._mutable = True
+
         data["created_user"] = request.user
         serializer = FaqSerializer(data=data)
 
@@ -56,9 +58,9 @@ class FaqAdminView(APIView, PaginationHandlerMixin):
         faq = get_faq(faq_id)
         data = request.data
         obj = {
-            "question" : data["question"],
-            "answer" : data["answer"],
-            "visible" : data["visible"]
+            "question": data.get("question"),
+            "answer": data.get("answer"),
+            "visible": data.get("visible", False)
         }
         if faq.created_user == request.user:
             serializer = FaqPatchSerializer(faq, data=obj)
