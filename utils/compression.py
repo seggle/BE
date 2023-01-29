@@ -76,7 +76,7 @@ def creat_archive(filepath: Path, base_dir: Path, submission_targets: QuerySet[S
 
     with open(filepath, 'wb') as f:
         portalocker.portalocker.lock(f, portalocker.LockFlags.EXCLUSIVE)
-        f.write(archive_buffer.read())
+        f.write(archive_buffer.getbuffer())
         portalocker.portalocker.unlock(f)
 
 
