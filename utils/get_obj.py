@@ -61,7 +61,7 @@ def get_competition(id):
 def get_problem(id):
     problem = get_object_or_404(Problem, id=id)
     if problem.is_deleted:
-        raise Http404()
+        return False
     return problem
 
 # contest

@@ -18,7 +18,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-class AdminProblemView(APIView,PaginationHandlerMixin):
+class AdminProblemView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdmin]
     pagination_class = BasicPagination
 

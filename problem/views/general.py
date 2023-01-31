@@ -102,23 +102,17 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 class ProblemDetailView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
-    if permission_classes is False:
-        raise NotFound(detail='Not Found.')
-
-    def get_object(self, id):
-        try:
-            return Problem.objects.get(pk=id)
-        except Problem.DoesNotExist:
-            return False
 
     # 03-04
     def get(self, request, problem_id):
-        problem = self.get_object(problem_id)
+        problem = get_problem(problem_id)
+
         if problem is False:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = ProblemDetailSerializer(problem)
+            raise NotFound(detail='Not Found.')
         if problem.is_deleted is True:
-            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ProblemDetailSerializer(problem)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 03-03
