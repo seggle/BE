@@ -106,29 +106,20 @@ class ProblemDetailView(APIView):
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
-        if problem is False:
-            raise NotFound(detail='Not Found.')
         if problem.is_deleted is True:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = ProblemDetailSerializer(problem)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # 03-03
+    # 03-03 problem 수정
     def put(self, request, problem_id):
         problem = get_problem(problem_id)
-        
         data = request.data
-        obj = {
-            "title": data["title"],
-            "description": data["description"],
-            "data_description": data["data_description"],
-            "evaluation": data["evaluation"],
-            "public": data["public"]
-        }
 
         if data.get('data', '') != '':
             data_str = data['data'].name.split('.')[-1]
+            print(data_str)
             if data_str != 'zip':
                 return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
             # 폴더 삭제
@@ -136,7 +127,11 @@ class ProblemDetailView(APIView):
                 path = (problem.data.path).split("uploads/problem/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
-            obj['data'] = data['data']
+                # 윈도우라면 위 코드 대신 다음 코드 실행
+                # path = os.path.normpath((problem.data.path).split('problem')[1])
+                # path = path.split("\\")[1]
+                # shutil.rmtree('./uploads/problem/' + path + '/')  # 폴더 삭제 명령어 - shutil
+
         if data.get('solution', '') != '':
             solution_str = data['solution'].name.split('.')[-1]
             if solution_str != 'csv':
@@ -145,14 +140,17 @@ class ProblemDetailView(APIView):
                 path = (problem.solution.path).split("uploads/solution/")
                 path = path[1].split("/", 1)
                 shutil.rmtree('./uploads/solution/' + path[0] + '/')
-            obj['solution'] = data['solution']
+                # 윈도우라면 위 코드 대신 다음 코드 실행
+                # path = os.path.normpath((problem.solution.path).split('solution')[1])
+                # path = path.split("\\")[1]
+                # shutil.rmtree('./uploads/solution/' + path + '/')  # 폴더 삭제 명령어 - shutil
 
-        serializer = ProblemPutSerializer(problem, data=obj, partial=True)
+        serializer = ProblemPutSerializer(problem, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        raise ParseError(detail='ParseError')
 
     # 03-05
     def delete(self, request, problem_id):
