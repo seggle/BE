@@ -11,8 +11,7 @@ from rest_framework import status
 from utils.get_obj import *
 from utils.message import *
 
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import ParseError, NotFound
 from utils.common import IP_ADDR
 import os
 import shutil
@@ -35,7 +34,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
     permission_classes = [(IsAuthenticated & (IsProf | IsTA)) | IsAdmin]
     pagination_class = BasicPagination
 
-    # 03-01
+    # 03-01 problem 전체 조회
     def get(self, request):
         if request.user.privilege == 0:
             problems = Problem.objects.filter(Q(created_user=request.user)).active()
@@ -70,7 +69,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
             serializer = AllProblemSerializer(page, many=True)
         return Response(serializer.data)
 
-    # 03-02
+    # 03-02 problem 생성
     def post(self, request):
         data = request.data.copy()
 
@@ -97,13 +96,13 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem.save()
             return Response(problem.data, status=status.HTTP_200_OK)
         else:
-            return Response(problem.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise ParseError(detail='ParseError')
 
 
 class ProblemDetailView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
 
-    # 03-04
+    # 03-04 problem 세부 조회
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
