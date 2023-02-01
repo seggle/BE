@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemPutSerializer
+from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
@@ -9,6 +10,9 @@ from django.http import HttpResponse
 from rest_framework import status
 from utils.get_obj import *
 from utils.message import *
+
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.exceptions import NotFound
 from utils.common import IP_ADDR
 import os
 import shutil
@@ -98,29 +102,24 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 class ProblemDetailView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
+    if permission_classes is False:
+        raise NotFound(detail='Not Found.')
+
+    def get_object(self, id):
+        try:
+            return Problem.objects.get(pk=id)
+        except Problem.DoesNotExist:
+            return False
 
     # 03-04
     def get(self, request, problem_id):
-        problem = get_problem(problem_id)
-
-        # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
-        # solution_url = "http://{0}/api/problems/{1}/download/solution".format(IP_ADDR, problem.id)
-
-        cp_json = {
-            "id": problem.id,
-            "title": problem.title,
-            "description": problem.description,
-            "created_time": problem.created_time,
-            "created_user": problem.created_user.username,
-            # "data": data_url,
-            "data_description": problem.data_description,
-            # "solution": solution_url,
-            "evaluation": problem.evaluation,
-            "public": problem.public,
-            "class_id": problem.class_id
-        }
-
-        return Response(cp_json, status=status.HTTP_200_OK)
+        problem = self.get_object(problem_id)
+        if problem is False:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = ProblemDetailSerializer(problem)
+        if problem.is_deleted is True:
+            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 03-03
     def put(self, request, problem_id):

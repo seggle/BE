@@ -1,5 +1,6 @@
 from pickle import TRUE
 
+from django.http import QueryDict
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -119,8 +120,12 @@ class ClassStdView(APIView, PaginationHandlerMixin):
             "is_existed": []
         }
         datas = request.data
+
         for data in datas:
-            username = data.get('username')
+            if type(data) is str:
+                username = datas.get('username')
+            else:
+                username = data.get('username')
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
@@ -167,7 +172,7 @@ class ClassTaView(APIView, PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 05-07
-    def post(self, request, class_id):
+    def post(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
         # 기존 ta 삭제
         if class_.created_user == request.user:
@@ -183,8 +188,10 @@ class ClassTaView(APIView, PaginationHandlerMixin):
         }
         datas = request.data
         for data in datas:
-
-            username = data.get('username')
+            if type(data) is str:
+                username = datas.get('username')
+            else:
+                username = data.get('username')
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:

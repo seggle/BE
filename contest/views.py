@@ -149,7 +149,7 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
             if serializer.is_valid():
                 serializer.save()
 
-        if len(error.get('Error_problem_id')) == 0 and len(error.keys()) > 1:
+        if len(error.get('Error_problem_id')) == 0:
             return Response(msg_success, status=status.HTTP_201_CREATED)
         else:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)

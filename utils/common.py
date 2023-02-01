@@ -55,3 +55,4 @@ def make_mult_level_dir(current_path: Path, target: str) -> None:
 # 현재 시간보다 이전에 끝난 경우 False를 반환
 def is_temp(date: datetime.datetime) -> bool:
     return False if datetime.datetime.now() > date else True
+
