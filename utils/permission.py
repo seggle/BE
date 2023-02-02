@@ -14,15 +14,10 @@ from submission.models import *
 from rest_framework.exceptions import NotFound
 
 
-# Handle non-logged in users
-def is_anonymous_user(user: Request.user) -> bool:
-    return True if type(user) is AnonymousUser else False
-
-
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
         privilege = request.user.privilege
         return privilege == 2
@@ -31,7 +26,7 @@ class IsAdmin(permissions.BasePermission):
 class IsProf(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
         privilege = request.user.privilege
         return privilege == 1
@@ -40,7 +35,7 @@ class IsProf(permissions.BasePermission):
 class IsProfAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
 
         if request.method in permissions.SAFE_METHODS:
@@ -58,7 +53,7 @@ class IsProfAdminOrReadOnly(permissions.BasePermission):
 class IsRightUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
         username = view.kwargs.get('username', None)
         try:
@@ -75,7 +70,7 @@ class IsTA(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         if ClassUser.objects.filter(username=user.username, privilege=1).count():
@@ -87,7 +82,7 @@ class IsTA(permissions.BasePermission):
 class IsProblemOwnerOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
 
         problem = Problem.objects.filter(id=view.kwargs.get('problem_id')).first()
@@ -101,7 +96,7 @@ class IsProblemOwnerOrReadOnly(permissions.BasePermission):
 class IsProblemOwner(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
 
         problem = Problem.objects.get(id=view.kwargs.get('problem_id', None))
@@ -114,7 +109,7 @@ class IsClassUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         class_id = view.kwargs.get('class_id', None)
@@ -135,7 +130,7 @@ class ClassProfTAorReadOnly(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         class_id = view.kwargs.get('class_id', None)
@@ -153,7 +148,7 @@ class ClassProfTAorReadOnly(permissions.BasePermission):
 class ClassProfOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
 
         if request.method in permissions.SAFE_METHODS:
@@ -176,7 +171,7 @@ class IsClassProf(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         class_id = view.kwargs.get('class_id', None)
@@ -195,7 +190,7 @@ class IsClassProfOrTA(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         class_id = view.kwargs.get('class_id', None)
@@ -213,7 +208,7 @@ class IsClassProfOrTA(permissions.BasePermission):
 class IsCompetitionManagerOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
-        if is_anonymous_user(request.user):
+        if isinstance(request.user, AnonymousUser):
             return False
 
         if request.method in permissions.SAFE_METHODS:
@@ -244,6 +239,9 @@ class IsSafeMethod(permissions.BasePermission):
 class IsCPUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
+        if isinstance(request.user, AnonymousUser):
+            return False
+
         cp_id = view.kwargs.get('cp_id', None)
 
         if not cp_id:
@@ -263,7 +261,7 @@ class IsCompetitionUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         competition_id = view.kwargs.get('competition_id', None)
@@ -278,7 +276,7 @@ class IsProblemDownloadableUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         problem_id = view.kwargs.get('problem_id', None)
@@ -321,7 +319,7 @@ class IsSubClassDownloadableUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         submission_id = view.kwargs.get('submission_id', None)
@@ -349,7 +347,7 @@ class IsSubCompDownloadableUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
         user = request.user
-        if is_anonymous_user(user):
+        if isinstance(user, AnonymousUser):
             return False
 
         submission_id = view.kwargs.get('submission_id', None)
