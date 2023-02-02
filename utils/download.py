@@ -12,8 +12,11 @@ from competition.models import Competition
 
 
 # For Windows
-def csv_download_windows(submission_path: str, base_dir: str or bytes) -> (str, str):
-    base_dir = base_dir.replace("\\submission", "")
+def csv_download_windows(submission_path: str, base_dir: str or bytes, type: str) -> (str, str, str):
+    if type == "submission":
+        base_dir = base_dir.replace("\\submission", "")
+    elif type == "problem":
+        base_dir = base_dir.replace("\\problem", "")
     csv_path = str(submission_path).split('uploads\\', 1)[1]
     filename = csv_path.split('\\', 2)[2]
     filename = urllib.parse.quote(filename.encode('utf-8'))
@@ -23,9 +26,12 @@ def csv_download_windows(submission_path: str, base_dir: str or bytes) -> (str, 
 
 
 # For Unix or Unix-compatible operating systems
-def csv_download_nix(submission_path: str, base_dir: str or bytes) -> (str, str):
+def csv_download_nix(submission_path: str, base_dir: str or bytes, type: str) -> (str, str, str):
     base_dir = base_dir.replace("/submission", "")
-
+    if type == "submission":
+        base_dir = base_dir.replace("/submission", "")
+    elif type == "problem":
+        base_dir = base_dir.replace("/problem", "")
     csv_path = str(submission_path).split('uploads/', 1)[1]
     filename = csv_path.split('/', 2)[2]
     filename = urllib.parse.quote(filename.encode('utf-8'))

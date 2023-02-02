@@ -1,3 +1,5 @@
+import platform
+
 from rest_framework.views import APIView
 from ..models import Problem
 from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer
@@ -5,6 +7,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
+import utils.download as download
 from django.db.models import Q
 from django.http import HttpResponse
 from rest_framework import status
@@ -152,7 +155,7 @@ class ProblemDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         raise ParseError(detail='ParseError')
 
-    # 03-05
+    # 03-05 문제 삭제
     def delete(self, request, problem_id):
         problem = get_problem(problem_id)
         problem.is_deleted = True
@@ -165,9 +168,10 @@ class ProblemDetailView(APIView):
 class ProblemVisibilityView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly]
 
-    # 03-06
+    # 03-06 problem의 public 수정
     def post(self, request, problem_id):
         problem = get_problem(problem_id)
+
         if problem.public:
             problem.public = False
         else:
@@ -177,7 +181,7 @@ class ProblemVisibilityView(APIView):
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
-
+    # 03-07 problem의 data 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
@@ -185,12 +189,12 @@ class ProblemDataDownloadView(APIView):
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # result = /Users/ingyu/Desktop/BE/problem
         BASE_DIR = BASE_DIR.replace("/problem", "")
-        
+
         data_path = str(problem.data.path).split('uploads/', 1)[1]
         filename = data_path.split('/', 2)[2]
         filename = urllib.parse.quote(filename.encode('utf-8'))
         filepath = BASE_DIR + '/uploads/' + data_path
-        
+
         # Open the file for reading content
         path = open(filepath, 'rb')
 
@@ -201,26 +205,24 @@ class ProblemDataDownloadView(APIView):
 
 class ProblemSolutionDownloadView(APIView):
     permission_classes = [IsProblemOwner]
-
+    # 03-08 problem solution 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
-        # Define Django project base directory
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/problem", "")
+        os_info = platform.system()
 
-        solution_path = str(problem.solution.path).split('uploads/', 1)[1]
-        filename = solution_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + solution_path
+        # Define Django project base directory
+
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        (filename, filepath) = download.csv_download_windows(problem.solution.path, BASE_DIR, "problem") \
+            if os_info == 'Windows' else download.csv_download_nix(problem.solution.path, BASE_DIR, "problem")
 
         # Open the file for reading content
         path = open(filepath, 'r')
-
         # Set the mime type
         mime_type, _ = mimetypes.guess_type(filepath)
-        response = HttpResponse(FileWrapper(path), content_type=mime_type)
+        response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
