@@ -109,8 +109,8 @@ class ProblemDetailView(APIView):
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
-        if problem.is_deleted is True:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
 
         serializer = ProblemDetailSerializer(problem)
         return Response(serializer.data, status=status.HTTP_200_OK)
