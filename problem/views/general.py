@@ -185,22 +185,21 @@ class ProblemDataDownloadView(APIView):
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
 
+        os_info = platform.system()
+
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # result = /Users/ingyu/Desktop/BE/problem
-        BASE_DIR = BASE_DIR.replace("/problem", "")
-
-        data_path = str(problem.data.path).split('uploads/', 1)[1]
-        filename = data_path.split('/', 2)[2]
-        filename = urllib.parse.quote(filename.encode('utf-8'))
-        filepath = BASE_DIR + '/uploads/' + data_path
+        (filename, filepath) = download.csv_download_windows(problem.data.path, BASE_DIR, "problem") \
+            if os_info == 'Windows' else download.csv_download_nix(problem.data.path, BASE_DIR, "problem")
 
         # Open the file for reading content
         path = open(filepath, 'rb')
-
-        response = HttpResponse(FileWrapper(path), content_type='application/zip')
+        # Set the mime type
+        mime_type, _ = mimetypes.guess_type(filepath)
+        response = HttpResponse(path, content_type=mime_type)
         # Set the HTTP header for sending to browser
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
+
         return response
 
 class ProblemSolutionDownloadView(APIView):
@@ -212,7 +211,6 @@ class ProblemSolutionDownloadView(APIView):
         os_info = platform.system()
 
         # Define Django project base directory
-
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         (filename, filepath) = download.csv_download_windows(problem.solution.path, BASE_DIR, "problem") \
             if os_info == 'Windows' else download.csv_download_nix(problem.solution.path, BASE_DIR, "problem")
