@@ -119,13 +119,8 @@ class ClassStdView(APIView, PaginationHandlerMixin):
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data
-
-        for data in datas:
-            if type(data) is str:
-                username = datas.get('username')
-            else:
-                username = data.get('username')
+        datas = request.data.get('username')
+        for username in datas:
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
@@ -186,19 +181,15 @@ class ClassTaView(APIView, PaginationHandlerMixin):
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data
-        for data in datas:
-            if type(data) is str:
-                username = datas.get('username')
-            else:
-                username = data.get('username')
+        datas = request.data.get('username')
+        for username in datas:
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
             if is_check_user == 0:
                 user_does_not_exist['does_not_exist'].append(username)
                 continue
             if is_check_ClassUser != 0:
-                user_does_not_exist['is_existed'].append(data.get(username))
+                user_does_not_exist['is_existed'].append(username)
                 continue
 
             data = {
