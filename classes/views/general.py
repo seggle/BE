@@ -74,7 +74,7 @@ class ClassDetailView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
 
     # 05-04
     def delete(self, request: Request, class_id: int) -> Response:
@@ -84,7 +84,7 @@ class ClassDetailView(APIView):
             class_.save()
             return Response(msg_success, status=status.HTTP_200_OK)
         else:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ClassStdView(APIView, PaginationHandlerMixin):
@@ -106,6 +106,10 @@ class ClassStdView(APIView, PaginationHandlerMixin):
     # 05-06
     def post(self, request: Request, class_id: int) -> Response:
 
+        datas = request.data.get('username')
+        if len(datas) == 0:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
         class_ = get_class(class_id)
         # 기존 std 삭제
         if class_.created_user == request.user:
@@ -119,7 +123,7 @@ class ClassStdView(APIView, PaginationHandlerMixin):
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data.get('username')
+
         for username in datas:
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
@@ -145,7 +149,7 @@ class ClassStdView(APIView, PaginationHandlerMixin):
 
         # 출력
         if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
-            return Response(msg_success, status=status.HTTP_201_CREATED)
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 
@@ -168,6 +172,11 @@ class ClassTaView(APIView, PaginationHandlerMixin):
 
     # 05-07
     def post(self, request: Request, class_id: int) -> Response:
+
+        datas = request.data.get('username')
+        if len(datas) == 0:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
         class_ = get_class(class_id)
         # 기존 ta 삭제
         if class_.created_user == request.user:
@@ -181,7 +190,7 @@ class ClassTaView(APIView, PaginationHandlerMixin):
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data.get('username')
+
         for username in datas:
             is_check_user = User.objects.filter(username=username).count()
             is_check_ClassUser = ClassUser.objects.filter(username=username).filter(class_id=class_id).count()
@@ -208,6 +217,6 @@ class ClassTaView(APIView, PaginationHandlerMixin):
 
         # 출력
         if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
-            return Response(msg_success, status=status.HTTP_201_CREATED)
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)

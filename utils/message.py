@@ -18,6 +18,8 @@ msg_problem_model_title_unique = {'unique': '중복된 제목 입니다.'}
 # announcement
 
 # classes
+msg_error_no_selection = {"code": 400, "message": "추가할 대상을 선택해 주세요."}
+
 
 # competition
 
