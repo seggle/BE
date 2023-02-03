@@ -35,10 +35,10 @@ msg_ExamParticipateView_get_e_2 = {"error": "해당 class에 속하지 않습니
 
 # problem
 msg_ProblemDetailView_delete_e_1 = {"success": "문제가 제거되었습니다."}
-msg_ProblemView_post_e_1 = {"error": "파일을 업로드 해주세요."}
-msg_ProblemView_post_e_2 = {"error": "올바른 데이터 파일을 업로드 해주세요."}
-msg_ProblemView_post_e_3 = {"error": "올바른 정답 파일을 업로드 해주세요."}
-
+msg_ProblemDetailView_delete_e_2 = {"code": 204, "message": "이미 삭제된 문제입니다."}
+msg_ProblemView_post_e_1 = {"code": 400, "message": "파일을 업로드 해주세요."}
+msg_ProblemView_post_e_2 = {"code": 400, "message": "올바른 데이터 파일을 업로드 해주세요."}
+msg_ProblemView_post_e_3 = {"code": 400, "message": "올바른 정답 파일을 업로드 해주세요."}
 
 # proposal
 

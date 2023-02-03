@@ -515,8 +515,8 @@ class SubmissionClassCsvDownloadView(APIView):
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
-            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR, "submission") \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR, "submission")
 
         # Open the file for reading content
         path = open(filepath, 'r')
@@ -568,8 +568,8 @@ class SubmissionCompetitionCsvDownloadView(APIView):
         # Define Django project base directory
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR) \
-            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR)
+        (filename, filepath) = download.csv_download_windows(submission.csv.path, BASE_DIR, "submission") \
+            if os_info == 'Windows' else download.csv_download_nix(submission.csv.path, BASE_DIR, "submission")
 
         # Open the file for reading content
         path = open(filepath, 'r')
