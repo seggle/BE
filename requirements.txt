@@ -22,3 +22,7 @@ sqlparse==0.4.2
 threadpoolctl==3.1.0
 tzdata==2022.7
 # windows-curses==2.3.0
+celery==5.2.7
+redis==4.4.2
+django-celery-beat==2.4.0
+django-celery-results==2.4.0
