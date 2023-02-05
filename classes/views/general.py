@@ -25,8 +25,7 @@ class ClassView(APIView):
     # 05-01
     def post(self, request: Request) -> Response:
 
-        data = request.data
-        data._mutable = True
+        data = request.data.copy()
 
         data['created_user'] = request.user
         serializer = ClassSerializer(data=data)
