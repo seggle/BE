@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'submission',
     'exam',
     'leaderboard',
+    'reminder',
 
     # celery
     'django_celery_beat',
@@ -236,20 +237,8 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 
 # CELERY SETTINGS
 CELERY_TIMEZONE = 'Asia/Seoul'
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379'
+CELERY_BROKER_URL = 'amqp://127.0.0.1:6379'
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
-"""
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://redis_server:6379/1',  # redis_server: docker container이름
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
-    }
-}
-"""
