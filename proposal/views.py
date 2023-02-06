@@ -29,7 +29,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
         if serializer.is_valid():
             serializer.save()
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             raise ParseError(detail="ParseError")
 
