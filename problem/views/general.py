@@ -2,7 +2,7 @@ import platform
 
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer
+from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer, ProblemPublicSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -176,8 +176,11 @@ class ProblemVisibilityView(APIView):
             problem.public = False
         else:
             problem.public = True
+
         problem.save()
-        return Response(msg_success, status=status.HTTP_200_OK)
+        serializer = ProblemPublicSerializer(problem)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]

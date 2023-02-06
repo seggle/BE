@@ -33,3 +33,8 @@ class ProblemPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         fields = ["title", "description", "data_description", "public", "evaluation"]
+
+class ProblemPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Problem
+        fields = ["public"]
