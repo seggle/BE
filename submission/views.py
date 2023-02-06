@@ -374,6 +374,7 @@ class SubmissionCompetitionCheckView(APIView):
 class SubmissionClassCsvDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
+    # 07-01
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
@@ -399,7 +400,7 @@ class SubmissionClassCsvDownloadView(APIView):
 class SubmissionClassIpynbDownloadView(APIView):
     permission_classes = [IsSubClassDownloadableUser]
 
-    # 
+    # 07-02
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_class(submission_id)
 
@@ -425,6 +426,7 @@ class SubmissionClassIpynbDownloadView(APIView):
 class SubmissionCompetitionCsvDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
+    # 07-03
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
@@ -452,6 +454,7 @@ class SubmissionCompetitionCsvDownloadView(APIView):
 class SubmissionCompetitionIpynbDownloadView(APIView):
     permission_classes = [IsSubCompDownloadableUser]
 
+    # 07-04
     def get(self, request: Request, submission_id: int) -> HttpResponse:
         submission = get_submission_competition(submission_id)
 
@@ -477,6 +480,7 @@ class SubmissionCompetitionIpynbDownloadView(APIView):
 class SubmissionClassDownloadView(APIView):
     permission_classes = [IsTA | IsProf | IsAdmin]
 
+    # 05-19
     def post(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
         download_option = request.GET.get('dloption', None)
@@ -562,7 +566,7 @@ class SubmissionClassDownloadView(APIView):
 class SubmissionCompetitionDownloadView(APIView):
     permission_classes = [IsTA | IsProf | IsAdmin]
 
-    #
+    # 06-08
     def post(self, request: Request, competition_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
         download_option = request.GET.get('dloption', None)
