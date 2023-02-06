@@ -4,7 +4,7 @@ import datetime
 from pathlib import Path
 import zipfile
 import io
-from typing import Any
+from typing import Any, Dict, List
 from enum import Enum
 import portalocker
 from django.db.models import QuerySet
@@ -19,7 +19,7 @@ from utils import common
 
 # Create a new archive. Make a stream and write to file
 def creat_archive(filepath: Path, base_dir: Path,
-                  submission_targets: dict[str, list[SubmissionCompetition or SubmissionClass]],
+                  submission_targets: Dict[str, List[SubmissionCompetition or SubmissionClass]],
                   download_option: str,
                   use_subdirectory: bool = True) -> None:
     archive_buffer = io.BytesIO()

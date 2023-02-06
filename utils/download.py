@@ -2,7 +2,7 @@ import io
 import mimetypes
 import urllib
 from pathlib import Path, PureWindowsPath, PurePosixPath
-from typing import Any
+from typing import Any, List, Dict
 
 from django.db.models import QuerySet
 from django.http import HttpResponse
@@ -83,7 +83,7 @@ def get_attachment_response(filepath: Path, mime_type: str) -> HttpResponse:
     return response
 
 
-def get_download_targets(targets: dict[str, list], download_option: str,
+def get_download_targets(targets: Dict[str, List], download_option: str,
                          queryset: QuerySet[SubmissionCompetition or SubmissionClass] or None) -> None:
 
     if download_option == 'latest':
