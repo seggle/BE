@@ -230,6 +230,8 @@ class IsCompetitionManagerOrReadOnly(permissions.BasePermission):
 class IsSafeMethod(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
+        if isinstance(request.user, AnonymousUser):
+            return False
         if request.method in permissions.SAFE_METHODS:
             return True
         else:
