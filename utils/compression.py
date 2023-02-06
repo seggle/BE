@@ -17,61 +17,34 @@ from utils import common
 # TODO: Move archive related features to functions
 # TODO: Make it fit to Class related views
 
-# Target selection mode defined enum class
-class SubmissionArchiveMode(Enum):
-    ALL = 0
-    LATEST = 1
-    HIGHEST = 2
-
-
 # Create a new archive. Make a stream and write to file
-def creat_archive(filepath: Path, base_dir: Path, submission_targets: QuerySet[SubmissionCompetition | SubmissionClass],
-                  usernames: list, target_mode: SubmissionArchiveMode = SubmissionArchiveMode.ALL) -> None:
+def creat_archive(filepath: Path, base_dir: Path,
+                  submission_targets: dict[str, list[SubmissionCompetition or SubmissionClass]],
+                  download_option: str,
+                  use_subdirectory: bool = True) -> None:
     archive_buffer = io.BytesIO()
 
     with zipfile.ZipFile(archive_buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-        extra_str = None
+        if use_subdirectory and (download_option == 'all' or download_option == 'custom'):
+            for username in submission_targets.keys():
+                front_str = username
+                pre_dir = '.' + '/' + username
 
-        # Pattern Matching (Python 3.10 or above)
-        '''
-        match target_mode:
-            case SubmissionArchiveMode.LATEST:
-                extra_str = 'latest'
-            case SubmissionArchiveMode.HIGHEST:
-                extra_str = 'highest'
-        '''
-        if target_mode == SubmissionArchiveMode.LATEST:
-            extra_str = 'latest'
-        elif target_mode == SubmissionArchiveMode.HIGHEST:
-            extra_str = 'highest'
+                for elem in submission_targets[username]:
+                    jupyter = elem.ipynb.name
+                    put_archive_object(archive, elem, jupyter, '.ipynb', pre_dir, base_dir, front_str, download_option)
+                    csv = elem.csv.name
+                    put_archive_object(archive, elem, csv, '.csv', pre_dir, base_dir, front_str, download_option)
+        else:
+            for username in submission_targets.keys():
+                front_str = username
+                pre_dir = '.'
 
-        for user in usernames:
-            front_str = user
-            pre_dir = '.'
-            user_submissions = submission_targets.filter(username=user)
-
-            if target_mode == SubmissionArchiveMode.LATEST:
-                latest_submission = user_submissions.latest('created_time')
-                put_archive_object(archive, latest_submission, str(latest_submission.ipynb), '.ipynb', pre_dir,
-                                   base_dir, front_str, extra_str)
-                put_archive_object(archive, latest_submission, str(latest_submission.csv), '.csv', pre_dir, base_dir,
-                                   front_str, extra_str)
-                continue
-            elif target_mode == SubmissionArchiveMode.HIGHEST:
-                highest_submission = user_submissions.order_by('-score', '-created_time').first()
-                put_archive_object(archive, highest_submission, str(highest_submission.ipynb), '.ipynb', pre_dir,
-                                   base_dir, front_str, extra_str)
-                put_archive_object(archive, highest_submission, str(highest_submission.csv), '.csv', pre_dir, base_dir,
-                                   front_str, extra_str)
-                continue
-
-            pre_dir += '/' + user
-
-            for material in user_submissions:
-                put_archive_object(archive, material, str(material.ipynb), '.ipynb', pre_dir,
-                                   base_dir, front_str, extra_str)
-                put_archive_object(archive, material, str(material.csv), '.csv', pre_dir, base_dir,
-                                   front_str, extra_str)
+                for elem in submission_targets[username]:
+                    jupyter = elem.ipynb.name
+                    put_archive_object(archive, elem, jupyter, '.ipynb', pre_dir, base_dir, front_str, download_option)
+                    csv = elem.csv.name
+                    put_archive_object(archive, elem, csv, '.csv', pre_dir, base_dir, front_str, download_option)
 
     with open(filepath, 'wb') as f:
         portalocker.portalocker.lock(f, portalocker.LockFlags.EXCLUSIVE)

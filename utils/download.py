@@ -4,9 +4,12 @@ import urllib
 from pathlib import Path, PureWindowsPath, PurePosixPath
 from typing import Any
 
+from django.db.models import QuerySet
 from django.http import HttpResponse
 
 from competition.models import Competition
+from submission.models import SubmissionClass, SubmissionCompetition
+
 
 # TODO : Convert these file to respond the convenient pathlib library
 
@@ -78,3 +81,25 @@ def get_attachment_response(filepath: Path, mime_type: str) -> HttpResponse:
     response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % str(filepath.name)
 
     return response
+
+
+def get_download_targets(targets: dict[str, list], download_option: str,
+                         queryset: QuerySet[SubmissionCompetition or SubmissionClass] or None) -> None:
+
+    if download_option == 'latest':
+        for username in targets.keys():
+            submission = queryset.filter(username=username).latest('created_time')
+            targets[username].append(submission)
+    elif download_option == 'highest':
+        for username in targets.keys():
+            submission = queryset.filter(username=username).order_by('-score', '-created_time').first()
+            targets[username].append(submission)
+    elif download_option == 'leaderboard':
+        for username in targets.keys():
+            submission = queryset.filter(username=username, on_leaderboard=True)\
+                            .order_by('-score', '-created_time').first()
+            targets[username].append(submission)
+    else:
+        for username in targets.keys():
+            submissions = list(queryset.filter(username=username).order_by('-created_time'))
+            targets[username].extend(submissions)

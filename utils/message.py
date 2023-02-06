@@ -14,6 +14,7 @@ msg_user_model_email_unique = {'unique': '중복된 email 입니다.'}
 msg_problem_model_title_unique = {'unique': '중복된 제목 입니다.'}
 msg_error_no_selection = {"code": 400, "message": "대상을 선택해 주세요."}
 msg_error_url = {"code": 400, "message": "잘못된 URL 입니다."}
+msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
 
 # account
 
