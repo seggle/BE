@@ -36,6 +36,7 @@ from utils.common import make_mult_level_dir, convert_date_format, is_temp
 
 COMPETITION_ZIP_ARCHIVE_PATH = 'uploads/zipcache/competition'
 CLASS_PROBLEM_ZIP_ARCHIVE_PATH = 'uploads/zipcache/class'
+CUSTOM_ZIP_ARCHIVE_PATH = 'uploads/zipcache/custom'
 
 
 # submission-class 관련
@@ -512,6 +513,8 @@ class SubmissionClassDownloadView(APIView):
                     targets[submitter] = [submission[0]]
                 else:
                     targets[submitter].append(submission[0])
+            tail = str(uuid.uuid4())[:8]
+            base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
 
         elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard'\
                 or download_option == 'all':
@@ -528,16 +531,19 @@ class SubmissionClassDownloadView(APIView):
                 targets = {username: []}
 
             download.get_download_targets(targets, download_option, queryset)
+            tail = download_option
+            base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
         else:
             return Response(data=msg_error_url, status=status.HTTP_400_BAD_REQUEST)
 
         zip_filename = f'c_{class_id}_t_{str(contest_id)}_p_{cp_id}_' \
-                       f'{convert_date_format(contest_info.start_time)}_{download_option}.zip'
+                       f'{convert_date_format(contest_info.start_time)}_{tail}.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, f'{CLASS_PROBLEM_ZIP_ARCHIVE_PATH}/{str(class_id)}/{str(contest_id)}')
+            make_mult_level_dir(base_dir, CUSTOM_ZIP_ARCHIVE_PATH)
 
         temp_flag = is_temp(contest_info.end_time)
 
@@ -570,7 +576,6 @@ class SubmissionCompetitionDownloadView(APIView):
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
-        base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
         # This could be implemented match-case statement on Python 3.10 or later
         if download_option == 'custom':
@@ -591,6 +596,8 @@ class SubmissionCompetitionDownloadView(APIView):
                     targets[submitter] = [submission[0]]
                 else:
                     targets[submitter].append(submission[0])
+            tail = str(uuid.uuid4())[:8]
+            base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
 
         elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard'\
                 or download_option == 'all':
@@ -608,16 +615,19 @@ class SubmissionCompetitionDownloadView(APIView):
                 targets = {username: []}
 
             download.get_download_targets(targets, download_option, queryset)
+            tail = download_option
+            base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
 
         else:
             return Response(data=msg_error_url, status=status.HTTP_400_BAD_REQUEST)
 
         zip_filename = f'comp_{str(competition_id)}_{convert_date_format(competition_info.start_time)}' \
-                       f'_{download_option}.zip'
+                       f'_{tail}.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, COMPETITION_ZIP_ARCHIVE_PATH)
+            make_mult_level_dir(base_dir, CUSTOM_ZIP_ARCHIVE_PATH)
 
         temp_flag = is_temp(competition_info.end_time)
 
