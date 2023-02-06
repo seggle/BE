@@ -484,7 +484,7 @@ class SubmissionClassDownloadView(APIView):
     def post(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
         download_option = request.GET.get('dloption', None)
-        use_subdirectory = request.data.get('useSubdirectory', False)
+        use_subdirectory = request.data.get('use_subdirectory', False)
         contest_info = Contest.objects.filter(id=contest_id).first()
 
         if download_option is None:
@@ -500,7 +500,7 @@ class SubmissionClassDownloadView(APIView):
 
         # This could be implemented match-case statement on Python 3.10 or later
         if download_option == 'custom':
-            entries = request.data.get('customTarget', None)
+            entries = request.data.get('custom_targets', None)
             if isinstance(entries, list) is False or len(entries) == 0:
                 return Response(data=msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
 
@@ -570,7 +570,7 @@ class SubmissionCompetitionDownloadView(APIView):
     def post(self, request: Request, competition_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
         download_option = request.GET.get('dloption', None)
-        use_subdirectory = request.data.get('useSubdirectory', False)
+        use_subdirectory = request.data.get('use_subdirectory', False)
         competition_info = Competition.objects.filter(id=competition_id).first()
 
         if download_option is None:
@@ -583,7 +583,7 @@ class SubmissionCompetitionDownloadView(APIView):
 
         # This could be implemented match-case statement on Python 3.10 or later
         if download_option == 'custom':
-            entries = request.data.get('customTarget', None)
+            entries = request.data.get('custom_targets', None)
             if isinstance(entries, list) is False or len(entries) == 0:
                 return Response(data=msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
 
