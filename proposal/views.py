@@ -31,7 +31,10 @@ class ProposalView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
-            raise ParseError(detail="ParseError")
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": serializer.errors
+                })
 
     def get(self, request, proposal_id=None):
         # 08-00 건의 게시판 전체 리스트
