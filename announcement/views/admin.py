@@ -91,9 +91,9 @@ class AnnouncementCheckAdminView(APIView):
         data = request.data
         obj = {}
         if data.get("visible"):
-            obj["visible"] = data["visible"]
+            obj["visible"] = data.get("visible")
         if data.get("important"):
-            obj["important"] = data["important"]
+            obj["important"] = data.get("important")
 
         serializer = AnnouncementCheckSerializer(announcement, data=obj)
         if serializer.is_valid():
