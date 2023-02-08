@@ -10,8 +10,8 @@ class ActiveModelQuerySet(models.QuerySet):
     def active(self, *args, **kwargs):
         return self.filter(is_deleted=False, *args, **kwargs)
 
+
 class Competition(models.Model):
-    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column="problem_id")
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_deleted = models.BooleanField(default=False)
@@ -22,6 +22,7 @@ class Competition(models.Model):
 
     class Meta:
         db_table = "competition"
+
 
 class CompetitionUser(models.Model):
     competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column="competition_id")
@@ -34,3 +35,20 @@ class CompetitionUser(models.Model):
 
     class Meta:
         db_table = "competition_user"
+
+
+class CompetitionProblem(models.Model):
+    title = models.TextField()
+    description = models.TextField()
+    data_description = models.TextField()
+    competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column='competition_id')
+    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column='problem_id', related_name='problems')
+    order = models.IntegerField()
+    is_deleted = models.BooleanField(default=False)
+    objects = ActiveModelQuerySet().as_manager()
+
+    def __str__(self):
+        return self.id
+
+    class Meta:
+        db_table = 'competition_problem'
