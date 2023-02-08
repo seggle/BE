@@ -60,7 +60,9 @@ class ListPagination:
             ('count', len(data)),
             ('next', next_url),
             ('previous', previous_url),
-            ('results', page.object_list)
+            ('current_page', page_number),
+            ('last_page', page.end_index()),
+            ('results', page.object_list),
         ])
 
         return JsonResponse(response_dict, status=200, safe=False)
