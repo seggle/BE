@@ -40,7 +40,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
 
         else:
             class_result_list = []
-            created_user = get_object_or_404(ClassUser, username=uid)
+            created_user = ClassUser.objects.filter(username=uid).first()
             class_lists = Class.objects.filter(created_user=created_user.username).order_by('-id')
 
             for class_elem in class_lists:
