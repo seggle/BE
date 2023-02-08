@@ -29,11 +29,16 @@ class ProposalView(APIView, PaginationHandlerMixin):
 
         if serializer.is_valid():
             serializer.save()
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
+            msg = []
+            if data.get('title') == '':
+                msg.append({'title': 'title을 작성해주세요'})
+            if data.get("context") == '':
+                msg.append({'context': 'context을 작성해주세요'})
             return Response(data={
                 "code": status.HTTP_400_BAD_REQUEST,
-                "message": serializer.errors
+                "message": msg
                 }, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, proposal_id=None):
@@ -67,7 +72,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
         if obj['title'] == '':
             obj['title'] = proposal.title
         if obj['context'] == '':
-            obj['context'] == proposal.context
+            obj['context'] = proposal.context
         if proposal.created_user == request.user:
             serializer = ProposalPatchSerializer(proposal, data=obj, partial=True)
             if serializer.is_valid():
