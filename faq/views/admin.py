@@ -21,9 +21,8 @@ class FaqAdminView(APIView, PaginationHandlerMixin):
 
     # 00-06
     def post(self, request: Request) -> Response:
-        data = request.data
-        data._mutable = True
 
+        data = request.data.copy()
         data["created_user"] = request.user
         serializer = FaqSerializer(data=data)
 
