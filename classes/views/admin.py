@@ -56,4 +56,4 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             list_paginator = ListPagination(request)
 
             return list_paginator.paginate_list(class_result_list, seggle.settings.REST_FRAMEWORK
-                                                .get('PAGE_SIZE', 15), request.GET.get('page', 1))
+                                                .get('PAGE_SIZE', 15), int(request.GET.get('page', 1)))

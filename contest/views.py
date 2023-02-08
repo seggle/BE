@@ -111,7 +111,7 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
         p_size = seggle.settings.REST_FRAMEWORK.get('PAGE_SIZE', 15)
 
         return list_paginator.paginate_list(
-            contest_problem_list, p_size, request.GET.get('page', default=1))
+            contest_problem_list, p_size, int(request.GET.get('page', default=1)))
 
     # 05-13-01
     def post(self, request: Request, class_id: int, contest_id: int) -> Response:
