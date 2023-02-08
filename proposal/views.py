@@ -31,11 +31,13 @@ class ProposalView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            msg = []
+            msg = {}
             if data.get('title') == '':
-                msg.append({'title': 'title을 작성해주세요'})
+                msg['title'] = []
+                msg['title'].append("title을 작성해주세요")
             if data.get("context") == '':
-                msg.append({'context': 'context을 작성해주세요'})
+                msg['context'] = []
+                msg['context'].append("context을 작성해주세요")
             return Response(data={
                 "code": status.HTTP_400_BAD_REQUEST,
                 "message": msg
