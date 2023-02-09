@@ -2,7 +2,7 @@ import platform
 
 from rest_framework.views import APIView
 from ..models import Problem
-from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer
+from ..serializers import ProblemSerializer, AllProblemSerializer, ProblemDetailSerializer, ProblemPutSerializer, ProblemPublicSerializer
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
@@ -14,7 +14,6 @@ from rest_framework import status
 from utils.get_obj import *
 from utils.message import *
 from utils.get_error import get_error_msg
-from rest_framework.exceptions import ParseError, NotFound
 from utils.common import IP_ADDR
 import os
 import shutil
@@ -167,9 +166,10 @@ class ProblemDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        msg = get_error_msg(serializer)
         return Response(data={
             "code": status.HTTP_400_BAD_REQUEST,
-            "message": serializer.errors
+            "message": msg
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # 03-05 문제 삭제
@@ -201,7 +201,8 @@ class ProblemVisibilityView(APIView):
         else:
             problem.public = True
         problem.save()
-        return Response(msg_success, status=status.HTTP_200_OK)
+        serializer = ProblemPublicSerializer(problem)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
