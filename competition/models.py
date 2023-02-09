@@ -2,6 +2,7 @@ from django.db import models
 from account.models import User
 from problem.models import Problem
 
+
 class ActiveModelQuerySet(models.QuerySet):
 
     def not_active(self, *args, **kwargs):
@@ -12,9 +13,16 @@ class ActiveModelQuerySet(models.QuerySet):
 
 
 class Competition(models.Model):
+    name = models.TextField()
+    description = models.TextField()
+    is_exam = models.BooleanField(default=False)
+    visible = models.BooleanField(default=True)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     is_deleted = models.BooleanField(default=False)
+    created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user",
+                                     related_name='created_user', to_field="username")
+    created_time = models.DateTimeField(auto_created=True, auto_now=True)
     objects = ActiveModelQuerySet().as_manager()
     
     def __str__(self):
