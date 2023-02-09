@@ -89,11 +89,11 @@ class AnnouncementCheckAdminView(APIView):
     def put(self, request, announcement_id):
         announcement = get_announcement(announcement_id)
         data = request.data
-        obj = {
-            "visible" : data["visible"],
-            "important" : data["important"],
-        }
-
+        obj = {}
+        if "visible" in data:
+            obj["visible"] = data.get("visible")
+        if "important" in data:
+            obj["important"] = data.get("important")
         serializer = AnnouncementCheckSerializer(announcement, data=obj)
         if serializer.is_valid():
             serializer.save()

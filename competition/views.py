@@ -28,7 +28,7 @@ from utils.message import *
 
 
 class CompetitionView(APIView, PaginationHandlerMixin):
-    permissions = [IsProfAdminOrReadOnly]
+    permission_classes = [IsProfAdminOrReadOnly]
     pagination_class = BasicPagination
 
     # 06-00 대회 리스트 조회
