@@ -7,6 +7,7 @@ from django.http.response import JsonResponse
 from rest_framework.response import Response
 
 
+# Custom Pagination for general purposes
 class PaginationHandlerMixin(object):
     @property
     def paginator(self):
@@ -35,7 +36,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-# Pagination for list
+# Pagination for list without serialization
 # https://stackoverflow.com/questions/38284440/drf-pagination-without-queryset
 class ListPagination:
     def __init__(self, request: Request):
