@@ -11,7 +11,8 @@ import seggle.settings
 from problem.models import Problem
 from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination
 from .models import Contest, ContestProblem
-from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
+from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, \
+    ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
@@ -41,10 +42,8 @@ class ContestView(APIView, PaginationHandlerMixin):
     def post(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
 
-        data = request.data
-        data._mutable = True
+        data = request.data.copy()
         data['class_id'] = class_id
-        data._mutable = False
 
         serializer = ContestSerializer(data=data)
 
@@ -86,31 +85,31 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []
 
-        if contest_problem_lists.count() == 0:
-            return Response(contest_problem_list, status=status.HTTP_200_OK)
+        problem_count = contest_problem_lists.count()
 
-        if contest_problem_lists[0].contest_id.class_id.id != class_id:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        if problem_count > 0:
+            if contest_problem_lists[0].contest_id.class_id.id != class_id:
+                return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
-        for contest_problem in contest_problem_lists:
-            if contest_problem.problem_id.is_deleted:
-                continue
-            contest_problem_json = {
-                "id": contest_problem.id,
-                "contest_id": contest_problem.contest_id.id,
-                "problem_id": contest_problem.problem_id.id,
-                "title": contest_problem.title,
-                "start_time": contest.start_time,
-                "end_time": contest.end_time,
-                "order": contest_problem.order
-            }
-            contest_problem_list.append(contest_problem_json)
+            for contest_problem in contest_problem_lists:
+                if contest_problem.problem_id.is_deleted:
+                    continue
+                contest_problem_json = {
+                    "id": contest_problem.id,
+                    "contest_id": contest_problem.contest_id.id,
+                    "problem_id": contest_problem.problem_id.id,
+                    "title": contest_problem.title,
+                    "start_time": contest.start_time,
+                    "end_time": contest.end_time,
+                    "order": contest_problem.order
+                }
+                contest_problem_list.append(contest_problem_json)
 
-            list_paginator = ListPagination(request)
-            p_size = seggle.settings.REST_FRAMEWORK.get('PAGE_SIZE')
+        list_paginator = ListPagination(request)
+        p_size = seggle.settings.REST_FRAMEWORK.get('PAGE_SIZE', 15)
 
-            return list_paginator.paginate_list(
-                contest_problem_list, p_size, request.GET.get('page', default=1))
+        return list_paginator.paginate_list(
+            contest_problem_list, p_size, request.GET.get('page', default=1))
 
     # 05-13-01
     def post(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -149,8 +148,8 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
             if serializer.is_valid():
                 serializer.save()
 
-        if len(error.get('Error_problem_id')) == 0 and len(error.keys()) > 1:
-            return Response(msg_success, status=status.HTTP_201_CREATED)
+        if len(error.get('Error_problem_id')) == 0:
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 

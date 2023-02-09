@@ -200,9 +200,12 @@ class ProblemVisibilityView(APIView):
             problem.public = False
         else:
             problem.public = True
+
         problem.save()
         serializer = ProblemPublicSerializer(problem)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
@@ -229,6 +232,7 @@ class ProblemDataDownloadView(APIView):
         response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'%s' % filename
 
         return response
+
 
 class ProblemSolutionDownloadView(APIView):
     permission_classes = [IsProblemOwner]

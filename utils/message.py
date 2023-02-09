@@ -12,12 +12,17 @@ msg_time_error = {'error': '제한된 시간입니다.'}
 msg_user_model_username_unique = {'unique': '중복된 ID 입니다.'}
 msg_user_model_email_unique = {'unique': '중복된 email 입니다.'}
 msg_problem_model_title_unique = {'unique': '중복된 제목 입니다.'}
+msg_error_no_selection = {"code": 400, "message": "대상을 선택해 주세요."}
+msg_error_url = {"code": 400, "message": "잘못된 URL 입니다."}
+msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
 
 # account
 
 # announcement
 
 # classes
+
+
 
 # competition
 
@@ -50,5 +55,7 @@ msg_SubmissionClassView_post_e_1 = {"error": "올바른 csv 파일을 업로드 
 msg_SubmissionClassView_post_e_2 = {"error": "올바른 ipynb 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_3 = {"error": "ip가 중복입니다"}
 msg_SubmissionCompetitionView_post_e_1 = {'error': "대회에 참가하지 않았습니다."}
+
+msg_error_no_download_option = {"code": 400, "message": "다운로드 옵션을 명시해 주세요."}
 # uploads
 

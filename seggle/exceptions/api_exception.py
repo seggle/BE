@@ -19,4 +19,4 @@ def custom_exception_handler(exc, context):
         del response.data['detail']
         if response.data.get('messages', ''):
             del response.data['messages']
-        return response
+    return response

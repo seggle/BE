@@ -28,7 +28,7 @@ from utils.message import *
 
 
 class CompetitionView(APIView, PaginationHandlerMixin):
-    permissions = [IsProfAdminOrReadOnly]
+    permission_classes = [IsProfAdminOrReadOnly]
     pagination_class = BasicPagination
 
     # 06-00 대회 리스트 조회
@@ -282,7 +282,10 @@ class CompetitionTaView(APIView):
         datas = request.data
         for data in datas:
 
-            username = data.get('username')
+            if type(data) is str:
+                username = datas.get('username')
+            else:
+                username = data.get('username')
 
             is_check_user = User.objects.filter(username=username).count()
             is_check_competition_user_ta = CompetitionUser.objects\
