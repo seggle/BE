@@ -13,7 +13,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from utils.get_obj import *
 from utils.message import *
-
+from utils.get_error import get_error_msg
 from rest_framework.exceptions import ParseError, NotFound
 from utils.common import IP_ADDR
 import os
@@ -99,11 +99,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem.save()
             return Response(problem.data, status=status.HTTP_200_OK)
         else:
-            default_errors = problem.errors
-            msg = {}
-            for field_name, field_error in default_errors.items():
-                msg[field_name] = field_error[0]
-
+            msg = get_error_msg(problem)
             return Response(data={
                 "code": status.HTTP_400_BAD_REQUEST,
                 "message": msg

@@ -10,6 +10,7 @@ from utils.pagination import PaginationHandlerMixin #pagination
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
+from utils.get_error import get_error_msg
 from rest_framework.exceptions import ParseError, PermissionDenied
 # Create your views here.
 
@@ -31,13 +32,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            msg = {}
-            if data.get('title') == '':
-                msg['title'] = []
-                msg['title'].append("title을 작성해주세요")
-            if data.get("context") == '':
-                msg['context'] = []
-                msg['context'].append("context을 작성해주세요")
+            msg = get_error_msg(serializer)
             return Response(data={
                 "code": status.HTTP_400_BAD_REQUEST,
                 "message": msg
@@ -84,7 +79,7 @@ class ProposalView(APIView, PaginationHandlerMixin):
                 "code": status.HTTP_400_BAD_REQUEST,
                 "message": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-        raise PermissionDenied(detail="접근 권한이 없습니다")
+        raise PermissionDenied(detail="작성자만 수정/삭제 가능합니다.")
 
     # 08-04 건의 글 삭제
     def delete(self, request, proposal_id=None):
@@ -94,4 +89,4 @@ class ProposalView(APIView, PaginationHandlerMixin):
             proposal.delete()
             return Response(msg_success_delete, status=status.HTTP_204_NO_CONTENT)
         else:
-            raise PermissionDenied(detail="PermissionDenied")
+            raise PermissionDenied(detail="작성자만 수정/삭제 가능합니다.")
