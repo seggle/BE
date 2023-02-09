@@ -122,6 +122,10 @@ class ProblemDetailView(APIView):
     # 03-03 problem 수정
     def put(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
         data = request.data
         obj = {
             "title": data.get("title"),
@@ -171,6 +175,10 @@ class ProblemDetailView(APIView):
     # 03-05 문제 삭제
     def delete(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-", "")
         problem.title = problem.title + ' - ' + temp
@@ -185,6 +193,9 @@ class ProblemVisibilityView(APIView):
     def post(self, request, problem_id):
         problem = get_problem(problem_id)
 
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
         if problem.public:
             problem.public = False
         else:
@@ -197,6 +208,9 @@ class ProblemDataDownloadView(APIView):
     # 03-07 problem의 data 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
 
         os_info = platform.system()
 
@@ -220,6 +234,9 @@ class ProblemSolutionDownloadView(APIView):
     # 03-08 problem solution 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
 
         os_info = platform.system()
 
