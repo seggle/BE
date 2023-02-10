@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db.models import QuerySet
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
@@ -24,7 +26,7 @@ class PaginationHandlerMixin(object):
         if self.paginator is None:
             return None
         return self.paginator.paginate_queryset(queryset,
-                self.request, view=self)
+                                                self.request, view=self)
 
     def get_paginated_response(self, data):
         assert self.paginator is not None
@@ -34,8 +36,20 @@ class PaginationHandlerMixin(object):
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
+    def get_paginated_response(self, data):
+        response = OrderedDict([
+            ('count', len(data)),
+            #    ('next', self.get_next_link()),
+            #    ('previous', self.get_previous_link()),
+            ('current_page', self.page.number),
+            ('last_page', self.page.end_index()),
+            ('results', data),
+        ])
 
-# Pagination for list
+        return Response(response)
+
+
+# Pagination for list without serializer
 # https://stackoverflow.com/questions/38284440/drf-pagination-without-queryset
 class ListPagination:
     def __init__(self, request: Request):
@@ -58,9 +72,11 @@ class ListPagination:
                                                                page.next_page_number())
         response_dict = OrderedDict([
             ('count', len(data)),
-            ('next', next_url),
-            ('previous', previous_url),
-            ('results', page.object_list)
+            #   ('next', next_url),
+            #   ('previous', previous_url),
+            ('current_page', page_number),
+            ('last_page', page.end_index()),
+            ('results', page.object_list),
         ])
 
         return JsonResponse(response_dict, status=200, safe=False)
