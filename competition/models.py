@@ -21,8 +21,8 @@ class Competition(models.Model):
     end_time = models.DateTimeField()
     is_deleted = models.BooleanField(default=False)
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user",
-                                     related_name='created_user', to_field="username")
-    created_time = models.DateTimeField(auto_created=True, auto_now=True)
+                                     related_name='%(class)s_created_user', to_field="username")
+    created_time = models.DateTimeField(auto_created=True, auto_now_add=True)
     objects = ActiveModelQuerySet().as_manager()
     
     def __str__(self):
@@ -50,7 +50,8 @@ class CompetitionProblem(models.Model):
     description = models.TextField()
     data_description = models.TextField()
     competition_id = models.ForeignKey(Competition, on_delete=models.CASCADE, db_column='competition_id')
-    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE, db_column='problem_id', related_name='problems')
+    problem_id = models.ForeignKey(Problem, on_delete=models.CASCADE,
+                                   db_column='problem_id', related_name='%(class)s_problems')
     order = models.IntegerField()
     is_deleted = models.BooleanField(default=False)
     objects = ActiveModelQuerySet().as_manager()
