@@ -159,11 +159,16 @@ class CompetitionProblemConfigurationView(APIView):
 
     def post(self, request: Request, competition_id: int) -> Response:
         # 문제 추가
-        targets = request.data.get('targets', [])
+        targets = request.data.get('targets', None)
+
+        if targets is None:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
         competition = get_competition(competition_id)
 
         error = {'error_problem_id': []}
 
+        obj_list = []
         for elem in targets:
 
             if Problem.objects.filter(id=elem).active().count() == 0 or \
@@ -183,10 +188,39 @@ class CompetitionProblemConfigurationView(APIView):
                 'problem_id': elem,
                 'order': order,
             }
-            serializer = CompetitionProblemSerializer(data=obj)
+            obj_list.append(obj)
 
-            if serializer.is_valid():
-                serializer.save()
+        serializer = CompetitionProblemDetailSerializer(data=obj_list, many=True)
+
+        if serializer.is_valid():
+            serializer.save()
+
+        if len(error.get('error_problem_id')) == 0:
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+        else:
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request: Request, competition_id: int) -> Response:
+        targets = request.data.get('targets', None)
+
+        if targets is None:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        competition = get_competition(competition_id)
+
+        error = {'error_problem_id': []}
+
+        for elem in targets:
+            if CompetitionProblem.objects.filter(id=elem).active().count() == 0 or \
+                    CompetitionProblem.objects.filter(competition_id=competition_id,
+                                                      id=elem).active().count() == 0:
+                error['error_problem_id'].append(elem)
+                continue
+
+            target = get_competition_problem(elem)
+            target.is_deleted = True
+
+            target.save()
 
         if len(error.get('error_problem_id')) == 0:
             return Response(msg_success_create, status=status.HTTP_201_CREATED)
