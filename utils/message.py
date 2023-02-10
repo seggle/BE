@@ -15,6 +15,7 @@ msg_problem_model_title_unique = {'unique': '중복된 제목 입니다.'}
 msg_error_no_selection = {"code": 400, "message": "대상을 선택해 주세요."}
 msg_error_url = {"code": 400, "message": "잘못된 URL 입니다."}
 msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
+msg_error_no_permission = {'code': 400, 'message': '권한이 없습니다.'}
 
 # account
 
@@ -25,6 +26,14 @@ msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
 
 
 # competition
+
+msg_error_invalid_user = {'code': 400, 'message': '잘못된 사용자입니다.'}
+msg_success_participation = {'code': 200, 'message': '대회에 참여 처리되었습니다.'}
+msg_error_participation = {'code': 400, 'message': '참여 처리 중 오류가 발생했습니다.'}
+msg_error_already_participated = {'code': 400, 'message': '이미 참가한 대회입니다.'}
+msg_success_delete_competition = {'code': 200, 'message': "대회가 정상적으로 삭제되었습니다."}
+msg_error_already_deleted = {'code': 404, 'message': '이미 삭제된 대회입니다.'}
+
 
 # contest
 
