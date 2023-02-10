@@ -2,19 +2,17 @@ from multiprocessing import context
 from pickle import TRUE
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated,AllowAny,IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework import status
 from .models import Proposal
-from rest_framework.pagination import PageNumberPagination #pagination
-from utils.pagination import PaginationHandlerMixin #pagination
+from rest_framework.pagination import PageNumberPagination  # pagination
+from utils.pagination import PaginationHandlerMixin, BasicPagination  # pagination
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
 from rest_framework.exceptions import ParseError, PermissionDenied
 # Create your views here.
 
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 class ProposalView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticatedOrReadOnly]

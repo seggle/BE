@@ -7,13 +7,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
-from utils.pagination import PaginationHandlerMixin
+from utils.pagination import PaginationHandlerMixin, BasicPagination
 from utils.get_ip import GetIpAddr
 from contest.models import Contest
 from utils.permission import *
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 
 class ExamParticipateView(APIView, PaginationHandlerMixin):
