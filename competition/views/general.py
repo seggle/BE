@@ -280,8 +280,8 @@ class CompetitionTaView(APIView):
 
         # 0315
         # 기존 TA 삭제
-        if (
-                competition.problem_id.created_user == request.user) or request.user.privilege == 2:  # 대회 담당 교수, admin인 경우에만
+        if (competition.created_user == request.user) or \
+                request.user.privilege == 2:  # 대회 담당 교수, admin인 경우에만
             user_list = CompetitionUser.objects.filter(competition_id=competition.id)
             for users in user_list:
                 if users.privilege == 1:
@@ -294,40 +294,40 @@ class CompetitionTaView(APIView):
             "does_not_exist": [],
             "is_existed": []
         }
-        datas = request.data
-        for data in datas:
+        people = request.data.get('users', [])
+        if len(people) == 0:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
 
-            if type(data) is str:
-                username = datas.get('username')
-            else:
-                username = data.get('username')
+        registered = []
 
-            is_check_user = User.objects.filter(username=username).count()
+        for user in people:
+            is_check_user = User.objects.filter(username=user).count()
             is_check_competition_user_ta = CompetitionUser.objects \
-                .filter(username=username).filter(competition_id=competition_id).filter(privilege=1).count()
+                .filter(username=user, competition_id=competition_id, privilege__gte=1).count()
             if is_check_user == 0:
-                user_does_not_exist['does_not_exist'].append(username)
+                user_does_not_exist['does_not_exist'].append(user)
                 continue
             if is_check_competition_user_ta:
-                user_does_not_exist['is_existed'].append(username)
+                user_does_not_exist['is_existed'].append(user)
                 continue
-            is_check_competition_user = CompetitionUser.objects.filter(username=username) \
-                .filter(competition_id=competition_id).filter(privilege=0)
+            is_check_competition_user = CompetitionUser.objects.filter(username=user,
+                                                                       competition_id=competition_id, privilege=0)
             if is_check_competition_user.count():
                 is_check_competition_user[0].delete()
 
             obj = {
-                "username": username,
+                "username": user,
                 "is_show": True,
                 "privilege": 1,
                 "competition_id": competition_id
             }
+            registered.append(obj)
 
-            serializer = CompetitionUserSerializer(data=obj)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CompetitionUserSerializer(data=registered, many=True)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
