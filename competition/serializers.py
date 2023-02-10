@@ -19,6 +19,7 @@ class CompetitionDetailSerializer(serializers.ModelSerializer):
 class CompetitionProblemDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompetitionProblem
+        fields = '__all__'
 
 
 class CompetitionPutSerializer(serializers.ModelSerializer):
