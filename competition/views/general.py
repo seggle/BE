@@ -256,7 +256,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
 
         # competition_user에 username이 이미 존재하는지 체크
         if CompetitionUser.objects.filter(username=request.user).filter(competition_id=competition_id).count():
-            return Response({"error": "이미 참가한 대회 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_already_participated, status=status.HTTP_400_BAD_REQUEST)
 
         data = {
             "username": request.user.username,
@@ -266,9 +266,9 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
         serializer = CompetitionUserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'code': 200, 'message': '대회에 참여 처리 되었습니다.'}, status=status.HTTP_200_OK)
+            return Response(msg_success_participation, status=status.HTTP_200_OK)
         else:
-            return Response({'code': 400, 'message': '참여 처리 중 오류가 발생했습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_participation, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CompetitionTaView(APIView):
@@ -287,7 +287,7 @@ class CompetitionTaView(APIView):
                 if users.privilege == 1:
                     users.delete()
         else:
-            return Response({'error': "추가 권한이 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_no_permission, status=status.HTTP_400_BAD_REQUEST)
 
         # TA 추가
         user_does_not_exist = {
@@ -331,6 +331,6 @@ class CompetitionTaView(APIView):
 
         # 출력
         if (len(user_does_not_exist['does_not_exist']) == 0) and (len(user_does_not_exist['is_existed']) == 0):
-            return Response(msg_success, status=status.HTTP_201_CREATED)
+            return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
