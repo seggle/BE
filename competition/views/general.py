@@ -80,34 +80,30 @@ class CompetitionView(APIView, PaginationHandlerMixin):
 
 class CompetitionDetailView(APIView, PaginationHandlerMixin):
     permission_classes = [IsCompetitionManagerOrReadOnly]
-    pagination_classes = [BasicPagination]
+    pagination_class = BasicPagination
 
     # 06-02 대회 개별 조회 및 문제 목록 조회
     def get(self, request: Request, competition_id: int) -> Response:
-        is_detail_mode = request.GET.get('detail', False)
+        is_detail_mode = bool(request.GET.get('detail', False))
         competition = get_competition(id=competition_id)
 
         # 대회 정보만 보여줌
         if is_detail_mode:
-            serializer = CompetitionDetailSerializer(data=competition, many=False)
-
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer = CompetitionDetailSerializer(competition, many=False)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         # 문제들을 보여줌
-        problems = CompetitionProblem.objects.filter(competition_id=competition_id, is_deleted=False)
+        problems = CompetitionProblem.objects.filter(competition_id=competition_id, is_deleted=False).order_by('order')
         obj_list = []
-        # Warning : In case of len(problems) == 1
         for problem in problems:
             obj = {
                 'id': problem.id,
-                'competition_id': problem.competition_id.id,
-                'problem_id': problem.id,
+                'competition_id': problem.competition_id,
+                'problem_id': problem.problem_id,
                 'order': problem.order,
                 'title': problem.title,
-                'period': competition,
+                'start_time': competition.start_time,
+                'end_time': competition.end_time,
             }
             obj_list.append(obj)
 
@@ -124,17 +120,16 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
         competition = get_competition(id=competition_id)
 
         data = request.data
-        # problem 수정
         obj = {
-            'name': data.get('name'),
+            'title': data.get('title'),
             'description': data.get('description'),
             'start_time': data.get('start_time'),
             'end_time': data.get('end_time'),
-            'visible': data.get('visible', False),
-            'is_exam': data.get('exam', False)
+            'visible': data.get('visible', competition.visible),
+            'is_exam': data.get('exam', competition.is_exam)
         }
 
-        serializer = CompetitionSerializer(competition, data=obj)
+        serializer = CompetitionSerializer(competition, data=obj, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -144,13 +139,19 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
     # 06-03-02 대회 삭제
     def delete(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
-        problem = get_problem(competition.problem_id.id)
-        problem.is_deleted = True
-        temp = str(uuid.uuid4()).replace("-", "")
-        problem.title = problem.title + ' - ' + temp
-        problem.save()
 
-        return Response({"success": "competition이 정상적으로 삭제되었습니다."}, status=status.HTTP_200_OK)
+        if competition.is_deleted:
+            Response(msg_error_already_deleted, status=status.HTTP_404_NOT_FOUND)
+        # Warning : 1 object in queryset
+        contest_problems = CompetitionProblem.objects.filter(competition_id=competition_id)
+
+        for cprob in contest_problems:
+            cprob.is_deleted = True
+            cprob.save()
+        competition.is_deleted = True
+        competition.save()
+
+        return Response(msg_success_delete_competition, status=status.HTTP_200_OK)
 
 
 class CompetitionProblemConfigurationView(APIView):
