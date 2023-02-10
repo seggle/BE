@@ -25,6 +25,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
         if keyword:
             announcements = announcements.filter(title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
 
+        announcements = announcements.order_by('-important', '-created_time')
         page = self.paginate_queryset(announcements)
         if page is not None:
             serializer = self.get_paginated_response(AnnouncementInfoSerializer(page, many=True).data)

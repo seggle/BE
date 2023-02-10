@@ -23,6 +23,8 @@ class AnnouncementView(APIView, PaginationHandlerMixin):
         keyword = request.GET.get('keyword', '')
         if keyword:
             announcements = announcements.filter(title__icontains=keyword)
+
+        announcements = announcements.order_by('-important', '-created_time')
         page = self.paginate_queryset(announcements)
         if page is not None:
             serializer = self.get_paginated_response(AnnouncementInfoSerializer(page, many=True).data)
