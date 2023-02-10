@@ -235,7 +235,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
     # 06-05-03 대회 참가자, 관리자 전체 조회
     def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
-        user_list = CompetitionUser.objects.filter(competition_id=competition.id)
+        user_list = CompetitionUser.objects.filter(competition_id=competition.id).order_by('-privilege', 'username')
 
         page = self.paginate_queryset(user_list)
         if page is not None:
