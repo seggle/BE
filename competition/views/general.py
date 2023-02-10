@@ -5,6 +5,7 @@ from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
     CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionProblemSerializer,
+    CompetitionProblemDetailSerializer,
 )
 from problem.serializers import ProblemSerializer
 from competition.models import Competition, CompetitionUser
@@ -33,30 +34,30 @@ class CompetitionView(APIView, PaginationHandlerMixin):
 
     # 06-00 대회 리스트 조회
     def get(self, request: Request) -> Response:
-        competitions = Competition.objects.filter(is_deleted=False, visible=True).active()
+        competitions = Competition.objects.filter(is_deleted=False, visible=True).order_by('id').active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             # 제목에 keyword가 포함되어 있는 레코드만 필터링
-            competitions = competitions.filter(name__icontains=keyword)
+            competitions = competitions.filter(title__icontains=keyword)
 
         page = self.paginate_queryset(competitions)
         if page is not None:
             competition_detail_serializer = self.get_paginated_response \
-                (CompetitionSerializer(page, many=True).data)
+                (CompetitionDetailSerializer(page, many=True).data)
         else:
-            competition_detail_serializer = CompetitionSerializer(competitions)
+            competition_detail_serializer = CompetitionDetailSerializer(competitions)
 
         return Response(competition_detail_serializer.data, status=status.HTTP_200_OK)
 
     # 06-01 대회 생성
     def post(self, request: Request) -> Response:
 
-        # name, description, is_exam, visible, start_time, end_time, created_user
-        data = request.data
+        # title, description, is_exam, visible, start_time, end_time, created_user
+        data = request.data.copy()
 
         data['created_user'] = request.user.username
 
-        serializer = CompetitionDetailSerializer(data=data)
+        serializer = CompetitionSerializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -70,10 +71,11 @@ class CompetitionView(APIView, PaginationHandlerMixin):
 
         user_serializer = CompetitionUserSerializer(data=professor)
         if not user_serializer.is_valid():
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            competition_obj.delete()
+            return Response(msg_error_invalid_user, status=status.HTTP_400_BAD_REQUEST)
         user_serializer.save()
 
-        return Response(competition_obj.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CompetitionDetailView(APIView, PaginationHandlerMixin):
