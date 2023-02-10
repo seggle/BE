@@ -227,6 +227,25 @@ class IsCompetitionManagerOrReadOnly(permissions.BasePermission):
                 return False
 
 
+class IsCompetitionProfOrTA(permissions.BasePermission):
+    def has_permission(self, request: Request, view: Any) -> bool:
+        if isinstance(request.user, AnonymousUser):
+            return False
+
+        user = request.user
+        competition_id = view.kwargs.get('competition_id', None)
+
+        if competition_id is None:
+            return False
+        try:
+            if CompetitionUser.objects.get(username=user, competition_id=competition_id).privilege > 0:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+
 class IsSafeMethod(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:

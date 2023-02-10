@@ -334,3 +334,37 @@ class CompetitionTaView(APIView):
             return Response(msg_success_create, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
+
+
+class CompetitionProblemOrderView(APIView):
+    permission_classes = [IsCompetitionProfOrTA | IsAdmin]
+
+    def patch(self, request: Request, competition_id: int) -> Response:
+        datas = request.data.get('data', None)
+
+        if datas is None:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        accepted = []
+        for data in datas:
+            competition_problem_id = data.get('id', None)
+            order = data.get('order', None)
+
+            if competition_problem_id is None or competition_problem_id <= 0:
+                return Response(msg_error_invalid_id, status=status.HTTP_400_BAD_REQUEST)
+            if order is None or order <= 0:
+                return Response(msg_error_invalid_order, status=status.HTTP_400_BAD_REQUEST)
+
+            problem = get_competition_problem(competition_problem_id)
+
+            if problem.competition_id.id != competition_id:
+                return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
+            accepted.append({'problem': problem, 'order': order})
+
+        for elem in accepted:
+            problem = elem.get('problem')
+            problem.order = elem.get('order')
+            problem.save()
+
+        return Response(msg_success_patch_order, status=status.HTTP_200_OK)
