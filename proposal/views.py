@@ -10,6 +10,7 @@ from utils.pagination import PaginationHandlerMixin, BasicPagination  # paginati
 from .serializers import ProposalSerializer, ProposalGetSerializer, ProposalPatchSerializer
 from utils.get_obj import *
 from utils.message import *
+from utils.get_error import get_error_msg
 from rest_framework.exceptions import ParseError, PermissionDenied
 # Create your views here.
 
@@ -29,7 +30,11 @@ class ProposalView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            raise ParseError(detail="ParseError")
+            msg = get_error_msg(serializer)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+                }, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, proposal_id=None):
         # 08-00 건의 게시판 전체 리스트
@@ -54,19 +59,25 @@ class ProposalView(APIView, PaginationHandlerMixin):
     # 08-03 건의 글 수정
     def patch(self, request, proposal_id=None):
         proposal = get_proposal(proposal_id)
-
         data = request.data
         obj = {
-            "title": data.get("title"),
-            "context": data.get("context"),
+            "title": data.get("title", proposal.title),
+            "context": data.get("context", proposal.context),
         }
+        if obj['title'] == '':
+            obj['title'] = proposal.title
+        if obj['context'] == '':
+            obj['context'] = proposal.context
         if proposal.created_user == request.user:
-            serializer = ProposalPatchSerializer(proposal, data=obj)
+            serializer = ProposalPatchSerializer(proposal, data=obj, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            raise ParseError(detail="ParseError")
-        raise PermissionDenied(detail="PermissionDenied")
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        raise PermissionDenied(detail="작성자만 수정/삭제 가능합니다.")
 
     # 08-04 건의 글 삭제
     def delete(self, request, proposal_id=None):
@@ -76,4 +87,4 @@ class ProposalView(APIView, PaginationHandlerMixin):
             proposal.delete()
             return Response(msg_success_delete, status=status.HTTP_204_NO_CONTENT)
         else:
-            raise PermissionDenied(detail="PermissionDenied")
+            raise PermissionDenied(detail="작성자만 수정/삭제 가능합니다.")

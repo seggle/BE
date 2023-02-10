@@ -13,8 +13,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from utils.get_obj import *
 from utils.message import *
-
-from rest_framework.exceptions import ParseError, NotFound
+from utils.get_error import get_error_msg
 from utils.common import IP_ADDR
 import os
 import shutil
@@ -95,7 +94,11 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem.save()
             return Response(problem.data, status=status.HTTP_200_OK)
         else:
-            raise ParseError(detail='ParseError')
+            msg = get_error_msg(problem)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProblemDetailView(APIView):
@@ -114,8 +117,18 @@ class ProblemDetailView(APIView):
     # 03-03 problem 수정
     def put(self, request, problem_id):
         problem = get_problem(problem_id)
-        data = request.data
 
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
+        data = request.data
+        obj = {
+            "title": data.get("title"),
+            "description": data.get("description"),
+            "data_description": data.get("data_description"),
+            "evaluation": data.get("evaluation"),
+            "public": data.get("public")
+        }
         if data.get('data', '') != '':
             data_str = data['data'].name.split('.')[-1]
             print(data_str)
@@ -149,11 +162,19 @@ class ProblemDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        raise ParseError(detail='ParseError')
+        msg = get_error_msg(serializer)
+        return Response(data={
+            "code": status.HTTP_400_BAD_REQUEST,
+            "message": msg
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     # 03-05 문제 삭제
     def delete(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
         problem.is_deleted = True
         temp = str(uuid.uuid4()).replace("-", "")
         problem.title = problem.title + ' - ' + temp
@@ -168,6 +189,9 @@ class ProblemVisibilityView(APIView):
     def post(self, request, problem_id):
         problem = get_problem(problem_id)
 
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
+
         if problem.public:
             problem.public = False
         else:
@@ -178,11 +202,15 @@ class ProblemVisibilityView(APIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
     # 03-07 problem의 data 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
 
         os_info = platform.system()
 
@@ -201,11 +229,15 @@ class ProblemDataDownloadView(APIView):
 
         return response
 
+
 class ProblemSolutionDownloadView(APIView):
     permission_classes = [IsProblemOwner]
     # 03-08 problem solution 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)
+
+        if problem is False:
+            return Response(msg_ProblemDetailView_delete_e_2, status=status.HTTP_204_NO_CONTENT)
 
         os_info = platform.system()
 
