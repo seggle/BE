@@ -13,7 +13,7 @@ class ActiveModelQuerySet(models.QuerySet):
 
 
 class Competition(models.Model):
-    name = models.TextField()
+    title = models.TextField()
     description = models.TextField()
     is_exam = models.BooleanField(default=False)
     visible = models.BooleanField(default=True)

@@ -6,14 +6,14 @@ from problem.serializers import ProblemSerializer, AllProblemSerializer
 class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
-        fields = ['id', 'name', 'description', 'start_time', 'end_time', 'created_user', 'visible',
+        fields = ['id', 'title', 'description', 'start_time', 'end_time', 'created_user', 'visible',
                   'created_time', 'is_exam']
 
 
 class CompetitionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
-        fields = ['id', 'name', 'description', 'start_time', 'end_time', 'created_user']
+        fields = ['id', 'title', 'description', 'start_time', 'end_time', 'created_user', 'created_time']
 
 
 class CompetitionProblemDetailSerializer(serializers.ModelSerializer):
