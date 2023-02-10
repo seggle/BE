@@ -72,22 +72,11 @@ class CompetitionUserGetInfoSerializer(serializers.ModelSerializer):
         fields = ["competition_id", "privilege"]
 
 
-
-
-
-
-
-
-
-
-class CompetitionPeriodSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Competition
-        fields = ['start_time', 'end_time']
-
-
 class CompetitionProblemSerializer(serializers.ModelSerializer):
-    period = CompetitionPeriodSerializer()
+    # period = CompetitionPeriodSerializer()
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+
     class Meta:
         model = CompetitionProblem
-        fields = ['id', 'competition_id', 'problem_id', 'order', 'title', 'period']
+        fields = ['order', 'id', 'competition_id', 'problem_id', 'title', 'start_time', 'end_time']
