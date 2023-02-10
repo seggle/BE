@@ -34,6 +34,10 @@ msg_error_already_participated = {'code': 400, 'message': '이미 참가한 대�
 msg_success_delete_competition = {'code': 200, 'message': "대회가 정상적으로 삭제되었습니다."}
 msg_error_already_deleted = {'code': 404, 'message': '이미 삭제된 대회입니다.'}
 
+msg_error_invalid_id = {'code': 400, 'message': 'id가 없거나 유효한 id가 아닙니다.'}
+msg_error_invalid_order = {'code': 400, 'message': 'order가 없거나 유효한 order가 아닙니다.'}
+msg_error_invalid_url = {'code': 400, 'message': '유효한 URL이 아닙니다.'}
+msg_success_patch_order = {'code': 200, 'message': 'order를 성공적으로 바꿨습니다.'}
 
 # contest
 
