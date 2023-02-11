@@ -7,13 +7,10 @@ from rest_framework import status
 from utils.common import IP_ADDR
 from utils.permission import *
 from rest_framework.permissions import AllowAny
-from rest_framework.pagination import PageNumberPagination # pagination
-from utils.pagination import PaginationHandlerMixin # pagination
+from rest_framework.pagination import PageNumberPagination  # pagination
+from utils.pagination import PaginationHandlerMixin, BasicPagination  # pagination
 from rest_framework.status import HTTP_200_OK
 
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 class LeaderboardClassView(APIView, PaginationHandlerMixin):
     permission_classes = [IsCPUser]

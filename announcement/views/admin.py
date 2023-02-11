@@ -2,14 +2,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination #pagination
-from utils.pagination import PaginationHandlerMixin #pagination
+from rest_framework.pagination import PageNumberPagination  # pagination
+from utils.pagination import PaginationHandlerMixin, BasicPagination  # pagination
 from ..models import Announcement, User
 from ..serializers import AnnouncementSerializer, AnnouncementInfoSerializer, AnnouncementCheckSerializer
 from utils.get_obj import *
 from utils.permission import IsAdmin
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
+
 
 class AnnouncementAdminView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAdmin]
@@ -25,6 +24,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
         if keyword:
             announcements = announcements.filter(title__icontains=keyword) # 제목에 keyword가 포함되어 있는 레코드만 필터링
 
+        announcements = announcements.order_by('-important', '-created_time')
         page = self.paginate_queryset(announcements)
         if page is not None:
             serializer = self.get_paginated_response(AnnouncementInfoSerializer(page, many=True).data)

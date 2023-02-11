@@ -40,7 +40,7 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
 
         else:
             class_result_list = []
-            created_user = get_object_or_404(ClassUser, username=uid)
+            created_user = ClassUser.objects.filter(username=uid).first()
             class_lists = Class.objects.filter(created_user=created_user.username).order_by('-id')
 
             for class_elem in class_lists:
@@ -56,4 +56,4 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             list_paginator = ListPagination(request)
 
             return list_paginator.paginate_list(class_result_list, seggle.settings.REST_FRAMEWORK
-                                                .get('PAGE_SIZE', 15), request.GET.get('page', 1))
+                                                .get('PAGE_SIZE', 15), int(request.GET.get('page', 1)))
