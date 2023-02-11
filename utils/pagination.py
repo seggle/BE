@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 from django.db.models import QuerySet
@@ -35,6 +36,11 @@ class PaginationHandlerMixin(object):
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+    last_page_number = 1
+
+    def paginate_queryset(self, queryset, request, view=None):
+        self.last_page_number = math.ceil(len(queryset) / self.page_size)
+        return super().paginate_queryset(queryset, request, view)
 
     def get_paginated_response(self, data):
         response = OrderedDict([
@@ -42,7 +48,7 @@ class BasicPagination(PageNumberPagination):
             #    ('next', self.get_next_link()),
             #    ('previous', self.get_previous_link()),
             ('current_page', self.page.number),
-            ('last_page', self.page.end_index()),
+            ('last_page', self.last_page_number),
             ('results', data),
         ])
 
@@ -75,7 +81,7 @@ class ListPagination:
             #   ('next', next_url),
             #   ('previous', previous_url),
             ('current_page', page_number),
-            ('last_page', page.end_index()),
+            ('last_page', paginator.num_pages),
             ('results', page.object_list),
         ])
 
