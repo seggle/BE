@@ -6,16 +6,13 @@ from ..serializers import AllProblemSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from utils.pagination import PaginationHandlerMixin
+from utils.pagination import PaginationHandlerMixin, BasicPagination
 from django.db.models import Q
 from rest_framework import status
 from utils.common import IP_ADDR
 import os
 import shutil
 from utils.permission import IsAdmin
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 
 class AdminProblemView(APIView, PaginationHandlerMixin):

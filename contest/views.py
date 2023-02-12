@@ -42,10 +42,8 @@ class ContestView(APIView, PaginationHandlerMixin):
     def post(self, request: Request, class_id: int) -> Response:
         class_ = get_class(class_id)
 
-        data = request.data
-        data._mutable = True
+        data = request.data.copy()
         data['class_id'] = class_id
-        data._mutable = False
 
         serializer = ContestSerializer(data=data)
 

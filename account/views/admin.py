@@ -5,14 +5,10 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from utils.get_obj import *
-from utils.pagination import PaginationHandlerMixin #pagination
+from utils.pagination import PaginationHandlerMixin, BasicPagination  # pagination
 from ..models import User
 from ..serializers import UserInfoSerializer, UserModifySerializer
 from utils.permission import IsAdmin
-
-
-class BasicPagination(PageNumberPagination):
-    page_size_query_param = 'limit'
 
 
 class ListUsersView(APIView, PaginationHandlerMixin):
