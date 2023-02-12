@@ -368,3 +368,19 @@ class CompetitionProblemOrderView(APIView):
             problem.save()
 
         return Response(msg_success_patch_order, status=status.HTTP_200_OK)
+
+
+class CompetitionCheckView(APIView):
+    permission_classes = [IsCompetitionProfOrTA]
+
+    def patch(self, request: Request, competition_id: int) -> Response:
+        competition = get_competition(id=competition_id)
+
+        if competition.visible:
+            competition.visible = False
+            competition.save()
+            return Response(msg_success_check_public, status=status.HTTP_200_OK)
+        else:
+            competition.visible = True
+            competition.save()
+            return Response(msg_success_check_private, status=status.HTTP_200_OK)

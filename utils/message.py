@@ -17,6 +17,9 @@ msg_error_url = {"code": 400, "message": "잘못된 URL 입니다."}
 msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
 msg_error_no_permission = {'code': 400, 'message': '권한이 없습니다.'}
 
+msg_success_check_public = {'code': 200, 'message': '성공적으로 공개로 바꾸었습니다.'}
+msg_success_check_private = {'code': 200, 'message': '성공적으로 비공개로 바꾸었습니다.'}
+
 # account
 
 # announcement
