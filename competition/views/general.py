@@ -75,7 +75,7 @@ class CompetitionView(APIView, PaginationHandlerMixin):
             return Response(msg_error_invalid_user, status=status.HTTP_400_BAD_REQUEST)
         user_serializer.save()
 
-        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CompetitionDetailView(APIView, PaginationHandlerMixin):
