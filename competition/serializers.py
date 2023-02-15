@@ -81,3 +81,13 @@ class CompetitionProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompetitionProblem
         fields = ['order', 'id', 'competition_id', 'problem_id', 'title', 'start_time', 'end_time']
+
+
+class CompetitionProblemInfoSerializer(serializers.ModelSerializer):
+    data = serializers.FileField()
+    evaluation = serializers.CharField()
+
+    class Meta:
+        model = CompetitionProblem
+        fields = ['id', 'order', 'title', 'description', 'data', 'data_description', 'evaluation']
+

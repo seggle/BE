@@ -5,7 +5,7 @@ from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
     CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionProblemSerializer,
-    CompetitionProblemDetailSerializer,
+    CompetitionProblemDetailSerializer, CompetitionProblemInfoSerializer,
 )
 from problem.serializers import ProblemSerializer
 from competition.models import Competition, CompetitionUser
@@ -384,3 +384,32 @@ class CompetitionCheckView(APIView):
             competition.visible = True
             competition.save()
             return Response(msg_success_check_private, status=status.HTTP_200_OK)
+
+
+class CompetitionProblemView(APIView):
+    permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsCompetitionUser]
+
+    def get(self, request: Request, competition_id: int, com_p_id: int) -> Response:
+        competition = get_competition(id=competition_id)
+
+        time_check = timezone.now()
+        if (competition.start_time > time_check) or (competition.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
+        comp_problem = get_competition_problem(com_p_id)
+
+        if comp_problem.competition_id != competition.id:
+            return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
+
+        orig_problem = get_problem(comp_problem.problem_id)
+
+        problem = dict(comp_problem) # ???
+        problem['data'] = orig_problem.data
+        problem['evaluation'] = orig_problem.evaluation
+
+        serializer = CompetitionProblemInfoSerializer(data=problem, many=False)
+
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(msg_error_wrong_problem, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

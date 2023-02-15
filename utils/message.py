@@ -42,6 +42,9 @@ msg_error_invalid_order = {'code': 400, 'message': 'order가 없거나 유효한
 msg_error_invalid_url = {'code': 400, 'message': '유효한 URL이 아닙니다.'}
 msg_success_patch_order = {'code': 200, 'message': 'order를 성공적으로 바꿨습니다.'}
 
+msg_error_invalid_problem = {'code': 400, 'message': '잘못된 메시지 요청입니다.'}
+msg_error_wrong_problem = {'code': 500, 'message': '잘못된 문제 유형입니다.'}
+
 # contest
 
 # exam
