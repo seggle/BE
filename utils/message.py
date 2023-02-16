@@ -70,10 +70,10 @@ msg_ProblemView_post_e_3 = {"code": 400, "message": "올바른 정답 파일을 
 
 # submission
 msg_SubmissionCheckView_patch_e_1 = {"error": "username"}
-msg_SubmissionClassView_post_e_1 = {"error": "올바른 csv 파일을 업로드 해주세요."}
-msg_SubmissionClassView_post_e_2 = {"error": "올바른 ipynb 파일을 업로드 해주세요."}
-msg_SubmissionClassView_post_e_3 = {"error": "ip가 중복입니다"}
-msg_SubmissionCompetitionView_post_e_1 = {'error': "대회에 참가하지 않았습니다."}
+msg_SubmissionClassView_post_e_1 = {'code': 400, "message": "올바른 csv 파일을 업로드 해주세요."}
+msg_SubmissionClassView_post_e_2 = {'code': 400, "message": "올바른 ipynb 파일을 업로드 해주세요."}
+msg_SubmissionClassView_post_e_3 = {'code': 400, "message": "ip가 중복입니다"}
+msg_SubmissionCompetitionView_post_e_1 = {'code': 402, 'message': "대회에 참가하지 않았습니다."}
 
 msg_error_no_download_option = {"code": 400, "message": "다운로드 옵션을 명시해 주세요."}
 # uploads
