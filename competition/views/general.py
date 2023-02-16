@@ -389,14 +389,14 @@ class CompetitionCheckView(APIView):
 class CompetitionProblemView(APIView):
     permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsCompetitionUser]
 
-    def get(self, request: Request, competition_id: int, com_p_id: int) -> Response:
+    def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(id=competition_id)
 
         time_check = timezone.now()
         if (competition.start_time > time_check) or (competition.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
-        comp_problem = get_competition_problem(com_p_id)
+        comp_problem = get_competition_problem(comp_p_id)
 
         if comp_problem.competition_id.id != competition.id:
             return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
