@@ -263,7 +263,6 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
                 continue
             obj = {}
             obj["id"] = competition.competition_id.id
-            obj["problem_id"] = competition.competition_id.problem_id
             obj["title"] = competition.competition_id.problem_id.title
             obj["start_time"] = competition.competition_id.start_time
             obj["end_time"] = competition.competition_id.end_time
