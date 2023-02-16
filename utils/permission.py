@@ -8,7 +8,7 @@ from account.models import User
 from classes.models import Class, ClassUser
 from problem.models import Problem
 from contest.models import Contest, ContestProblem
-from competition.models import Competition, CompetitionUser
+from competition.models import Competition, CompetitionUser, CompetitionProblem
 from submission.models import *
 
 from rest_framework.exceptions import NotFound
@@ -112,13 +112,14 @@ class IsClassUser(permissions.BasePermission):
         if isinstance(user, AnonymousUser):
             return False
 
+        # Change due to model modification in Problem model
         class_id = view.kwargs.get('class_id', None)
         if not class_id:
-            problem_id = view.kwargs.get('problem_id', None)
-            if not problem_id:
+            contest_id = view.kwargs.get('contest_id', None)
+            if not contest_id:
                 return False
             else:
-                class_id = Problem.objects.get(id=problem_id).class_id.id
+                class_id = Contest.objects.get(contest_id=contest_id).class_id.id
         class_query = ClassUser.objects.filter(username=user, class_id=class_id)
         if class_query.exists():
             return True
@@ -301,38 +302,36 @@ class IsProblemDownloadableUser(permissions.BasePermission):
             return False
 
         problem_id = view.kwargs.get('problem_id', None)
+
         try:
             problem = Problem.objects.get(id=problem_id)
         except:
             return False
 
-        class_ = problem.class_id
-        competition = problem.competition_set.all()
+        contest_problems = ContestProblem.objects.filter(problem_id=problem_id)
+        competition_problems = CompetitionProblem.objects.filter(problem_id=problem_id)
 
-        if class_:
-            class_id = problem.class_id.id
-            cp_query = ContestProblem.objects.filter(problem_id=problem_id)
+        # Professor and created_user only
+        if contest_problems.count() == 0 and competition_problems.count() == 0:
+            return True if problem.professor == user or problem.created_user == user else False
 
-            if cp_query.exists():  # problem이 cp화 되었다면
-                if ClassUser.objects.filter(username=user, class_id=class_id).exists():
-                    return True
-                else:
-                    return False
-            else:  # problem이 cp화 되지 않았다면 (prof 또는 created user가 다운가능)
-                if user == problem.created_user or user == problem.professor:
-                    return True
-                else:
-                    return False
+        # People who involved in competition or class where the problem is existed
+        if contest_problems.count() > 0:
+            classes = set(contest_problems.order_by('contest_id__class_id_id') \
+                                .distinct() \
+                                .values_list('contest_id__class_id_id', flat=True))
 
-        if competition.exists():
-            competition_id = competition.first().id
+            user_classes = set(ClassUser.objects.filter(username=user.username)
+                               .order_by('class_id_id')
+                               .distinct()
+                               .values_list('class_id_id', flat=True))
 
-            if CompetitionUser.objects.filter(competition_id=competition_id, username=user).exists():
-                return True
-            else:
-                return False
+            return False if len(classes.intersection(user_classes)) == 0 else True
 
-        return False
+        if competition_problems.count() > 0:
+
+            eligible_problems = competition_problems.filter(competition_id__competitionuser__username=user.username)
+            return False if eligible_problems.count() == 0 else True
 
 
 # 수업의 조교 , 수업의 prof , 제출한 사람
