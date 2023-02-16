@@ -342,20 +342,26 @@ class SubmissionCompetitionCheckView(APIView):
     permission_classes = [IsCompetitionUser]
 
     # 06-06 submission 리더보드 체크
-    def patch(self, request: Request, competition_id: int) -> Response:
+    def patch(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
+        problem = get_competition_problem(comp_p_id)
 
         data = request.data
         competition_submission_list = []
-        for submission in data:
-            competition_submission = get_submission_competition(id=submission.get("id"))
+
+        lst = data.get('id', None)
+        if not isinstance(lst, list) or len(lst) == 0:
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        for submission in data.get('id'):
+            competition_submission = get_submission_competition(id=submission)
             if competition_submission.username.username != request.user.username:
                 return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
             competition_submission_list.append(competition_submission)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionCompetition.objects.filter(username=request.user.username).filter(
-            competition_id=competition.id)
+            competition_id=competition.id, comp_p_id=comp_p_id)
 
         for submission in submission_list:
             submission.on_leaderboard = False
