@@ -18,7 +18,7 @@ class Class(models.Model):
     year = models.IntegerField()
     semester = models.IntegerField()
     created_user = models.ForeignKey(User, on_delete=models.CASCADE, db_column="created_user",
-                                     related_name='created_user', to_field="username")
+                                     related_name='created_user', to_field='username')
     is_deleted = models.BooleanField(default=False)
     objects = ActiveModelQuerySet().as_manager()
 

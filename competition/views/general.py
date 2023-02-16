@@ -398,14 +398,21 @@ class CompetitionProblemView(APIView):
 
         comp_problem = get_competition_problem(com_p_id)
 
-        if comp_problem.competition_id != competition.id:
+        if comp_problem.competition_id.id != competition.id:
             return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
 
-        orig_problem = get_problem(comp_problem.problem_id)
+        orig_problem = get_problem(comp_problem.problem_id.id)
 
-        problem = dict(comp_problem) # ???
-        problem['data'] = orig_problem.data
-        problem['evaluation'] = orig_problem.evaluation
+        problem = {
+            'id': comp_problem.id,
+            'title': comp_problem.title,
+            'description': comp_problem.description,
+            'data_description': comp_problem.data_description,
+            'problem_id': comp_problem.problem_id.id,
+            'order': comp_problem.order,
+            'data': orig_problem.data,
+            'evaluation': orig_problem.evaluation
+        }
 
         serializer = CompetitionProblemInfoSerializer(data=problem, many=False)
 

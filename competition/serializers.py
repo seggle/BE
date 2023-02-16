@@ -89,5 +89,4 @@ class CompetitionProblemInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CompetitionProblem
-        fields = ['id', 'order', 'title', 'description', 'data', 'data_description', 'evaluation']
-
+        fields = ['id', 'order', 'problem_id', 'title', 'description', 'data', 'data_description', 'evaluation']

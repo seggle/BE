@@ -62,10 +62,10 @@ def get_competition(id):
         return competition
 
 
-def get_competition_problem(competition_problem_id: int) -> CompetitionProblem or Exception:
+def get_competition_problem(competition_problem_id: int) -> CompetitionProblem:
     problem = get_object_or_404(CompetitionProblem, id=competition_problem_id)
     if problem.is_deleted:
-        return Http404()
+        raise Http404()
     return problem
 
 
