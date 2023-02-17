@@ -84,9 +84,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
         data['created_user'] = request.user
 
-        class_ = get_class(data['class_id'])
-
-        data['professor'] = class_.created_user
+        data['professor'] = data.get('created_user')
         problem = ProblemSerializer(data=data)
 
         if problem.is_valid():
