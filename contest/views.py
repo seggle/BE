@@ -63,11 +63,13 @@ class ContestCheckView(APIView):
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_contest, status=status.HTTP_400_BAD_REQUEST)
 
         contest.visible = not contest.visible
-        contest = contest.save()
-        return Response(msg_success, status=status.HTTP_200_OK)
+        contest.save()
+
+        return Response(msg_success_check_private if not contest.visible else msg_success_check_public,
+                        status=status.HTTP_200_OK)
 
 
 class ContestProblemView(APIView, PaginationHandlerMixin):
