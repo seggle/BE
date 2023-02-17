@@ -157,6 +157,7 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 class CompetitionProblemConfigurationView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
 
+    # 06-09 Add problems to the competition
     def post(self, request: Request, competition_id: int) -> Response:
         # 문제 추가
         targets = request.data.get('targets', None)
@@ -200,6 +201,7 @@ class CompetitionProblemConfigurationView(APIView):
         else:
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
+    # 06-10 Remove problems from the competition
     def delete(self, request: Request, competition_id: int) -> Response:
         targets = request.data.get('targets', None)
 
@@ -232,7 +234,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
 
-    # 06-05-03 대회 참가자, 관리자 전체 조회
+    # 06-05-02 대회 참가자, 관리자 전체 조회
     def get(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
         user_list = CompetitionUser.objects.filter(competition_id=competition.id).order_by('-privilege', 'username')
@@ -274,7 +276,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
 class CompetitionTaView(APIView):
     permission_classes = [IsCompetitionManagerOrReadOnly]
 
-    # 06-05-02 대회 유저 참가
+    # 06-05-03 대회 유저 참가
     def post(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(competition_id)
 
@@ -339,6 +341,7 @@ class CompetitionTaView(APIView):
 class CompetitionProblemOrderView(APIView):
     permission_classes = [IsCompetitionProfOrTA | IsAdmin]
 
+    # 06-11 Ordering problems
     def patch(self, request: Request, competition_id: int) -> Response:
         datas = request.data.get('data', None)
 
@@ -373,6 +376,7 @@ class CompetitionProblemOrderView(APIView):
 class CompetitionCheckView(APIView):
     permission_classes = [IsCompetitionProfOrTA]
 
+    # 06-12 Toggle the visibility of competition
     def patch(self, request: Request, competition_id: int) -> Response:
         competition = get_competition(id=competition_id)
 
@@ -389,6 +393,7 @@ class CompetitionCheckView(APIView):
 class CompetitionProblemView(APIView):
     permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsCompetitionUser]
 
+    # 06-13
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(id=competition_id)
 
