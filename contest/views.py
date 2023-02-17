@@ -22,7 +22,7 @@ from utils.permission import *
 # Create your views here.
 
 class ContestView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-08
@@ -55,7 +55,7 @@ class ContestView(APIView, PaginationHandlerMixin):
 
 
 class ContestCheckView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-10
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -73,7 +73,7 @@ class ContestCheckView(APIView):
 
 
 class ContestProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-12
@@ -182,7 +182,7 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
 
 
 class ContestProblemOrderView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-13-02
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -205,7 +205,7 @@ class ContestProblemOrderView(APIView):
 
 
 class ContestProblemTitleDescptView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-13-03
     def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
@@ -235,7 +235,7 @@ class ContestProblemTitleDescptView(APIView):
 
 
 class ContestProblemInfoView(APIView):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
 
     # 05-14
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:

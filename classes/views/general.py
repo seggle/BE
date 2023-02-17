@@ -53,7 +53,7 @@ class ClassView(APIView):
 
 
 class ClassDetailView(APIView):
-    permission_classes = [ClassProfOrReadOnly]
+    permission_classes = [ClassProfOrReadOnly | IsAdmin]
 
     # 05-02
     def get(self, request: Request, class_id: int) -> Response:
@@ -87,7 +87,7 @@ class ClassDetailView(APIView):
 
 
 class ClassStdView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-05-01
@@ -154,7 +154,7 @@ class ClassStdView(APIView, PaginationHandlerMixin):
 
 
 class ClassTaView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsClassProf]
+    permission_classes = [IsClassProf | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-05-02
