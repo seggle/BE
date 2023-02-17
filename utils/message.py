@@ -70,7 +70,7 @@ msg_ProblemView_post_e_3 = {"code": 400, "message": "올바른 정답 파일을 
 # seggle
 
 # submission
-msg_SubmissionCheckView_patch_e_1 = {"error": "username"}
+msg_SubmissionCheckView_patch_e_1 = {'code': 400, 'error': '타인의 제출물입니다.'}
 msg_SubmissionClassView_post_e_1 = {'code': 400, "message": "올바른 csv 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_2 = {'code': 400, "message": "올바른 ipynb 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_3 = {'code': 400, "message": "ip가 중복입니다"}

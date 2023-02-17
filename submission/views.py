@@ -344,20 +344,19 @@ class SubmissionCompetitionCheckView(APIView):
     # 06-06 submission 리더보드 체크
     def patch(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
-        problem = get_competition_problem(comp_p_id)
-
         data = request.data
-        competition_submission_list = []
 
-        lst = data.get('id', None)
-        if not isinstance(lst, list) or len(lst) == 0:
+        # competition 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
+        if competition.end_time < timezone.now():
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
+        submission_id = data.get('id', None)
+        if not isinstance(submission_id, int):
             return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
 
-        for submission in data.get('id'):
-            competition_submission = get_submission_competition(id=submission)
-            if competition_submission.username.username != request.user.username:
-                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
-            competition_submission_list.append(competition_submission)
+        competition_submission = get_submission_competition(id=submission_id)
+        if competition_submission.username.username != request.user.username:
+            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionCompetition.objects.filter(username=request.user.username).filter(
@@ -368,13 +367,8 @@ class SubmissionCompetitionCheckView(APIView):
             submission.save()
 
         # submission의 on_leaderboard를 True로 설정
-        for competition_submission in competition_submission_list:
-            competition_submission.on_leaderboard = True
-            competition_submission.save()
-
-        # competition 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
-        if competition.end_time < timezone.now():
-            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        competition_submission.on_leaderboard = True
+        competition_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
