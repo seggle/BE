@@ -297,7 +297,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
 
 class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
-    # pagination
+    permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
 
     # 06-07 유저 submission 내역 조회
