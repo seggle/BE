@@ -36,4 +36,5 @@ urlpatterns = [
     path('api/api-auth/', include('rest_framework.urls')),
     path('api/class/<int:class_id>/contests/<int:contest_id>/exam/',include('exam.urls')),
     path('api/admin/problems/',include('problem.urls.admin')),
+    path('api/auth', include('authentication.urls')),
 ]
