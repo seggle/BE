@@ -163,9 +163,19 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
-        serializer = ContestPatchSerializer(contest, data=data)
+        obj = {
+            'id': contest.id,
+            'name': data.get('name', contest.name),
+            'start_time': data.get('start_time', contest.start_time),
+            'end_time': data.get('end_time', contest.end_time),
+            'visible': data.get('visible', contest.visible),
+            'is_exam': data.get('is_exam', contest.is_exam)
+        }
+        serializer = ContestPatchSerializer(contest, data=obj, partial=True)
         if serializer.is_valid():
             serializer.save()
+        else:
+            Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
