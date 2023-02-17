@@ -121,10 +121,10 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 
         data = request.data
         obj = {
-            'title': data.get('title'),
-            'description': data.get('description'),
-            'start_time': data.get('start_time'),
-            'end_time': data.get('end_time'),
+            'title': data.get('title', competition.title),
+            'description': data.get('description', competition.description),
+            'start_time': data.get('start_time', competition.start_time),
+            'end_time': data.get('end_time', competition.end_time),
             'visible': data.get('visible', competition.visible),
             'is_exam': data.get('exam', competition.is_exam)
         }
