@@ -358,7 +358,10 @@ class CompetitionProblemOrderView(APIView):
             if order is None or order <= 0:
                 return Response(msg_error_invalid_order, status=status.HTTP_400_BAD_REQUEST)
 
-            problem = get_competition_problem(competition_problem_id)
+            try:
+                problem = CompetitionProblem.objects.get(id=competition_problem_id)
+            except:
+                return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
 
             if problem.competition_id.id != competition_id:
                 return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
