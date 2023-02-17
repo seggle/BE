@@ -8,7 +8,7 @@ msg_success_delete = {"code": 204, "message": "성공했습니다"}
 msg_error = {"error": "실패"}
 msg_error_id = {"error": "올바르지 않은 URL 입니다."}
 msg_error_diff_user = {"error": "작성자만 수정/삭제 가능합니다."}
-msg_time_error = {'error': '제한된 시간입니다.'}
+msg_time_error = {'code': 400, 'message': '제한된 시간입니다.'}
 msg_user_model_username_unique = {'unique': '중복된 ID 입니다.'}
 msg_user_model_email_unique = {'unique': '중복된 email 입니다.'}
 msg_problem_model_title_unique = {'unique': '중복된 제목 입니다.'}
@@ -44,6 +44,7 @@ msg_success_patch_order = {'code': 200, 'message': 'order를 성공적으로 바
 
 msg_error_invalid_problem = {'code': 400, 'message': '잘못된 메시지 요청입니다.'}
 msg_error_wrong_problem = {'code': 500, 'message': '잘못된 문제 유형입니다.'}
+msg_error_problem_not_found = {'code': 404, 'message': '없는 문제입니다.'}
 
 # contest
 
