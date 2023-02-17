@@ -174,11 +174,11 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_contest, status=status.HTTP_400_BAD_REQUEST)
         contest.is_deleted = True
         contest.save()
 
-        return Response(msg_success, status=status.HTTP_200_OK)
+        return Response(msg_success_delete, status=status.HTTP_200_OK)
 
 
 class ContestProblemOrderView(APIView):

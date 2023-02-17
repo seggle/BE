@@ -111,7 +111,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
 
-                return Response(msg_success, status=status.HTTP_200_OK)
+                return Response(msg_success_create, status=status.HTTP_201_CREATED)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -289,7 +289,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
 
-                return Response(msg_success, status=status.HTTP_200_OK)
+                return Response(msg_success_create, status=status.HTTP_201_CREATED)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

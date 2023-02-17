@@ -268,7 +268,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
         serializer = CompetitionUserSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(msg_success_participation, status=status.HTTP_200_OK)
+            return Response(msg_success_participation, status=status.HTTP_201_CREATED)
         else:
             return Response(msg_error_participation, status=status.HTTP_400_BAD_REQUEST)
 

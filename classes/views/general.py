@@ -73,7 +73,7 @@ class ClassDetailView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+        return Response(msg_error_diff_user, status=status.HTTP_403_FORBIDDEN)
 
     # 05-04
     def delete(self, request: Request, class_id: int) -> Response:
@@ -81,9 +81,9 @@ class ClassDetailView(APIView):
         if class_.created_user == request.user:
             class_.is_deleted = True
             class_.save()
-            return Response(msg_success, status=status.HTTP_200_OK)
+            return Response(msg_success_delete, status=status.HTTP_200_OK)
         else:
-            return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_diff_user, status=status.HTTP_403_FORBIDDEN)
 
 
 class ClassStdView(APIView, PaginationHandlerMixin):

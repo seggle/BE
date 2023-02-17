@@ -4,10 +4,10 @@
 
 msg_success = {"code": 200, "success": "성공했습니다"}
 msg_success_create = {"code": 201, "message": "성공했습니다"}
-msg_success_delete = {"code": 204, "message": "성공했습니다"}
+msg_success_delete = {"code": 200, "message": "성공적으로 삭제했습니다."}
 msg_error = {"error": "실패"}
 msg_error_id = {"error": "올바르지 않은 URL 입니다."}
-msg_error_diff_user = {"error": "작성자만 수정/삭제 가능합니다."}
+msg_error_diff_user = {"code": 403, "error": "작성자만 수정/삭제 가능합니다."}
 msg_time_error = {'code': 400, 'message': '제한된 시간입니다.'}
 msg_user_model_username_unique = {'unique': '중복된 ID 입니다.'}
 msg_user_model_email_unique = {'unique': '중복된 email 입니다.'}
@@ -26,12 +26,12 @@ msg_success_check_private = {'code': 200, 'message': '성공적으로 비공개�
 
 # classes
 
-
+msg_error_invalid_contest = {'code': 400, 'message': '잘못된 contest입니다.'}
 
 # competition
 
 msg_error_invalid_user = {'code': 400, 'message': '잘못된 사용자입니다.'}
-msg_success_participation = {'code': 200, 'message': '대회에 참여 처리되었습니다.'}
+msg_success_participation = {'code': 201, 'message': '대회에 참여 처리되었습니다.'}
 msg_error_participation = {'code': 400, 'message': '참여 처리 중 오류가 발생했습니다.'}
 msg_error_already_participated = {'code': 400, 'message': '이미 참가한 대회입니다.'}
 msg_success_delete_competition = {'code': 200, 'message': "대회가 정상적으로 삭제되었습니다."}
