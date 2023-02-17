@@ -82,7 +82,7 @@ class UserInfoView(APIView):
     permission_classes = [IsRightUser]
 
     # 01-07 유저 조회
-    def get(self, request: Request, username: str, format: str=None) -> Response:
+    def get(self, request: Request, username: str, format: str = None) -> Response:
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
@@ -234,7 +234,7 @@ class ContributionsView(APIView, PaginationHandlerMixin):
         page = self.paginate_queryset(sort_list)
 
         if page is not None:
-            serializer = self.get_paginated_response(ContributionsSerializer(page,many=True).data)
+            serializer = self.get_paginated_response(ContributionsSerializer(page, many=True).data)
         else:
             serializer = ContributionsSerializer(sort_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -263,7 +263,6 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
                 continue
             obj = {}
             obj["id"] = competition.competition_id.id
-            obj["problem_id"] = competition.competition_id.problem_id
             obj["title"] = competition.competition_id.problem_id.title
             obj["start_time"] = competition.competition_id.start_time
             obj["end_time"] = competition.competition_id.end_time

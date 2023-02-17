@@ -61,7 +61,7 @@ class UserCompetitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competition
-        fields = ['id', "problem_id", "title", "start_time", "end_time", "user_total", "rank"]
+        fields = ['id', "title", "start_time", "end_time", "user_total", "rank"]
 
 
 class UserClassPrivilege(serializers.ModelSerializer):

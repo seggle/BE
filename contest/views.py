@@ -22,7 +22,7 @@ from utils.permission import *
 # Create your views here.
 
 class ContestView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-08
@@ -55,7 +55,7 @@ class ContestView(APIView, PaginationHandlerMixin):
 
 
 class ContestCheckView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-10
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -63,24 +63,26 @@ class ContestCheckView(APIView):
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_contest, status=status.HTTP_400_BAD_REQUEST)
 
         contest.visible = not contest.visible
-        contest = contest.save()
-        return Response(msg_success, status=status.HTTP_200_OK)
+        contest.save()
+
+        return Response(msg_success_check_private if not contest.visible else msg_success_check_public,
+                        status=status.HTTP_200_OK)
 
 
 class ContestProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-12
     def get(self, request: Request, class_id: int, contest_id: int) -> Response or JsonResponse:
         contest = get_contest(contest_id)
 
-        # time_check = timezone.now()
-        # if (contest.start_time > time_check) or (contest.end_time < time_check):
-        #     return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        time_check = timezone.now()
+        if (contest.start_time > time_check) or (contest.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []
@@ -161,9 +163,19 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
             return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
-        serializer = ContestPatchSerializer(contest, data=data)
+        obj = {
+            'id': contest.id,
+            'name': data.get('name', contest.name),
+            'start_time': data.get('start_time', contest.start_time),
+            'end_time': data.get('end_time', contest.end_time),
+            'visible': data.get('visible', contest.visible),
+            'is_exam': data.get('is_exam', contest.is_exam)
+        }
+        serializer = ContestPatchSerializer(contest, data=obj, partial=True)
         if serializer.is_valid():
             serializer.save()
+        else:
+            Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -172,15 +184,15 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
         contest = get_contest(contest_id)
 
         if contest.class_id.id != class_id:
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_contest, status=status.HTTP_400_BAD_REQUEST)
         contest.is_deleted = True
         contest.save()
 
-        return Response(msg_success, status=status.HTTP_200_OK)
+        return Response(msg_success_delete, status=status.HTTP_200_OK)
 
 
 class ContestProblemOrderView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-13-02
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -203,7 +215,7 @@ class ContestProblemOrderView(APIView):
 
 
 class ContestProblemTitleDescptView(APIView):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
 
     # 05-13-03
     def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
@@ -233,7 +245,7 @@ class ContestProblemTitleDescptView(APIView):
 
 
 class ContestProblemInfoView(APIView):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA]
+    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
 
     # 05-14
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:

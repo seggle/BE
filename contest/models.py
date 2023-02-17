@@ -2,6 +2,7 @@ from django.db import models
 from classes.models import Class
 from problem.models import Problem
 
+
 class ActiveModelQuerySet(models.QuerySet):
 
     def not_active(self, *args, **kwargs):
@@ -9,6 +10,7 @@ class ActiveModelQuerySet(models.QuerySet):
 
     def active(self, *args, **kwargs):
         return self.filter(is_deleted=False, *args, **kwargs)
+
 
 class Contest(models.Model):
     class_id = models.ForeignKey(Class, on_delete=models.CASCADE, db_column="class_id")

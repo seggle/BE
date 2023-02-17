@@ -13,7 +13,7 @@ class ContestSerializer(serializers.ModelSerializer):
 class ContestPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contest
-        fields = ["name", "start_time", "end_time", "is_exam", "visible"]
+        fields = ["id", "name", "start_time", "end_time", "is_exam", "visible"]
 
 
 class ContestProblemSerializer(serializers.ModelSerializer):

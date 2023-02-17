@@ -6,8 +6,8 @@ from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework.views import APIView
 from submission.models import SubmissionClass, SubmissionCompetition
 from utils.compression import creat_archive
-from .serializers import PathSerializer, SubmissionClassSerializer, SumissionClassListSerializer, \
-    SubmissionCompetitionSerializer, SumissionCompetitionListSerializer
+from .serializers import PathSerializer, SubmissionClassSerializer, SubmissionClassListSerializer, \
+    SubmissionCompetitionSerializer, SubmissionCompetitionListSerializer
 from competition.models import CompetitionUser
 from rest_framework.pagination import PageNumberPagination  # pagination
 from utils.pagination import BasicPagination, PaginationHandlerMixin  # pagination
@@ -111,7 +111,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
 
-                return Response(msg_success, status=status.HTTP_200_OK)
+                return Response(msg_success_create, status=status.HTTP_201_CREATED)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(path_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -151,9 +151,9 @@ class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
         page = self.paginate_queryset(outputs)
 
         if page is not None:
-            serializer = self.get_paginated_response(SumissionClassListSerializer(page, many=True).data)
+            serializer = self.get_paginated_response(SubmissionClassListSerializer(page, many=True).data)
         else:
-            serializer = SumissionClassListSerializer(outputs, many=True)
+            serializer = SubmissionClassListSerializer(outputs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -188,9 +188,9 @@ class SubmissionClassListView(APIView, PaginationHandlerMixin):
 
         page = self.paginate_queryset(obj_list)
         if page is not None:
-            serializer = self.get_paginated_response(SumissionClassListSerializer(page, many=True).data)
+            serializer = self.get_paginated_response(SubmissionClassListSerializer(page, many=True).data)
         else:
-            serializer = SumissionClassListSerializer(obj_list, many=True)
+            serializer = SubmissionClassListSerializer(obj_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -235,18 +235,18 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
     permission_classes = [IsCompetitionUser]
 
     # 06-04 대회 유저 파일 제출
-    def post(self, request: Request, competition_id: int) -> Response:
+    def post(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
+        problem = get_competition_problem(comp_p_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
         time_check = timezone.now()
         if (competition.start_time > time_check) or (competition.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
-        user = get_username(request.user.username)
         if CompetitionUser.objects.filter(username=request.user.username).filter(
                 competition_id=competition_id).count() == 0:
-            return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_403_FORBIDDEN)
 
         data = request.data.copy()
 
@@ -269,9 +269,10 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         submission_json = {
             "username": request.user,
             "competition_id": competition.id,
+            'comp_p_id': problem.id,
             "csv": data.get("csv"),
             "ipynb": data.get("ipynb"),
-            "problem_id": competition.problem_id.id,
+            "problem_id": problem.problem_id.id,
             "score": None,
             "ip_address": GetIpAddr(request)
         }
@@ -288,7 +289,7 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 problem = get_problem(submission.problem_id.id)
                 self.evaluate(submission=submission, problem=problem)
 
-                return Response(msg_success, status=status.HTTP_200_OK)
+                return Response(msg_success_create, status=status.HTTP_201_CREATED)
             else:
                 return Response(submission_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -296,15 +297,16 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
 
 
 class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
-    # pagination
+    permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
 
     # 06-07 유저 submission 내역 조회
-    def get(self, request: Request, competition_id: int) -> Response:
+    def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
         username = request.GET.get('username', '')
 
-        submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id).order_by(
+        submission_competition_list = SubmissionCompetition.objects \
+            .filter(competition_id=competition_id, comp_p_id=comp_p_id).order_by(
             '-created_time')
         if username:
             submission_competition_list = submission_competition_list.filter(username=username)
@@ -329,9 +331,9 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
 
         page = self.paginate_queryset(obj_list)
         if page is not None:
-            serializer = self.get_paginated_response(SumissionCompetitionListSerializer(page, many=True).data)
+            serializer = self.get_paginated_response(SubmissionCompetitionListSerializer(page, many=True).data)
         else:
-            serializer = SumissionCompetitionListSerializer(obj_list, many=True)
+            serializer = SubmissionCompetitionListSerializer(obj_list, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -340,33 +342,33 @@ class SubmissionCompetitionCheckView(APIView):
     permission_classes = [IsCompetitionUser]
 
     # 06-06 submission 리더보드 체크
-    def patch(self, request: Request, competition_id: int) -> Response:
+    def patch(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
-
         data = request.data
-        competition_submission_list = []
-        for submission in data:
-            competition_submission = get_submission_competition(id=submission.get("id"))
-            if competition_submission.username.username != request.user.username:
-                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
-            competition_submission_list.append(competition_submission)
+
+        # competition 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
+        if competition.end_time < timezone.now():
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
+        submission_id = data.get('id', None)
+        if not isinstance(submission_id, int):
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        competition_submission = get_submission_competition(id=submission_id)
+        if competition_submission.username.username != request.user.username:
+            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionCompetition.objects.filter(username=request.user.username).filter(
-            competition_id=competition.id)
+            competition_id=competition.id, comp_p_id=comp_p_id)
 
         for submission in submission_list:
             submission.on_leaderboard = False
             submission.save()
 
         # submission의 on_leaderboard를 True로 설정
-        for competition_submission in competition_submission_list:
-            competition_submission.on_leaderboard = True
-            competition_submission.save()
-
-        # competition 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
-        if competition.end_time < timezone.now():
-            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        competition_submission.on_leaderboard = True
+        competition_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
@@ -520,7 +522,7 @@ class SubmissionClassDownloadView(APIView):
             tail = str(uuid.uuid4())[:8]
             base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
 
-        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard'\
+        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard' \
                 or download_option == 'all':
             queryset = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id, c_p_id=cp_id)
             if download_option == 'leaderboard':
@@ -603,7 +605,7 @@ class SubmissionCompetitionDownloadView(APIView):
             tail = str(uuid.uuid4())[:8]
             base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
 
-        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard'\
+        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard' \
                 or download_option == 'all':
             queryset = SubmissionCompetition.objects.filter(id=competition_id)
 
