@@ -374,7 +374,7 @@ class CompetitionProblemOrderView(APIView):
 
 
 class CompetitionCheckView(APIView):
-    permission_classes = [IsCompetitionProfOrTA]
+    permission_classes = [IsCompetitionProfOrTA | IsAdmin]
 
     # 06-12 Toggle the visibility of competition
     def patch(self, request: Request, competition_id: int) -> Response:
@@ -383,11 +383,11 @@ class CompetitionCheckView(APIView):
         if competition.visible:
             competition.visible = False
             competition.save()
-            return Response(msg_success_check_public, status=status.HTTP_200_OK)
+            return Response(msg_success_check_private, status=status.HTTP_200_OK)
         else:
             competition.visible = True
             competition.save()
-            return Response(msg_success_check_private, status=status.HTTP_200_OK)
+            return Response(msg_success_check_public, status=status.HTTP_200_OK)
 
 
 class CompetitionProblemView(APIView):
