@@ -148,7 +148,7 @@ class ClassStdView(APIView, PaginationHandlerMixin):
 
         # 출력
         if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+            return Response(msg_success_participation, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 

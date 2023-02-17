@@ -78,9 +78,9 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
     def get(self, request: Request, class_id: int, contest_id: int) -> Response or JsonResponse:
         contest = get_contest(contest_id)
 
-        # time_check = timezone.now()
-        # if (contest.start_time > time_check) or (contest.end_time < time_check):
-        #     return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        time_check = timezone.now()
+        if (contest.start_time > time_check) or (contest.end_time < time_check):
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('order').active()
         contest_problem_list = []

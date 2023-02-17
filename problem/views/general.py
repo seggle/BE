@@ -33,12 +33,12 @@ class ProblemView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 03-01 problem 전체 조회
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         if request.user.privilege == 0:
             problems = Problem.objects.filter(Q(created_user=request.user)).active()
         else:
             problems = Problem.objects.filter(
-                (Q(public=True) | Q(professor=request.user)) & ~Q(class_id=None)).active()
+                (Q(public=True) | Q(professor=request.user))).active()
         keyword = request.GET.get('keyword', '')
         if keyword:
             problems = problems.filter(title__icontains=keyword)
@@ -51,12 +51,11 @@ class ProblemView(APIView, PaginationHandlerMixin):
             problem_json = {
                 "id": problem.id,
                 "title": problem.title,
-                "created_time" : problem.created_time,
-                "created_user" : problem.created_user.username,
+                "created_time": problem.created_time,
+                "created_user": problem.created_user.username,
                 # "data" : data_url,
                 # "solution" : solution_url,
-                "public" : problem.public,
-                "class_id" : problem.class_id.id
+                "public": problem.public,
             }
             new_problems.append(problem_json)
 
@@ -102,7 +101,7 @@ class ProblemView(APIView, PaginationHandlerMixin):
 
 
 class ProblemDetailView(APIView):
-    permission_classes = [IsProblemOwnerOrReadOnly|IsAdmin]
+    permission_classes = [IsProblemOwnerOrReadOnly | IsAdmin]
 
     # 03-04 problem 세부 조회
     def get(self, request, problem_id):
@@ -205,6 +204,7 @@ class ProblemVisibilityView(APIView):
 
 class ProblemDataDownloadView(APIView):
     permission_classes = [IsProblemDownloadableUser | IsAdmin]
+
     # 03-07 problem의 data 다운로드
     def get(self, request, problem_id):
         problem = get_problem(problem_id)

@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from submission.models import SubmissionClass, SubmissionCompetition
-from utils.get_obj import get_competition, get_contest_problem
+from utils.get_obj import get_competition, get_contest_problem, get_competition_problem
 from .serializers import LeaderboardClassSerializer, LeaderboardCompetitionSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -62,12 +62,14 @@ class LeaderboardCompetitionView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 09-00 대회 문제 리더보드 조회
-    def get(self, request, competition_id):
+    def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
-        submission_competition_list = SubmissionCompetition.objects.filter(competition_id=competition_id)
+        problem = get_competition_problem(comp_p_id)
+        submission_competition_list = SubmissionCompetition\
+            .objects.filter(competition_id=competition_id, comp_p_id=comp_p_id)
 
         # 정렬
-        if competition.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
+        if problem.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
             submission_competition_list = submission_competition_list.order_by('-score', 'created_time')
         else:
             submission_competition_list = submission_competition_list.order_by('score', 'created_time')
