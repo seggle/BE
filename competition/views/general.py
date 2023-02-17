@@ -138,10 +138,10 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 
     # 06-03-02 대회 삭제
     def delete(self, request: Request, competition_id: int) -> Response:
-        competition = get_competition(id=competition_id)
+        competition = Competition.objects.get(id=competition_id)
 
         if competition.is_deleted:
-            Response(msg_error_already_deleted, status=status.HTTP_404_NOT_FOUND)
+            return Response(msg_error_already_deleted, status=status.HTTP_404_NOT_FOUND)
         # Warning : 1 object in queryset
         contest_problems = CompetitionProblem.objects.filter(competition_id=competition_id)
 
