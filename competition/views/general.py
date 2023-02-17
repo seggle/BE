@@ -155,7 +155,7 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 
 
 class CompetitionProblemConfigurationView(APIView):
-    permission_classes = [IsCompetitionManagerOrReadOnly]
+    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
 
     # 06-09 Add problems to the competition
     def post(self, request: Request, competition_id: int) -> Response:
@@ -274,7 +274,7 @@ class CompetitionUserView(APIView, PaginationHandlerMixin):
 
 
 class CompetitionTaView(APIView):
-    permission_classes = [IsCompetitionManagerOrReadOnly]
+    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
 
     # 06-05-03 대회 유저 참가
     def post(self, request: Request, competition_id: int) -> Response:
