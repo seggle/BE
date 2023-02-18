@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework.request import Request
 from rest_framework.response import Response
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,7 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer
+    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer, LoginSerializer
 from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
@@ -18,11 +19,16 @@ from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
     TokenRefreshView, TokenObtainPairView,
 )
-from utils.get_obj import *
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
 
+from utils.get_obj import *
+from utils.get_error import get_error_msg
 from utils.permission import *
 from utils.pagination import BasicPagination, PaginationHandlerMixin
 
+from django.middleware import csrf
+from django.contrib.auth import authenticate
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
@@ -51,6 +57,53 @@ class UserRegisterView(APIView):
             data = serializer.errors
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
+
+class LoginView(APIView):
+    def post(self, request):
+        print("start")
+        serializer = LoginSerializer(data=request.data)
+
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+        print(username, password)
+        if serializer.is_valid():
+            user = serializer.save()
+            # jwt 토큰 접근
+            token = TokenObtainPairSerializer.get_token(user)
+            refresh_token = str(token)
+            access_token = str(token.access_token)
+
+            user = authenticate(username=username, password=password)
+
+            if user is not None:
+                # jwt 토큰 접근
+                token = TokenObtainPairSerializer.get_token(user)
+                refresh_token = str(token)
+                access_token = str(token.access_token)
+                res = Response(
+                    {
+                        "username": username,
+                        "message": "Login successs",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+                # jwt 토큰 => 쿠키에 저장
+                res.set_cookie("access", access_token, httponly=True)
+                res.set_cookie("refresh", refresh_token, httponly=True)
+                # csrf.get_token(request)
+                return res
+            msg = get_error_msg(serializer)
+            return Response(data={
+                "code": status.HTTP_401_UNAUTHORIZED,
+                "message": msg
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        msg = get_error_msg(serializer)
+        return Response(data={
+            "code": status.HTTP_400_BAD_REQUEST,
+            "message": msg
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -325,8 +378,3 @@ class UserCompetitionPrivilege(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# TokenObtainPairView with username field
-class TokenObtainResultView(TokenObtainPairView):
-
-    serializer_class = TokenObtainResultSerializer
-    token_obtain_pair = TokenObtainPairView.as_view()

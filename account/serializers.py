@@ -81,8 +81,13 @@ class UserGetClassInfo(serializers.Serializer):
 
 class TokenObtainResultSerializer(TokenObtainPairSerializer):
 
-    def validate(self, attrs) -> None:
-        data = super().validate(attrs)
+    def validate(self, attrs):
+        data = super(TokenObtainResultSerializer, self).validate(attrs)
         data['username'] = self.user.username
 
         return data
+
+class LoginSerializer(serializers.Serializer):
+    class Meta:
+        model = User
+        fields = ["username", "password"]
