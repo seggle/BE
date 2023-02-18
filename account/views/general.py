@@ -30,6 +30,10 @@ from utils.pagination import BasicPagination, PaginationHandlerMixin
 from django.middleware import csrf
 from django.contrib.auth import authenticate
 
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
+
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -58,52 +62,7 @@ class UserRegisterView(APIView):
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
 
-class LoginView(APIView):
-    def post(self, request):
-        print("start")
-        serializer = LoginSerializer(data=request.data)
 
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
-        print(username, password)
-        if serializer.is_valid():
-            user = serializer.save()
-            # jwt 토큰 접근
-            token = TokenObtainPairSerializer.get_token(user)
-            refresh_token = str(token)
-            access_token = str(token.access_token)
-
-            user = authenticate(username=username, password=password)
-
-            if user is not None:
-                # jwt 토큰 접근
-                token = TokenObtainPairSerializer.get_token(user)
-                refresh_token = str(token)
-                access_token = str(token.access_token)
-                res = Response(
-                    {
-                        "username": username,
-                        "message": "Login successs",
-                    },
-                    status=status.HTTP_200_OK,
-                )
-
-                # jwt 토큰 => 쿠키에 저장
-                res.set_cookie("access", access_token, httponly=True)
-                res.set_cookie("refresh", refresh_token, httponly=True)
-                # csrf.get_token(request)
-                return res
-            msg = get_error_msg(serializer)
-            return Response(data={
-                "code": status.HTTP_401_UNAUTHORIZED,
-                "message": msg
-            }, status=status.HTTP_401_UNAUTHORIZED)
-
-        msg = get_error_msg(serializer)
-        return Response(data={
-            "code": status.HTTP_400_BAD_REQUEST,
-            "message": msg
-        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -127,8 +86,6 @@ class LogoutView(APIView):
 #             t, _ = BlacklistedToken.objects.get_or_create(token=token)
 #         return Response(status=status.HTTP_205_RESET_CONTENT)
 
-class RefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
 
 
 class UserInfoView(APIView):
@@ -378,3 +335,40 @@ class UserCompetitionPrivilege(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+    def validate(self, attrs):
+        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
+        if attrs['refresh']:
+            return super().validate(attrs)
+        else:
+            raise InvalidToken('No valid token found in cookie \'refresh_token\'')
+
+class CookieTokenObtainPairView(TokenObtainPairView):
+    def finalize_response(self, request, response, *args, **kwargs):
+        print(response)
+        if response.data.get('refresh'):
+            cookie_max_age = 3600 * 24 * 14 # 14 days
+            response.set_cookie('access_token', response.data['access'], expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'])
+            response.set_cookie('refresh_token', response.data['refresh'], max_age=cookie_max_age, httponly=True )
+            del response.data['refresh']
+            del response.data['access']
+        return super().finalize_response(request, response, *args, **kwargs)
+
+class CookieTokenRefreshView(TokenRefreshView):
+    serializer_class = CookieTokenRefreshSerializer
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        if response.data.get("refresh"):
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
+                value=response.data['refresh'],
+                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
+
+            del response.data["refresh"]
+        response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
+        return super().finalize_response(request, response, *args, **kwargs)
