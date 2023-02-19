@@ -320,23 +320,18 @@ class CookieTokenRefreshSerializer(TokenRefreshSerializer):
             raise InvalidToken('No valid token found in cookie \'refresh_token\'')
 
 class CookieTokenObtainPairView(TokenObtainPairView):
-    # 01-03 로그인
+    serializer_class = TokenObtainResultSerializer
+    # 01-03 login
     def finalize_response(self, request, response, *args, **kwargs):
         if response.data.get('refresh'):
-            cookie_max_age = 3600 * 24 * 14 # 14 days
-            response.set_cookie('access_token', response.data['access'], expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'])
-            response.set_cookie('refresh_token', response.data['refresh'], max_age=cookie_max_age, httponly=True )
-            response.data['username'] = request.data.get('username')
-            del response.data['refresh']
-            del response.data['access']
-
-        return super().finalize_response(request, response, *args, **kwargs)
-
-class CookieTokenRefreshView(TokenRefreshView):
-    serializer_class = CookieTokenRefreshSerializer
-    # 01-01 login refresh
-    def finalize_response(self, request, response, *args, **kwargs):
-        if response.data.get("refresh"):
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                value=response.data['access'],
+                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
                 value=response.data['refresh'],
@@ -345,35 +340,49 @@ class CookieTokenRefreshView(TokenRefreshView):
                 httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                 samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
             )
+            del response.data['refresh']
+            del response.data['access']
+        return super().finalize_response(request, response, *args, **kwargs)
 
-            del response.data["refresh"]
+class CookieTokenRefreshView(TokenRefreshView):
+    serializer_class = CookieTokenRefreshSerializer
+    # 01-01 login refresh
+    def finalize_response(self, request, response, *args, **kwargs):
+        # set access token
+        response.set_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+            value=response.data['access'],
+            expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        del response.data["access"]
+
+        response.data["message"] = "Refresh Success"
         response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
         return super().finalize_response(request, response, *args, **kwargs)
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     # 01-04 로그아웃
-    def post(self, request: Request) -> Response:
+    def post(self, request):
         try:
-            refresh_token = request.data["refresh_token"]
+            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
             token = RefreshToken(refresh_token)
             token.blacklist()
-            print("hi")
-            return Response(status=status.HTTP_205_RESET_CONTENT)
 
-            """            
-            res = Response()
+            response = Response({
+                "message": "Logout success"
+            }, status=status.HTTP_202_ACCEPTED)
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
 
-            res.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
-            res.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
-            res.delete_cookie("X-CSRFToken")
-            res.delete_cookie("csrftoken")
-            res["X-CSRFToken"] = None
-
-            return res
-            """
+            return response
 
         except:
+            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+            print(refresh_token)
             raise ParseError("Invalid token")
 
 
