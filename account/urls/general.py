@@ -1,19 +1,9 @@
-from tokenize import Token
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from account.views.general import (
     LogoutView, UserCompetitionInfoView, UserRegisterView,
-    UserInfoView, ClassInfoView, RefreshView, ContributionsView, UserClassPrivilege, UserCompetitionPrivilege,
-    LoginView, CookieTokenObtainPairView, CookieTokenRefreshView
+    UserInfoView, ClassInfoView, ContributionsView, UserClassPrivilege, UserCompetitionPrivilege,
+    CookieTokenObtainPairView, CookieTokenRefreshView
 )
-
-
-#simple-jwt
-from rest_framework_simplejwt.views import(
-    TokenObtainPairView,
-    TokenRefreshView,
-)
-from account.serializers import TokenObtainResultSerializer
 
 app_name = "account"
 urlpatterns = [
