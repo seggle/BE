@@ -342,6 +342,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             )
             del response.data['refresh']
             del response.data['access']
+            # response.data["X-CSRFToken"] = csrf.get_token(request)
         return super().finalize_response(request, response, *args, **kwargs)
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -360,7 +361,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         del response.data["access"]
 
         response.data["message"] = "Refresh Success"
-        response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
+        # response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
         return super().finalize_response(request, response, *args, **kwargs)
 
 class LogoutView(APIView):
@@ -377,12 +378,12 @@ class LogoutView(APIView):
             }, status=status.HTTP_202_ACCEPTED)
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
-
+            # response.delete_cookie("X-CSRFToken")
+            # response.delete_cookie("csrftoken")
+            # response.data["X-CSRFToken"] = None
             return response
 
         except:
-            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
-            print(refresh_token)
             raise ParseError("Invalid token")
 
 
