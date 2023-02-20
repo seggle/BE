@@ -457,3 +457,37 @@ class CompetitionProblemView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(msg_error_wrong_problem, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # 06-14 Remove problems
+    def delete(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
+        problem = CompetitionProblem.objects.filter(competition_id=competition_id, id=comp_p_id).active().first()
+        problem_id = problem.problem_id.id
+
+        if problem is None:
+            return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
+
+        if problem.competition_id.id != competition_id:
+            return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
+
+        competition_problem_lists = CompetitionProblem.objects.filter(competition_id=competition_id) \
+            .order_by('-order').active()
+
+        for comp_problem in competition_problem_lists:
+            if comp_problem.order > problem.order:
+                comp_problem.order = comp_problem.order - 1
+                comp_problem.save()
+            else:
+
+                competition_usage = CompetitionProblem.objects.exclude(id=comp_p_id).filter(problem_id=problem_id)\
+                    .order_by('id').active()
+                contest_usage = ContestProblem.objects.filter(problem_id=problem_id).order_by('id').active()
+
+                if competition_usage.count() == 0 and contest_usage.count() == 0:
+                    p = get_problem(id=problem_id)
+                    p.is_deleted = True
+                    p.save()
+
+                comp_problem.is_deleted = True
+                comp_problem.save()
+
+                return Response(msg_success_delete, status=status.HTTP_200_OK)
