@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from utils.get_error import get_error_msg
 from utils.pagination import PaginationHandlerMixin, BasicPagination
 from utils.permission import *
 from utils.get_obj import *
@@ -79,7 +80,7 @@ class CompetitionView(APIView, PaginationHandlerMixin):
 
 
 class CompetitionDetailView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsCompetitionManagerOrReadOnly]
+    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
     pagination_class = BasicPagination
 
     # 06-02 대회 개별 조회 및 문제 목록 조회
@@ -153,53 +154,81 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 
         return Response(msg_success_delete_competition, status=status.HTTP_200_OK)
 
-
-class CompetitionProblemConfigurationView(APIView):
-    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
-
     # 06-09 Add problems to the competition
     def post(self, request: Request, competition_id: int) -> Response:
-        # 문제 추가
-        targets = request.data.get('targets', None)
 
-        if targets is None:
-            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy()
 
-        competition = get_competition(competition_id)
+        if data.get('problem_id', None) is not None:
+            pass
 
-        error = {'error_problem_id': []}
+        if data.get('data', None) is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if data.get('solution', None) is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
 
-        obj_list = []
-        for elem in targets:
+        data_str = data.get('data').name.split('.')[-1]
+        solution_str = data.get('solution').name.split('.')[-1]
+        if data_str != 'zip':
+            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        if solution_str != 'csv':
+            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
 
-            if Problem.objects.filter(id=elem).active().count() == 0 or \
-                    CompetitionProblem.objects.filter(competition_id=competition_id,
-                                                      problem_id=elem).active().count() != 0:
-                error['error_problem_id'].append(elem)
-                continue
+        data['created_user'] = request.user
 
-            target = get_problem(id=elem)
+        data['professor'] = data.get('created_user')
+        problem = ProblemSerializer(data=data)
+
+        if problem.is_valid():
+            problem.save()
+
+            elem = problem.data.get('id')
+
+            target = problem
             order = CompetitionProblem.objects.filter(competition_id=competition_id).active().count() + 1
 
             obj = {
-                'title': target.title,
-                'description': target.description,
-                'data_description': target.data_description,
+                'title': target.data.get('title'),
+                'description': target.data.get('description'),
+                'data_description': target.data.get('data_description'),
                 'competition_id': competition_id,
                 'problem_id': elem,
                 'order': order,
             }
-            obj_list.append(obj)
 
-        serializer = CompetitionProblemDetailSerializer(data=obj_list, many=True)
+            serializer = CompetitionProblemDetailSerializer(data=obj)
 
-        if serializer.is_valid():
-            serializer.save()
+            if serializer.is_valid():
+                serializer.save()
+                rt = {
+                    'id': problem.data.get('id'),
+                    'comp_p_id': serializer.data.get('id'),
+                    'order': order,
+                    'title': serializer.data.get('title'),
+                    'description': serializer.data.get('description'),
+                    'data_description': serializer.data.get('data_description'),
+                    'data': problem.data.get('data'),
+                    'solution': problem.data.get('solution'),
+                    'evaluation': problem.data.get('evaluation'),
+                    'public': problem.data.get('public'),
+                    'created_time': problem.data.get('created_time'),
+                    'created_user': problem.data.get('created_user'),
+                    'professor': problem.data.get('professor'),
+                }
 
-        if len(error.get('error_problem_id')) == 0:
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+                return Response(rt, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+            msg = get_error_msg(problem)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CompetitionProblemConfigurationView(APIView):
+    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
 
     # 06-10 Remove problems from the competition
     def delete(self, request: Request, competition_id: int) -> Response:
