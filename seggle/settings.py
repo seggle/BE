@@ -85,6 +85,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 # CORS 관련 추가
@@ -92,14 +93,14 @@ CORS_ORIGIN_WHITELIST = ['http://115.91.214.3',
                          'http://localhost:8000']
 CORS_ALLOW_CREDENTIALS = True  # Return response with cookies
 
-CSRF_COOKIE_SECURE = True  # CSRF cookie enabled only Https server
+CSRF_COOKIE_SECURE = False  # CSRF cookie enabled only Https server
 CSRF_COOKIE_HTTPONLY = True  # CSRF stored in http only cookie
 CSRF_TESTED_ORIGINS = [
     "http://localhost:8000"
 ]
 
 CORS_EXPOSE_HEADERS=["Content-Type", "X-CSRFToken"]  # Allow return of CSRF in response header
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = "Lax"  # Samesite "Lax" - Protection against csrf attacks
 SESSION_COOKIE_SAMESITE = "Lax"
 
@@ -240,7 +241,7 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_SECURE': False,  # Whether the auth cookies should be secure (https:// only).
     'AUTH_COOKIE_HTTP_ONLY': True,  # Http only cookie flag.It's not fetch by javascript.
     'AUTH_COOKIE_PATH': '/',  # The path of the auth cookie.
-    'AUTH_COOKIE_SAMESITE': 'None',
+    'AUTH_COOKIE_SAMESITE': 'Lax',
     # Whether to set the flag restricting cookie leaks on cross-site requests. This can be 'Lax', 'Strict', or None to disable the flag.
 }
 
