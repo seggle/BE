@@ -3,8 +3,7 @@ from competition.views.general import (
     CompetitionTaView,
     CompetitionUserView,
     CompetitionView,
-    CompetitionDetailView,
-    CompetitionProblemConfigurationView, CompetitionProblemOrderView, CompetitionCheckView, CompetitionProblemView
+    CompetitionDetailView, CompetitionProblemOrderView, CompetitionCheckView, CompetitionProblemView
 )
 from submission.views import SubmissionCompetitionView, SubmissionCompetitionListView, SubmissionCompetitionCheckView
 

@@ -227,38 +227,6 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CompetitionProblemConfigurationView(APIView):
-    permission_classes = [IsCompetitionManagerOrReadOnly | IsAdmin]
-
-    # 06-10 Remove problems from the competition
-    def delete(self, request: Request, competition_id: int) -> Response:
-        targets = request.data.get('targets', None)
-
-        if targets is None:
-            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
-
-        competition = get_competition(competition_id)
-
-        error = {'error_problem_id': []}
-
-        for elem in targets:
-            if CompetitionProblem.objects.filter(id=elem).active().count() == 0 or \
-                    CompetitionProblem.objects.filter(competition_id=competition_id,
-                                                      id=elem).active().count() == 0:
-                error['error_problem_id'].append(elem)
-                continue
-
-            target = get_competition_problem(elem)
-            target.is_deleted = True
-
-            target.save()
-
-        if len(error.get('error_problem_id')) == 0:
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
-        else:
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
-
-
 class CompetitionUserView(APIView, PaginationHandlerMixin):
     permission_classes = [IsAuthenticated]
     pagination_class = BasicPagination
@@ -461,13 +429,13 @@ class CompetitionProblemView(APIView):
     # 06-14 Remove problems
     def delete(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         problem = CompetitionProblem.objects.filter(competition_id=competition_id, id=comp_p_id).active().first()
-        problem_id = problem.problem_id.id
 
         if problem is None:
             return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
 
+        problem_id = problem.problem_id.id
         if problem.competition_id.id != competition_id:
-            return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         competition_problem_lists = CompetitionProblem.objects.filter(competition_id=competition_id) \
             .order_by('-order').active()
@@ -477,17 +445,11 @@ class CompetitionProblemView(APIView):
                 comp_problem.order = comp_problem.order - 1
                 comp_problem.save()
             else:
-
-                competition_usage = CompetitionProblem.objects.exclude(id=comp_p_id).filter(problem_id=problem_id)\
-                    .order_by('id').active()
-                contest_usage = ContestProblem.objects.filter(problem_id=problem_id).order_by('id').active()
-
-                if competition_usage.count() == 0 and contest_usage.count() == 0:
-                    p = get_problem(id=problem_id)
-                    p.is_deleted = True
-                    p.save()
-
                 comp_problem.is_deleted = True
                 comp_problem.save()
+
+                p = get_problem(id=problem_id)
+                p.is_deleted = True
+                p.save()
 
                 return Response(msg_success_delete, status=status.HTTP_200_OK)

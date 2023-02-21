@@ -251,20 +251,30 @@ class ContestProblemInfoView(APIView):
 
     # 05-15
     def delete(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
-        contest_problem = get_contest_problem(cp_id)
-        if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-            return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+        contest_problem = ContestProblem.objects.filter(contest_id=contest_id, cp_id=cp_id).active().first()
+
+        if contest_problem is None:
+            return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
+
+        problem_id = contest_problem.problem_id.id
+        if contest_problem.contest_id.id != contest_id or contest_problem.contest_id.class_id.id != class_id:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         contest_problem_lists = ContestProblem.objects.filter(contest_id=contest_id).order_by('-order').active()
 
-        for contest_problem_list in contest_problem_lists:
-            if contest_problem_list.order > contest_problem.order:
-                contest_problem_list.order = contest_problem_list.order - 1
-                contest_problem_list.save()
+        for con_p in contest_problem_lists:
+            if con_p.order > contest_problem.order:
+                con_p.order = con_p.order - 1
+                con_p.save()
             else:
                 contest_problem.is_deleted = True
                 contest_problem.save()
-                return Response(msg_success, status=status.HTTP_200_OK)
+
+                p = get_problem(id=problem_id)
+                p.is_deleted = True
+                p.save()
+
+                return Response(msg_success_delete, status=status.HTTP_200_OK)
 
     # 05-13-03
     def put(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
