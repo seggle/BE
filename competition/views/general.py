@@ -5,9 +5,9 @@ from competition.serializers import (
     CompetitionDetailSerializer, CompetitionSerializer,
     CompetitionProblemCheckSerializer, CompetitionPutSerializer,
     CompetitionUserGetSerializer, CompetitionUserSerializer, CompetitionProblemSerializer,
-    CompetitionProblemDetailSerializer, CompetitionProblemInfoSerializer,
+    CompetitionProblemDetailSerializer, CompetitionProblemInfoSerializer, CompetitionProblemPutSerializer,
 )
-from problem.serializers import ProblemSerializer
+from problem.serializers import ProblemSerializer, ProblemPutSerializer
 from competition.models import Competition, CompetitionUser
 from problem.models import Problem
 from account.models import User
@@ -391,7 +391,7 @@ class CompetitionCheckView(APIView):
 
 
 class CompetitionProblemView(APIView):
-    permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsCompetitionUser]
+    permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsSafeMethod]
 
     # 06-13
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
@@ -453,3 +453,77 @@ class CompetitionProblemView(APIView):
                 p.save()
 
                 return Response(msg_success_delete, status=status.HTTP_200_OK)
+
+    # 06-15
+    def put(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
+        competition_problem = get_competition_problem(comp_p_id)
+        problem = get_problem(id=competition_problem.problem_id.id)
+
+        if competition_problem.competition_id.id != competition_id:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
+        data = request.data
+
+        if len(request.data) == 0:
+            return Response(msg_error_no_request, status=status.HTTP_400_BAD_REQUEST)
+
+        obj = {
+            "title": data.get('title', competition_problem.title),
+            "description": data.get('description', competition_problem.description),
+            "data_description": data.get('data_description', competition_problem.data_description),
+            'evaluation': data.get('evaluation', problem.evaluation),
+            "public": data.get("public", problem.public),
+        }
+
+        if data.get('data', '') != '':
+            data_str = data['data'].name.split('.')[-1]
+            print(data_str)
+            if data_str != 'zip':
+                return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+            # 폴더 삭제
+            if os.path.isfile(problem.data.path):
+                if os.name == 'posix':
+                    path = problem.data.path.split("uploads/problem/")
+                    path = path[1].split("/", 1)
+                    shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
+                else:
+                    path = os.path.normpath(problem.data.path.split('problem')[1])
+                    path = path.split("\\")[1]
+                    shutil.rmtree('./uploads/problem/' + path + '/')  # 폴더 삭제 명령어 - shutil
+
+        if data.get('solution', '') != '':
+            solution_str = data['solution'].name.split('.')[-1]
+            if solution_str != 'csv':
+                return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+            if os.path.isfile(problem.solution.path):
+                if os.name == 'posix':
+                    path = problem.solution.path.split("uploads/solution/")
+                    path = path[1].split("/", 1)
+                    shutil.rmtree('./uploads/solution/' + path[0] + '/')
+                else:
+                    path = os.path.normpath(problem.solution.path.split('solution')[1])
+                    path = path.split("\\")[1]
+                    shutil.rmtree('./uploads/solution/' + path + '/')  # 폴더 삭제 명령어 - shutil
+
+        serializer = ProblemPutSerializer(problem, data=request.data, partial=True)
+        comserializer = CompetitionProblemPutSerializer(competition_problem, data=obj, partial=True)
+
+        if serializer.is_valid() and comserializer.is_valid():
+            serializer.save()
+            comserializer.save()
+
+            rt = {
+                'id': problem.id,
+                'comp_p_id': comserializer.data.get('id'),
+                'order': comserializer.data.get('order'),
+                'title': serializer.data.get('title'),
+                'description': serializer.data.get('description'),
+                'data_description': serializer.data.get('data_description'),
+                'data': serializer.data.get('data'),
+                'solution': serializer.data.get('solution'),
+                'evaluation': serializer.data.get('evaluation'),
+                'public': serializer.data.get('public'),
+            }
+            return Response(rt, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
