@@ -281,6 +281,9 @@ class ContestProblemInfoView(APIView):
         contest_problem = get_contest_problem(cp_id)
         problem = get_problem(id=contest_problem.problem_id.id)
 
+        if contest_problem.contest_id.id != contest_id or contest_problem.contest_id.class_id.id != class_id:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data
 
         if len(request.data) == 0:
