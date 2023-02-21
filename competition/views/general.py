@@ -159,9 +159,6 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
 
         data = request.data.copy()
 
-        if data.get('problem_id', None) is not None:
-            pass
-
         if data.get('data', None) is None:
             return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
         if data.get('solution', None) is None:

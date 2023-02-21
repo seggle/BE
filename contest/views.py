@@ -11,7 +11,8 @@ from rest_framework import status
 from django.utils import timezone
 import seggle.settings
 from problem.models import Problem
-from problem.serializers import ProblemPutSerializer
+from problem.serializers import ProblemPutSerializer, ProblemSerializer
+from utils.get_error import get_error_msg
 from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination
 from .models import Contest, ContestProblem
 from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, \
@@ -118,45 +119,71 @@ class ContestProblemView(APIView, PaginationHandlerMixin):
 
     # 05-13-01
     def post(self, request: Request, class_id: int, contest_id: int) -> Response:
-        # permission 해당 Class의 ClassUser privilege 2 이상 & admin
+        data = request.data.copy()
 
-        datas = request.data
-        error = {
-            "Error_problem_id": []
-        }
-        for data in datas.get('problem_id'):
-            pro_id = int(data)
-            # exist and Problem id and public and is_deleted is not checking
-            # problem_id 가 존재하지 않거나, 이미 등록된 경우
-            if Problem.objects.filter(id=pro_id).active().count() == 0 or \
-               ContestProblem.objects.filter(contest_id=contest_id).filter(problem_id=pro_id).active().count() != 0:
-                error['Error_problem_id'].append(data)
-                continue
+        if data.get('data', None) is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
+        if data.get('solution', None) is None:
+            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
 
+        data_str = data.get('data').name.split('.')[-1]
+        solution_str = data.get('solution').name.split('.')[-1]
+        if data_str != 'zip':
+            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+        if solution_str != 'csv':
+            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+
+        data['created_user'] = request.user
+
+        data['professor'] = data.get('created_user')
+        problem = ProblemSerializer(data=data)
+
+        if problem.is_valid():
+            problem.save()
+
+            elem = problem.data.get('id')
+
+            target = problem
             order = ContestProblem.objects.filter(contest_id=contest_id).active().count() + 1
-            problem = Problem.objects.get(id=pro_id)
-            # 0315 수정 필요
-            # if ((problem.public != 1) or (problem.is_deleted != 0)):
-            #     error['Error_problem_id'].append(data['problem_id'])
-            #     continue
 
-            problem_data = {
-                "contest_id": contest_id,
-                "problem_id": pro_id,
-                "order": order,
-                "title": problem.title,
-                "description": problem.description,
-                "data_description": problem.data_description
+            obj = {
+                'title': target.data.get('title'),
+                'description': target.data.get('description'),
+                'data_description': target.data.get('data_description'),
+                'contest_id': contest_id,
+                'problem_id': elem,
+                'order': order,
             }
-            serializer = ContestProblemPostSerializer(data=problem_data)
+
+            serializer = ContestProblemSerializer(data=obj)
 
             if serializer.is_valid():
                 serializer.save()
+                rt = {
+                    'id': problem.data.get('id'),
+                    'cp_id': serializer.data.get('id'),
+                    'order': order,
+                    'title': serializer.data.get('title'),
+                    'description': serializer.data.get('description'),
+                    'data_description': serializer.data.get('data_description'),
+                    'data': problem.data.get('data'),
+                    'solution': problem.data.get('solution'),
+                    'evaluation': problem.data.get('evaluation'),
+                    'public': problem.data.get('public'),
+                    'created_time': problem.data.get('created_time'),
+                    'created_user': problem.data.get('created_user'),
+                    'professor': problem.data.get('professor'),
+                }
 
-        if len(error.get('Error_problem_id')) == 0:
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+                return Response(rt, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+            msg = get_error_msg(problem)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     # 05-11
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
@@ -251,7 +278,7 @@ class ContestProblemInfoView(APIView):
 
     # 05-15
     def delete(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
-        contest_problem = ContestProblem.objects.filter(contest_id=contest_id, cp_id=cp_id).active().first()
+        contest_problem = ContestProblem.objects.filter(contest_id=contest_id, id=cp_id).active().first()
 
         if contest_problem is None:
             return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
