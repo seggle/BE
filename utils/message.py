@@ -57,6 +57,7 @@ msg_ExamParticipateView_get_e_2 = {"error": "해당 class에 속하지 않습니
 # faq
 
 # leaderboard
+msg_error_no_on_leaderboard_submission = {'code': 400, "message": "리더보드에 공개된 제출이 없습니다."}
 
 # password
 

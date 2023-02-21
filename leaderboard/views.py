@@ -9,8 +9,8 @@ from utils.permission import *
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import PageNumberPagination  # pagination
 from utils.pagination import PaginationHandlerMixin, BasicPagination  # pagination
-from rest_framework.status import HTTP_200_OK
-
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from utils.message import *
 
 class LeaderboardClassView(APIView, PaginationHandlerMixin):
     permission_classes = [IsCPUser]
@@ -93,9 +93,9 @@ class LeaderboardCompetitionView(APIView, PaginationHandlerMixin):
                 count = count -1
             obj_list.append(obj)
             count = count + 1
-
+        if not obj_list:
+            return Response(msg_error_no_on_leaderboard_submission, status=HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(obj_list)
-
         if page is not None:
             serializer = self.get_paginated_response(LeaderboardCompetitionSerializer(page, many=True).data)
         else:
