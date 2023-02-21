@@ -336,7 +336,7 @@ class ContestProblemInfoView(APIView):
 
             rt = {
                 'id': problem.id,
-                'con_p_id': conserializer.data.get('id'),
+                'cp_id': conserializer.data.get('id'),
                 'order': conserializer.data.get('order'),
                 'title': serializer.data.get('title'),
                 'description': serializer.data.get('description'),
