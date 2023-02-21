@@ -3,8 +3,7 @@ from competition.views.general import (
     CompetitionTaView,
     CompetitionUserView,
     CompetitionView,
-    CompetitionDetailView,
-    CompetitionProblemConfigurationView, CompetitionProblemOrderView, CompetitionCheckView, CompetitionProblemView
+    CompetitionDetailView, CompetitionProblemOrderView, CompetitionCheckView, CompetitionProblemView
 )
 from submission.views import SubmissionCompetitionView, SubmissionCompetitionListView, SubmissionCompetitionCheckView
 
@@ -13,7 +12,6 @@ urlpatterns = [
     path('', CompetitionView.as_view(), name="competition"),
     path('<int:competition_id>/', CompetitionDetailView.as_view(), name="competition_detail"),
     path('<int:competition_id>/check/', CompetitionCheckView.as_view(), name="competition_check"),
-    path('<int:competition_id>/config/', CompetitionProblemConfigurationView.as_view(), name="manage_problems"),
     path('<int:competition_id>/order/', CompetitionProblemOrderView.as_view(), name="manage_problems"),
     path('<int:competition_id>/participation/', CompetitionUserView.as_view(), name='competition_user'),
     path('<int:competition_id>/participation/ta/', CompetitionTaView.as_view(), name='competition_ta'),
