@@ -46,6 +46,7 @@ msg_success_patch_order = {'code': 200, 'message': 'order를 성공적으로 바
 msg_error_invalid_problem = {'code': 400, 'message': '잘못된 메시지 요청입니다.'}
 msg_error_wrong_problem = {'code': 500, 'message': '잘못된 문제 유형입니다.'}
 msg_error_problem_not_found = {'code': 404, 'message': '없는 문제입니다.'}
+msg_error_user_not_found = {"code": 404, "message": "없는 사용자입니다."}
 
 # contest
 
