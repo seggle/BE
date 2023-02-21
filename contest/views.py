@@ -1,3 +1,5 @@
+import os
+import shutil
 from multiprocessing import context
 from pickle import TRUE
 
@@ -9,10 +11,11 @@ from rest_framework import status
 from django.utils import timezone
 import seggle.settings
 from problem.models import Problem
+from problem.serializers import ProblemPutSerializer
 from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination
 from .models import Contest, ContestProblem
 from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, \
-    ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer
+    ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer, ContestProblemSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
@@ -214,36 +217,6 @@ class ContestProblemOrderView(APIView):
         return Response(msg_success, status=status.HTTP_200_OK)
 
 
-class ContestProblemTitleDescptView(APIView):
-    permission_classes = [IsClassProfOrTA | IsAdmin]
-
-    # 05-13-03
-    def patch(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
-        contest_problem = get_contest_problem(cp_id)
-
-        data = request.data
-
-        obj = {
-            "title": data.get('title'),
-            "description": data.get('description'),
-            "data_description": data.get('data_description')
-        }
-        serializer = ContestProblemDesSerializer(contest_problem, data=obj)
-        if serializer.is_valid():
-            contest_problem = serializer.save()
-            problem = contest_problem.problem_id
-            obj = {
-                "evaluation": data.get('evaluation')
-            }
-            serializer = ContestProblemDesEvaluateSerializer(problem, data=obj)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(msg_success, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class ContestProblemInfoView(APIView):
     permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
 
@@ -292,3 +265,74 @@ class ContestProblemInfoView(APIView):
                 contest_problem.is_deleted = True
                 contest_problem.save()
                 return Response(msg_success, status=status.HTTP_200_OK)
+
+    # 05-13-03
+    def put(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
+        contest_problem = get_contest_problem(cp_id)
+        problem = get_problem(id=contest_problem.problem_id.id)
+
+        data = request.data
+
+        if len(request.data) == 0:
+            return Response(msg_error_no_request, status=status.HTTP_400_BAD_REQUEST)
+
+        obj = {
+            "title": data.get('title', contest_problem.title),
+            "description": data.get('description', contest_problem.description),
+            "data_description": data.get('data_description', contest_problem.data_description),
+            'evaluation': data.get('evaluation', problem.evaluation),
+            "public": data.get("public", problem.public),
+        }
+
+        if data.get('data', '') != '':
+            data_str = data['data'].name.split('.')[-1]
+            print(data_str)
+            if data_str != 'zip':
+                return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
+            # 폴더 삭제
+            if os.path.isfile(problem.data.path):
+                if os.name == 'posix':
+                    path = problem.data.path.split("uploads/problem/")
+                    path = path[1].split("/", 1)
+                    shutil.rmtree('./uploads/problem/' + path[0] + '/')  # 폴더 삭제 명령어 - shutil
+                else:
+                    path = os.path.normpath(problem.data.path.split('problem')[1])
+                    path = path.split("\\")[1]
+                    shutil.rmtree('./uploads/problem/' + path + '/')  # 폴더 삭제 명령어 - shutil
+
+        if data.get('solution', '') != '':
+            solution_str = data['solution'].name.split('.')[-1]
+            if solution_str != 'csv':
+                return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+            if os.path.isfile(problem.solution.path):
+                if os.name == 'posix':
+                    path = problem.solution.path.split("uploads/solution/")
+                    path = path[1].split("/", 1)
+                    shutil.rmtree('./uploads/solution/' + path[0] + '/')
+                else:
+                    path = os.path.normpath(problem.solution.path.split('solution')[1])
+                    path = path.split("\\")[1]
+                    shutil.rmtree('./uploads/solution/' + path + '/')  # 폴더 삭제 명령어 - shutil
+
+        serializer = ProblemPutSerializer(problem, data=request.data, partial=True)
+        conserializer = ContestProblemSerializer(contest_problem, data=obj, partial=True)
+
+        if serializer.is_valid() and conserializer.is_valid():
+            serializer.save()
+            conserializer.save()
+
+            rt = {
+                'id': problem.id,
+                'con_p_id': conserializer.data.get('id'),
+                'order': conserializer.data.get('order'),
+                'title': serializer.data.get('title'),
+                'description': serializer.data.get('description'),
+                'data_description': serializer.data.get('data_description'),
+                'data': serializer.data.get('data'),
+                'solution': serializer.data.get('solution'),
+                'evaluation': serializer.data.get('evaluation'),
+                'public': serializer.data.get('public'),
+            }
+            return Response(rt, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
