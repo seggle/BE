@@ -16,7 +16,8 @@ from utils.get_error import get_error_msg
 from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination
 from .models import Contest, ContestProblem
 from .serializers import ContestSerializer, ContestPatchSerializer, ContestProblemPostSerializer, \
-    ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer, ContestProblemSerializer
+    ContestProblemDesSerializer, ContestProblemDesEvaluateSerializer, ContestProblemSerializer, \
+    ContestProblemInfoSerializer
 from utils.get_obj import *
 from utils.message import *
 from utils.common import IP_ADDR
@@ -227,21 +228,37 @@ class ContestProblemOrderView(APIView):
     # 05-13-02
     def patch(self, request: Request, class_id: int, contest_id: int) -> Response:
 
-        datas = request.data
+        datas = request.data.get('data', None)
 
-        # contest_problem_id check
+        if datas is None:
+            return Response(msg_error_no_selection, status.HTTP_400_BAD_REQUEST)
+
+        accepted = []
         for data in datas:
-            contest_problem = get_contest_problem(data.get('id'))
-            # url check
-            if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-                return Response(msg_error, status=status.HTTP_400_BAD_REQUEST)
+            contest_problem_id = data.get('id', None)
+            order = data.get('order', None)
 
-        for data in datas:
-            contest_problem = ContestProblem.objects.get(id=data.get('id'))
-            contest_problem.order = data.get('order')
-            contest_problem.save()
+            if contest_problem_id is None or contest_problem_id <= 0:
+                return Response(msg_error_invalid_id, status=status.HTTP_400_BAD_REQUEST)
+            if order is None or order <= 0:
+                return Response(msg_error_invalid_order, status.HTTP_400_BAD_REQUEST)
 
-        return Response(msg_success, status=status.HTTP_200_OK)
+            try:
+                problem = ContestProblem.objects.get(id=contest_problem_id)
+            except:
+                return Response(msg_error_problem_not_found, status=status.HTTP_404_NOT_FOUND)
+
+            if problem.contest_id.id != contest_id or problem.contest_id.class_id.id != class_id:
+                return Response(msg_error_invalid_url, status.HTTP_400_BAD_REQUEST)
+
+            accepted.append({'problem': problem, 'order': order})
+
+        for elem in accepted:
+            problem = elem.get('problem')
+            problem.order = elem.get('order')
+            problem.save()
+
+        return Response(msg_success_patch_order, status=status.HTTP_200_OK)
 
 
 class ContestProblemInfoView(APIView):
