@@ -62,11 +62,11 @@ class LeaderboardCompetitionView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     # 09-00 대회 문제 리더보드 조회
-    def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
-        competition = get_competition(competition_id)
+    def get(self, request: Request, comp_p_id: int) -> Response:
+
         problem = get_competition_problem(comp_p_id)
         submission_competition_list = SubmissionCompetition\
-            .objects.filter(competition_id=competition_id, comp_p_id=comp_p_id)
+            .objects.filter(comp_p_id=comp_p_id)
 
         # 정렬
         if problem.problem_id.evaluation in ["CategorizationAccuracy", "F1-score", "mAP"]: # 내림차순
@@ -87,6 +87,7 @@ class LeaderboardCompetitionView(APIView, PaginationHandlerMixin):
                 "score": submission.score,
                 "created_time": submission.created_time,
             }
+            competition_id = submission.competition_id
             if CompetitionUser.objects.filter(username=submission.username, privilege=1, competition_id=competition_id).exists() or CompetitionUser.objects.filter(username=submission.username, privilege=2, competition_id=competition_id).exists():
                 obj["id"] = 0
                 count = count -1
