@@ -268,30 +268,33 @@ class ContestProblemInfoView(APIView):
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
         contest_problem = get_contest_problem(cp_id)
 
-        if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
-
         time_check = timezone.now()
         if (contest_problem.contest_id.start_time > time_check) or (contest_problem.contest_id.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
 
-        problem = Problem.objects.get(id=contest_problem.problem_id.id)
+        orig_problem = get_problem(id=contest_problem.problem_id.id)
+
+        if contest_problem.contest_id.id != contest_id or contest_problem.contest_id.class_id.id != class_id:
+            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
 
         # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         cp_json = {
             "id": contest_problem.id,
-            "contest_id": contest_problem.contest_id.id,
-            "problem_id": contest_problem.problem_id.id,
             "title": contest_problem.title,
             "description": contest_problem.description,
             "data_description": contest_problem.data_description,
-            "start_time": contest_problem.contest_id.start_time,
-            "end_time": contest_problem.contest_id.end_time,
+            "problem_id": contest_problem.problem_id.id,
+            "order": contest_problem.order,
+            'data': orig_problem.data,
             "evaluation": contest_problem.problem_id.evaluation,
-            # "problem_data": data_url,
         }
 
-        return Response(cp_json, status=status.HTTP_200_OK)
+        serializer = ContestProblemInfoSerializer(data=cp_json, many=False)
+
+        if serializer.is_valid():
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(msg_error_wrong_problem, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # 05-15
     def delete(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:

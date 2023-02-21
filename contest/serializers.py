@@ -28,6 +28,15 @@ class ContestProblemPostSerializer(serializers.ModelSerializer):
         fields = ["contest_id", "problem_id", "title", "description", "data_description", "order"]
 
 
+class ContestProblemInfoSerializer(serializers.ModelSerializer):
+    data = serializers.FileField()
+    evaluation = serializers.CharField()
+
+    class Meta:
+        model = ContestProblem
+        fields = ['id', 'order', 'problem_id', 'title', 'description', 'data', 'data_description', 'evaluation']
+
+
 class ContestProblemDesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContestProblem
