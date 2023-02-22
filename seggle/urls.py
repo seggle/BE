@@ -32,7 +32,6 @@ urlpatterns = [
     path('api/competitions/', include('competition.urls.general')),
     path('api/submissions/', include('submission.urls')),
     path('api/leaderboards/', include('leaderboard.urls')),
-    path('api/api-auth/', include('rest_framework.urls')),
     path('api/class/<int:class_id>/contests/<int:contest_id>/exam/',include('exam.urls')),
     path('api/admin/problems/',include('problem.urls.admin')),
     path('api/admin/', admin.site.urls),
