@@ -21,7 +21,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, AuthenticationFailed
 from utils.get_obj import *
 from utils.get_error import get_error_msg
 from utils.permission import *
@@ -322,6 +322,24 @@ class CookieTokenRefreshSerializer(TokenRefreshSerializer):
 class CookieTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainResultSerializer
     # 01-03 login
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid()
+        except AuthenticationFailed:
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": "ID 혹은 PW 가 틀렸습니다"
+                }, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid() is False:
+            msg = get_error_msg(serializer)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
     def finalize_response(self, request, response, *args, **kwargs):
         if response.data.get('refresh'):
             response.set_cookie(
