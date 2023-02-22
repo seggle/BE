@@ -376,7 +376,6 @@ class CookieTokenRefreshView(TokenRefreshView):
             httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
             samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
         )
-        print(response.data)
         if response.data.get('access') is not None:
             del response.data["access"]
             response.data["message"] = "Refresh Success"
@@ -397,7 +396,7 @@ class LogoutView(APIView):
 
             response = Response({
                 "message": "Logout success"
-            }, status=status.HTTP_202_ACCEPTED)
+            }, status=status.HTTP_200_OK)
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
             # response.delete_cookie("X-CSRFToken")
@@ -406,7 +405,10 @@ class LogoutView(APIView):
             return response
 
         except:
-            raise ParseError(detail="Invalid token", code=400)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": "Invalid Token"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class LogoutAllView(APIView):
