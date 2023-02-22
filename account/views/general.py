@@ -327,7 +327,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE'],
                 value=response.data['access'],
-                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                max_age=3600,  # 1 hour
                 secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
                 httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                 samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
@@ -335,7 +335,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             response.set_cookie(
                 key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
                 value=response.data['refresh'],
-                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                max_age=3600*24*14,  # 14 days
                 secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
                 httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                 samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
@@ -352,15 +352,19 @@ class CookieTokenRefreshView(TokenRefreshView):
         # set access token
         response.set_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],
-            value=response.data['access'],
+            value=response.data.get('access'),
             expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
             secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
             httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
             samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
         )
-        del response.data["access"]
+        print(response.data)
+        if response.data.get('access') is not None:
+            del response.data["access"]
+            response.data["message"] = "Refresh Success"
+        else:
+            response.data["message"] = "Refresh Failed. Refresh Token Expired"
 
-        response.data["message"] = "Refresh Success"
         # response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
         return super().finalize_response(request, response, *args, **kwargs)
 
@@ -384,7 +388,7 @@ class LogoutView(APIView):
             return response
 
         except:
-            raise ParseError("Invalid token")
+            raise ParseError(detail="Invalid token", code=400)
 
 
 # class LogoutAllView(APIView):
