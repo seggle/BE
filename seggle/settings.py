@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
     # DRF
     'rest_framework',
+    'rest_framework.authtoken',
 
     # simple jwt
     'rest_framework_simplejwt',
@@ -185,7 +186,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly', # 비인증 요청에게는 읽기 권한만 허용
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'account.authenticate.CustomAuthentication',
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination', # pagenation 관련 설정
     'PAGE_SIZE': 15,
