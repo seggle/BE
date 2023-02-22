@@ -28,6 +28,7 @@ class Problem(models.Model):
     is_deleted = models.BooleanField(default=False)
     professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor", blank=True, null=True)
     objects = ActiveModelQuerySet().as_manager()
+    type = models.TextField(default="None")
 
     def __str__(self):
         return self.id
