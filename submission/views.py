@@ -203,14 +203,19 @@ class SubmissionClassCheckView(APIView):
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
 
+        # contest 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
+        if contest.end_time < timezone.now():
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data
-        class_submission_list = []
-        for submission in data:
-            sub_id = submission.id
-            class_submission = get_submission_class(sub_id)
-            if class_submission.username.username != request.user.username:
-                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
-            class_submission_list.append(class_submission)
+
+        sub_id = data.get('id', None)
+        if not isinstance(sub_id, int):
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        class_submission = get_submission_class(sub_id)
+        if class_submission.username.username != request.user.username:
+            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionClass.objects.filter(username=request.user.username).filter(c_p_id=cp_id)
@@ -219,13 +224,8 @@ class SubmissionClassCheckView(APIView):
             submission.save()
 
         # submission의 on_leaderboard를 True로 설정
-        for class_submission in class_submission_list:
-            class_submission.on_leaderboard = True
-            class_submission.save()
-
-        # contest 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
-        if contest.end_time < timezone.now():
-            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        class_submission.on_leaderboard = True
+        class_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
