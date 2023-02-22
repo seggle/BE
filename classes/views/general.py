@@ -53,7 +53,7 @@ class ClassView(APIView):
 
 
 class ClassDetailView(APIView):
-    permission_classes = [ClassProfOrReadOnly]
+    permission_classes = [ClassProfOrReadOnly | IsAdmin]
 
     # 05-02
     def get(self, request: Request, class_id: int) -> Response:
@@ -73,7 +73,7 @@ class ClassDetailView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+        return Response(msg_error_diff_user, status=status.HTTP_403_FORBIDDEN)
 
     # 05-04
     def delete(self, request: Request, class_id: int) -> Response:
@@ -81,13 +81,13 @@ class ClassDetailView(APIView):
         if class_.created_user == request.user:
             class_.is_deleted = True
             class_.save()
-            return Response(msg_success, status=status.HTTP_200_OK)
+            return Response(msg_success_delete, status=status.HTTP_200_OK)
         else:
-            return Response(msg_error_diff_user, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_diff_user, status=status.HTTP_403_FORBIDDEN)
 
 
 class ClassStdView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsClassProfOrTA]
+    permission_classes = [IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-05-01
@@ -148,13 +148,13 @@ class ClassStdView(APIView, PaginationHandlerMixin):
 
         # 출력
         if (len(user_does_not_exist.get('does_not_exist')) == 0) and (len(user_does_not_exist.get('is_existed')) == 0):
-            return Response(msg_success_create, status=status.HTTP_201_CREATED)
+            return Response(msg_success_participation, status=status.HTTP_201_CREATED)
         else:
             return Response(user_does_not_exist, status=status.HTTP_201_CREATED)
 
 
 class ClassTaView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsClassProf]
+    permission_classes = [IsClassProf | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-05-02

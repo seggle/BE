@@ -12,6 +12,8 @@ db.sqlite3-journal
 secrets.json
 uploads
 envvv
+venv/
+uploads/
 migrations/
 # uploads/problem
 # uploads/solution

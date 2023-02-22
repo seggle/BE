@@ -1,6 +1,7 @@
 from django.db.models import Q
 from rest_framework.request import Request
 from rest_framework.response import Response
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,7 +11,7 @@ from rest_framework.pagination import PageNumberPagination
 from utils.pagination import PaginationHandlerMixin
 from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer
+    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer, LoginSerializer
 from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
 from competition.models import CompetitionUser
@@ -18,15 +19,25 @@ from submission.models import SubmissionClass, SubmissionCompetition
 from rest_framework_simplejwt.views import (
     TokenRefreshView, TokenObtainPairView,
 )
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import ParseError
 from utils.get_obj import *
-
+from utils.get_error import get_error_msg
 from utils.permission import *
 from utils.pagination import BasicPagination, PaginationHandlerMixin
 
+from django.middleware import csrf
+from django.contrib.auth import authenticate
+
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
+    # 01-02 회원 가입
     def post(self, request: Request) -> Response:
         serializer = UserRegisterSerializer(data=request.data)
         data = {}
@@ -52,37 +63,11 @@ class UserRegisterView(APIView):
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
 
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request: Request) -> Response:
-        try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# class LogoutAllView(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     def post(self, request):
-#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
-#         for token in tokens:
-#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
-#         return Response(status=status.HTTP_205_RESET_CONTENT)
-
-class RefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
-
-
 class UserInfoView(APIView):
     permission_classes = [IsRightUser]
 
     # 01-07 유저 조회
-    def get(self, request: Request, username: str, format: str=None) -> Response:
+    def get(self, request: Request, username: str, format: str = None) -> Response:
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
@@ -234,7 +219,7 @@ class ContributionsView(APIView, PaginationHandlerMixin):
         page = self.paginate_queryset(sort_list)
 
         if page is not None:
-            serializer = self.get_paginated_response(ContributionsSerializer(page,many=True).data)
+            serializer = self.get_paginated_response(ContributionsSerializer(page, many=True).data)
         else:
             serializer = ContributionsSerializer(sort_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -263,7 +248,6 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
                 continue
             obj = {}
             obj["id"] = competition.competition_id.id
-            obj["problem_id"] = competition.competition_id.problem_id
             obj["title"] = competition.competition_id.problem_id.title
             obj["start_time"] = competition.competition_id.start_time
             obj["end_time"] = competition.competition_id.end_time
@@ -326,8 +310,87 @@ class UserCompetitionPrivilege(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# TokenObtainPairView with username field
-class TokenObtainResultView(TokenObtainPairView):
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+    def validate(self, attrs):
+        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
+        if attrs['refresh']:
+            return super().validate(attrs)
+        else:
+            raise InvalidToken('No valid token found in cookie \'refresh_token\'')
 
+class CookieTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainResultSerializer
-    token_obtain_pair = TokenObtainPairView.as_view()
+    # 01-03 login
+    def finalize_response(self, request, response, *args, **kwargs):
+        if response.data.get('refresh'):
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                value=response.data['access'],
+                expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
+                value=response.data['refresh'],
+                expires=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'],
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
+            del response.data['refresh']
+            del response.data['access']
+            # response.data["X-CSRFToken"] = csrf.get_token(request)
+        return super().finalize_response(request, response, *args, **kwargs)
+
+class CookieTokenRefreshView(TokenRefreshView):
+    serializer_class = CookieTokenRefreshSerializer
+    # 01-01 login refresh
+    def finalize_response(self, request, response, *args, **kwargs):
+        # set access token
+        response.set_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+            value=response.data['access'],
+            expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        del response.data["access"]
+
+        response.data["message"] = "Refresh Success"
+        # response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
+        return super().finalize_response(request, response, *args, **kwargs)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    # 01-04 로그아웃
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            response = Response({
+                "message": "Logout success"
+            }, status=status.HTTP_202_ACCEPTED)
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+            # response.delete_cookie("X-CSRFToken")
+            # response.delete_cookie("csrftoken")
+            # response.data["X-CSRFToken"] = None
+            return response
+
+        except:
+            raise ParseError("Invalid token")
+
+
+# class LogoutAllView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     def post(self, request):
+#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+#         for token in tokens:
+#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
+#         return Response(status=status.HTTP_205_RESET_CONTENT)

@@ -9,7 +9,7 @@ from rest_framework.pagination import PageNumberPagination #pagination
 import seggle.settings
 from utils.pagination import PaginationHandlerMixin, BasicPagination, ListPagination  # pagination
 from ..models import Class, ClassUser
-from ..serializers import ClassSerializer
+from ..serializers import ClassSerializer, ClassInfoSerializer
 from utils.get_obj import *
 from django.http import Http404, JsonResponse
 from utils.permission import IsAdmin
@@ -29,12 +29,12 @@ class ClassAdminInfoView(APIView, PaginationHandlerMixin):
             if keyword:
                 class_list = class_list.filter(Q(name__icontains=keyword) |
                                                Q(created_user__username__icontains=keyword))
-                
+
             page = self.paginate_queryset(class_list)
             if page is not None:
-                serializer = self.get_paginated_response(ClassSerializer(page, many=True).data)
+                serializer = self.get_paginated_response(ClassInfoSerializer(page, many=True).data)
             else:
-                serializer = ClassSerializer(class_list)
+                serializer = ClassInfoSerializer(class_list)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
