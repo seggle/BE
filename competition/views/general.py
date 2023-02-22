@@ -174,6 +174,9 @@ class CompetitionDetailView(APIView, PaginationHandlerMixin):
         data['created_user'] = request.user
 
         data['professor'] = data.get('created_user')
+
+        data['type'] = "competition"
+
         problem = ProblemSerializer(data=data)
 
         if problem.is_valid():
