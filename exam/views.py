@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+
+from utils.get_obj import get_contest
 from .models import Exam
 from .serializer import ExamSerializer, ExamGenerateSerializer , ExamIDGenerateSerializer
 from rest_framework.generics import get_object_or_404
@@ -66,10 +68,10 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
         #     message = {"error": "해당 class에 속하지 않습니다."}
         #     return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
-        contest = Contest.objects.get(id=contest_id)
+        contest = get_contest(contest_id)
 
         if not contest.is_exam:
-            message = {"error": "해당 contest는 시험이 아닙니다"}
+            message = {"code": 400, "message": "해당 contest는 시험이 아닙니다."}
             return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
 
         # data = request.data
@@ -114,9 +116,9 @@ class ExamParticipateView(APIView, PaginationHandlerMixin):
                 else:
                     return Response(serializer.errors)
             else:
-                message = {"error": "이미 제출된 내역이 있습니다."}
+                message = {"code": 400, "message": "이미 제출된 내역이 있습니다."}
                 return Response(data=message, status=status.HTTP_400_BAD_REQUEST)
-        message = {"error": "처리해야합니다"}
+        message = {"message": "처리해야합니다"}
         return Response(data=message)
 
 
