@@ -93,16 +93,16 @@ MIDDLEWARE = [
 CORS_ORIGIN_WHITELIST = ['http://115.91.214.3',
                          'http://localhost:8000']
 CORS_ALLOW_CREDENTIALS = True  # Return response with cookies
-
+"""
 CSRF_COOKIE_SECURE = False  # CSRF cookie enabled only Https server
 CSRF_COOKIE_HTTPONLY = True  # CSRF stored in http only cookie
 CSRF_TESTED_ORIGINS = [
     "http://localhost:8000"
 ]
-
+"""
 CORS_EXPOSE_HEADERS=["Content-Type", "X-CSRFToken"]  # Allow return of CSRF in response header
 SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SAMESITE = "Lax"  # Samesite "Lax" - Protection against csrf attacks
+# CSRF_COOKIE_SAMESITE = "Lax"  # Samesite "Lax" - Protection against csrf attacks
 SESSION_COOKIE_SAMESITE = "Lax"
 
 ROOT_URLCONF = 'seggle.urls'
@@ -187,7 +187,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'account.authenticate.CustomAuthentication',
-        #'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination', # pagenation 관련 설정
     'PAGE_SIZE': 15,
