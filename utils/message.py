@@ -22,7 +22,13 @@ msg_success_check_public = {'code': 200, 'message': '성공적으로 공개로 �
 msg_success_check_private = {'code': 200, 'message': '성공적으로 비공개로 바꾸었습니다.'}
 
 # account
-
+msg_password_is_not_match = {'code': 400, 'message': '비밀번호가 일치하지 않습니다.'}
+msg_success_delete_user = {'code': 200, 'message': '회원 탈퇴 성공'}
+msg_error_delete_user = {'code': 400, 'message': '이미 탈퇴 되었습니다.'}
+msg_error_new_password_is_not_match = {'code': 400, 'message': '새로운 비밀번호가 일치하지 않습니다.'}
+msg_error_current_password_is_not_correct = {'code': 400, 'message': '현재 비밀번호가 일치하지 않습니다.'}
+msg_error_no_permission_user = {"code": 403, "message": "접근 권한이 없습니다."}
+msg_error_not_in_class = {"code": 400, "message": "해당 수업에 속해있지 않습니다."}
 # announcement
 
 # classes
