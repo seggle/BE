@@ -248,6 +248,16 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
                 competition_id=competition_id).count() == 0:
             return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_403_FORBIDDEN)
 
+        # exam인 경우
+        is_competition_student = CompetitionUser.objects.filter(username=request.user, privilege=0).exists()
+        if competition.is_exam and is_competition_student:
+            # ip 중복 체크
+            '''
+            exam = Exam.objects.get(user=request.user, contest=contest)
+            if exam.is_duplicated:  # 중복이면 에러
+                return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+            '''
+
         data = request.data.copy()
 
         csv_str = data.get('csv', '')
