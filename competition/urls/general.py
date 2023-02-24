@@ -5,7 +5,8 @@ from competition.views.general import (
     CompetitionView,
     CompetitionDetailView, CompetitionProblemOrderView, CompetitionCheckView, CompetitionProblemView
 )
-from submission.views import SubmissionCompetitionView, SubmissionCompetitionListView, SubmissionCompetitionCheckView
+from submission.views import SubmissionCompetitionView, SubmissionCompetitionListView, SubmissionCompetitionCheckView, \
+    SubmissionCompetitionDownloadView
 
 app_name = "competition"
 urlpatterns = [
@@ -20,8 +21,8 @@ urlpatterns = [
          name='competition_submission'),
     path('<int:competition_id>/<int:comp_p_id>/submissions/', SubmissionCompetitionListView.as_view(),
         name='competition_submission_list'),
-    # path('<int:competition_id>/submissions/download/', SubmissionCompetitionDownloadView.as_view(),
-    #      name='competition_submission_download'),
+    path('<int:competition_id>/<int:comp_p_id>/submissions/download/', SubmissionCompetitionDownloadView.as_view(),
+         name='competition_submission_download'),
     path('<int:competition_id>/<int:comp_p_id>/check/', SubmissionCompetitionCheckView.as_view(),
          name='competition_leaderboard_check'),
 ]

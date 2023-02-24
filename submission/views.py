@@ -49,9 +49,11 @@ class SubmissionClassView(APIView, EvaluationMixin):
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
 
+        # 해당 클래스와 contest 요청이 제대로 되었는지 확인
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
+        # 시간 체크
         time_check = timezone.now()
         if (contest.start_time > time_check) or (contest.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
@@ -118,10 +120,17 @@ class SubmissionClassView(APIView, EvaluationMixin):
 
 
 class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsAdmin | IsClassProfOrTA | IsClassUser]
     pagination_class = BasicPagination
 
     # 05-18 클래스 contest 내 제출 보기
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
+        submission_class = get_class(class_id)
+        contest = get_contest(contest_id)
+        prob = get_contest_problem(cp_id)
+
+        if prob.contest_id != contest or contest.class_id != submission_class:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         submissions = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id, c_p_id=cp_id) \
             .order_by('-created_time')
@@ -129,9 +138,6 @@ class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
         username = request.GET.get('username', '')
         if username:
             submissions = submissions.filter(username=username)
-
-        if submissions.count() == 0:
-            return Response({'message': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
         outputs = []
 
@@ -203,14 +209,19 @@ class SubmissionClassCheckView(APIView):
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
 
+        # contest 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
+        if contest.end_time < timezone.now():
+            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data
-        class_submission_list = []
-        for submission in data:
-            sub_id = submission.id
-            class_submission = get_submission_class(sub_id)
-            if class_submission.username.username != request.user.username:
-                return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
-            class_submission_list.append(class_submission)
+
+        sub_id = data.get('id', None)
+        if not isinstance(sub_id, int):
+            return Response(msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+
+        class_submission = get_submission_class(sub_id)
+        if class_submission.username.username != request.user.username:
+            return Response(msg_SubmissionCheckView_patch_e_1, status=status.HTTP_400_BAD_REQUEST)
 
         # on_leaderboard를 모두 False로 설정
         submission_list = SubmissionClass.objects.filter(username=request.user.username).filter(c_p_id=cp_id)
@@ -219,13 +230,8 @@ class SubmissionClassCheckView(APIView):
             submission.save()
 
         # submission의 on_leaderboard를 True로 설정
-        for class_submission in class_submission_list:
-            class_submission.on_leaderboard = True
-            class_submission.save()
-
-        # contest 마감 이후 leaderboard 제출 시도 시 msg_time_error 반환
-        if contest.end_time < timezone.now():
-            return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
+        class_submission.on_leaderboard = True
+        class_submission.save()
 
         return Response(msg_success, status=status.HTTP_200_OK)
 
@@ -240,6 +246,9 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         problem = get_competition_problem(comp_p_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
+        if problem.competition_id != competition:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
         time_check = timezone.now()
         if (competition.start_time > time_check) or (competition.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
@@ -247,6 +256,16 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         if CompetitionUser.objects.filter(username=request.user.username).filter(
                 competition_id=competition_id).count() == 0:
             return Response(msg_SubmissionCompetitionView_post_e_1, status=status.HTTP_403_FORBIDDEN)
+
+        # exam인 경우
+        is_competition_student = CompetitionUser.objects.filter(username=request.user, privilege=0).exists()
+        if competition.is_exam and is_competition_student:
+            # ip 중복 체크
+            '''
+            exam = Exam.objects.get(user=request.user, contest=contest)
+            if exam.is_duplicated:  # 중복이면 에러
+                return Response(msg_SubmissionClassView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
+            '''
 
         data = request.data.copy()
 
@@ -303,6 +322,11 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     # 06-07 유저 submission 내역 조회
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
+        prob = get_competition_problem(comp_p_id)
+
+        if prob.competition_id != competition:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
         username = request.GET.get('username', '')
 
         submission_competition_list = SubmissionCompetition.objects \
@@ -483,15 +507,14 @@ class SubmissionClassDownloadView(APIView):
     permission_classes = [IsTA | IsProf | IsAdmin]
 
     # 05-19
-    def post(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response or HttpResponse:
+    def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
-        download_option = request.GET.get('dloption', None)
-        use_subdirectory = request.data.get('use_subdirectory', False)
-        contest_info = Contest.objects.filter(id=contest_id).first()
+        user_class = get_class(class_id)
+        contest_info = get_contest(contest_id)
+        problem = get_contest_problem(cp_id)
 
-        if download_option is None:
-            return Response(data=msg_error_no_download_option,
-                            status=status.HTTP_400_BAD_REQUEST)
+        if problem.contest_id != contest_info or contest_info.class_id != user_class:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
@@ -501,65 +524,41 @@ class SubmissionClassDownloadView(APIView):
         base_dir_obj /= str(contest_id)
 
         # This could be implemented match-case statement on Python 3.10 or later
-        if download_option == 'custom':
-            entries = request.data.get('custom_targets', None)
-            if isinstance(entries, list) is False or len(entries) == 0:
-                return Response(data=msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+        queryset = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id,
+                                                  c_p_id=cp_id, on_leaderboard=True)
 
-            targets = {}
-            failed = []
-            for submission_id in entries:
-                submission = SubmissionClass.objects.filter(id=submission_id).distinct()
-                if submission.count() == 0:
-                    failed.append(submission_id)
-                    continue
+        if len(queryset) == 0:
+            return Response(data=msg_notfound, status=status.HTTP_404_NOT_FOUND)
+        is_specific_user = False
 
-                submitter = submission.first().username.username
-                if targets.get(submitter, None) is None:
-                    targets[submitter] = [submission[0]]
-                else:
-                    targets[submitter].append(submission[0])
-            tail = str(uuid.uuid4())[:8]
-            base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
-
-        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard' \
-                or download_option == 'all':
-            queryset = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id, c_p_id=cp_id)
-            if download_option == 'leaderboard':
-                queryset = queryset.filter(on_leaderboard=True)
-
-            if len(queryset) == 0:
-                return Response(data=msg_notfound, status=status.HTTP_404_NOT_FOUND)
-
-            if not isinstance(username, str):
-                targets = {key: [] for key in queryset.values_list('username', flat=True).distinct()}
-            else:
-                targets = {username: []}
-
-            download.get_download_targets(targets, download_option, queryset)
-            tail = download_option
-            base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
-
+        if not isinstance(username, str):
+            targets = {key: [] for key in queryset.values_list('username', flat=True).distinct()}
         else:
-            return Response(data=msg_error_url, status=status.HTTP_400_BAD_REQUEST)
+            targets = {username: []}
+            is_specific_user = True
+
+        if download.get_download_targets(targets, queryset) == 0:
+            return Response(msg_notfound, status=status.HTTP_404_NOT_FOUND)
 
         zip_filename = f'c_{class_id}_t_{str(contest_id)}_p_{cp_id}_' \
-                       f'{convert_date_format(contest_info.start_time)}_{tail}.zip'
+                       f'{convert_date_format(contest_info.start_time)}'
+        if is_specific_user:
+            zip_filename += f'_{username}'
+        zip_filename += '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
             make_mult_level_dir(base_dir, f'{CLASS_PROBLEM_ZIP_ARCHIVE_PATH}/{str(class_id)}/{str(contest_id)}')
-            make_mult_level_dir(base_dir, CUSTOM_ZIP_ARCHIVE_PATH)
 
         temp_flag = is_temp(contest_info.end_time)
 
-        if download_option != 'custom' and os.path.exists(str(zip_filepath)) and not temp_flag:
+        if os.path.exists(str(zip_filepath)) and not temp_flag:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
         # elif is_temp is True:
         #    update_archive()
         else:
-            creat_archive(zip_filepath, base_dir, targets, download_option, use_subdirectory)
+            creat_archive(zip_filepath, base_dir, targets)
 
         mime_type = download.get_mimetype(zip_filepath)
         return download.get_attachment_response(zip_filepath, mime_type)
@@ -569,81 +568,55 @@ class SubmissionCompetitionDownloadView(APIView):
     permission_classes = [IsTA | IsProf | IsAdmin]
 
     # 06-08
-    def post(self, request: Request, competition_id: int) -> Response or HttpResponse:
+    def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
-        download_option = request.GET.get('dloption', None)
-        use_subdirectory = request.data.get('use_subdirectory', False)
-        competition_info = Competition.objects.filter(id=competition_id).first()
+        competition_info = get_competition(competition_id)
+        problem = get_competition_problem(comp_p_id)
 
-        if download_option is None:
-            return Response(data=msg_error_no_download_option,
-                            status=status.HTTP_400_BAD_REQUEST)
+        if problem.competition_id != competition_info:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
         base_dir = base_dir_obj
+        base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
+        base_dir_obj /= str(competition_id)
 
-        # This could be implemented match-case statement on Python 3.10 or later
-        if download_option == 'custom':
-            entries = request.data.get('custom_targets', None)
-            if isinstance(entries, list) is False or len(entries) == 0:
-                return Response(data=msg_error_no_selection, status=status.HTTP_400_BAD_REQUEST)
+        queryset = SubmissionCompetition.objects.filter(competition_id=competition_id,
+                                                        comp_p_id=comp_p_id, on_leaderboard=True)
 
-            targets = {}
-            failed = []
-            for submission_id in entries:
-                submission = SubmissionCompetition.objects.filter(id=submission_id).distinct()
-                if submission.count() == 0:
-                    failed.append(submission_id)
-                    continue
+        if len(queryset) == 0:
+            return Response(data=msg_notfound, status=status.HTTP_404_NOT_FOUND)
+        is_specific_user = False
 
-                submitter = submission.first().username.username
-                if targets.get(submitter, None) is None:
-                    targets[submitter] = [submission[0]]
-                else:
-                    targets[submitter].append(submission[0])
-            tail = str(uuid.uuid4())[:8]
-            base_dir_obj /= CUSTOM_ZIP_ARCHIVE_PATH
-
-        elif download_option == 'latest' or download_option == 'highest' or download_option == 'leaderboard' \
-                or download_option == 'all':
-            queryset = SubmissionCompetition.objects.filter(id=competition_id)
-
-            if download_option == 'leaderboard':
-                queryset = queryset.filter(on_leaderboard=True)
-
-            if len(queryset) == 0:
-                return Response(data=msg_notfound, status=status.HTTP_404_NOT_FOUND)
-
-            if not isinstance(username, str):
-                targets = {key: [] for key in queryset.values_list('username', flat=True).distinct()}
-            else:
-                targets = {username: []}
-
-            download.get_download_targets(targets, download_option, queryset)
-            tail = download_option
-            base_dir_obj /= COMPETITION_ZIP_ARCHIVE_PATH
-
+        if not isinstance(username, str):
+            targets = {key: [] for key in queryset.values_list('username', flat=True).distinct()}
         else:
-            return Response(data=msg_error_url, status=status.HTTP_400_BAD_REQUEST)
+            targets = {username: []}
+            is_specific_user = True
 
-        zip_filename = f'comp_{str(competition_id)}_{convert_date_format(competition_info.start_time)}' \
-                       f'_{tail}.zip'
+        if download.get_download_targets(targets, queryset) == 0:
+            return Response(msg_notfound, status=status.HTTP_404_NOT_FOUND)
+
+        zip_filename = f'comp_{str(competition_id)}_{str(comp_p_id)}_' \
+                       f'{convert_date_format(competition_info.start_time)}'
+        if is_specific_user:
+            zip_filename += f'_{username}'
+        zip_filename += '.zip'
         zip_filepath = base_dir_obj / zip_filename
 
         if os.path.exists(str(base_dir_obj)) is False:
-            make_mult_level_dir(base_dir, COMPETITION_ZIP_ARCHIVE_PATH)
-            make_mult_level_dir(base_dir, CUSTOM_ZIP_ARCHIVE_PATH)
+            make_mult_level_dir(base_dir, f'{COMPETITION_ZIP_ARCHIVE_PATH}/{str(competition_id)}')
 
         temp_flag = is_temp(competition_info.end_time)
 
-        if download_option != 'custom' and os.path.exists(str(zip_filepath)) and not temp_flag:
+        if os.path.exists(str(zip_filepath)) and not temp_flag:
             mime_type = download.get_mimetype(zip_filepath)
             return download.get_attachment_response(zip_filepath, mime_type)
         # elif is_temp is True:
         #    update_archive()
         else:
-            creat_archive(zip_filepath, base_dir, targets, download_option, use_subdirectory)
+            creat_archive(zip_filepath, base_dir, targets)
 
         mime_type = download.get_mimetype(zip_filepath)
         return download.get_attachment_response(zip_filepath, mime_type)
