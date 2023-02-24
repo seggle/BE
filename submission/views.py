@@ -50,7 +50,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
         contest_problem = get_contest_problem(cp_id)
 
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
-            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         time_check = timezone.now()
         if (contest.start_time > time_check) or (contest.end_time < time_check):

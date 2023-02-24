@@ -275,7 +275,7 @@ class ContestProblemInfoView(APIView):
         orig_problem = get_problem(id=contest_problem.problem_id.id)
 
         if contest_problem.contest_id.id != contest_id or contest_problem.contest_id.class_id.id != class_id:
-            return Response(msg_error_id, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_invalid_problem, status=status.HTTP_400_BAD_REQUEST)
 
         # data_url = "http://{0}/api/problems/{1}/download/data".format(IP_ADDR, problem.id)
         cp_json = {
