@@ -509,7 +509,12 @@ class SubmissionClassDownloadView(APIView):
     # 05-19
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
-        contest_info = Contest.objects.filter(id=contest_id).first()
+        user_class = get_class(class_id)
+        contest_info = get_contest(contest_id)
+        problem = get_contest_problem(cp_id)
+
+        if problem.contest_id != contest_info or contest_info.class_id != user_class:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
@@ -565,7 +570,11 @@ class SubmissionCompetitionDownloadView(APIView):
     # 06-08
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response or HttpResponse:
         username = request.GET.get('username', None)
-        competition_info = Competition.objects.filter(id=competition_id).first()
+        competition_info = get_competition(competition_id)
+        problem = get_competition_problem(comp_p_id)
+
+        if problem.competition_id != competition_info:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         # Setting path of the archive file
         base_dir_obj = pathlib.Path(__file__).parents[1].absolute()
