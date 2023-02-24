@@ -4,6 +4,7 @@ from classes.models import Class
 from utils.common import upload_to_data, upload_to_solution
 from utils.message import *
 
+
 class ActiveModelQuerySet(models.QuerySet):
 
     def not_active(self, *args, **kwargs):
@@ -23,7 +24,7 @@ class Problem(models.Model):
     data_description = models.TextField()
     public = models.BooleanField(default=False)
     evaluation = models.TextField() # 평가 방식
-    class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
+    # class_id = models.ForeignKey(Class, on_delete = models.CASCADE , db_column="class", blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     professor = models.ForeignKey(User, on_delete=models.CASCADE, db_column="professor",to_field="username",related_name="problem_professor", blank=True, null=True)
     objects = ActiveModelQuerySet().as_manager()

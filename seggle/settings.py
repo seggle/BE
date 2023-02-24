@@ -54,10 +54,14 @@ INSTALLED_APPS = [
 
     # DRF
     'rest_framework',
+    'rest_framework.authtoken',
 
     # simple jwt
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+
+    # cors headers
+    'corsheaders',
 
     # my app
     'account',
@@ -71,7 +75,6 @@ INSTALLED_APPS = [
     'submission',
     'exam',
     'leaderboard',
-
 ]
 
 MIDDLEWARE = [
@@ -82,11 +85,25 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 # CORS 관련 추가
-CORS_ORIGIN_WHITELIST = ['http://115.91.214.3']
-CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = ['http://115.91.214.3',
+                         'http://localhost:8000']
+CORS_ALLOW_CREDENTIALS = True  # Return response with cookies
+
+CSRF_COOKIE_SECURE = False  # CSRF cookie enabled only Https server
+CSRF_COOKIE_HTTPONLY = True  # CSRF stored in http only cookie
+CSRF_TESTED_ORIGINS = [
+    "http://localhost:8000"
+]
+
+CORS_EXPOSE_HEADERS=["Content-Type", "X-CSRFToken"]  # Allow return of CSRF in response header
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = "Lax"  # Samesite "Lax" - Protection against csrf attacks
+SESSION_COOKIE_SAMESITE = "Lax"
 
 ROOT_URLCONF = 'seggle.urls'
 
@@ -169,17 +186,18 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly', # 비인증 요청에게는 읽기 권한만 허용
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'account.authenticate.CustomAuthentication',
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination', # pagenation 관련 설정
     'PAGE_SIZE': 15,
-    'EXCEPTION_HANDLER': 'seggle.exceptions.api_exception.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'seggle.exceptions.api_exception.custom_exception_handler',
 
 }
 
 # simple jwt
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
     """
     ROTATE_REFRESH_TOKENS
@@ -217,6 +235,16 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
     'SLIDING_TOKEN_LIFETIME': timedelta(days=1),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=14),
+
+    # custom
+    'AUTH_COOKIE': 'access_token',  # Cookie name. Enables cookies if value is set.
+    'AUTH_COOKIE_REFRESH': 'refresh_token',
+    'AUTH_COOKIE_DOMAIN': None,  # A string like "example.com", or None for standard domain cookie.
+    'AUTH_COOKIE_SECURE': False,  # Whether the auth cookies should be secure (https:// only).
+    'AUTH_COOKIE_HTTP_ONLY': True,  # Http only cookie flag.It's not fetch by javascript.
+    'AUTH_COOKIE_PATH': '/',  # The path of the auth cookie.
+    'AUTH_COOKIE_SAMESITE': 'Lax',
+    # Whether to set the flag restricting cookie leaks on cross-site requests. This can be 'Lax', 'Strict', or None to disable the flag.
 }
 
 # SMTP 설정

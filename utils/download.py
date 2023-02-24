@@ -2,6 +2,7 @@ import io
 import mimetypes
 import urllib
 from pathlib import Path, PureWindowsPath, PurePosixPath
+from types import NoneType
 from typing import Any, List, Dict
 
 from django.db.models import QuerySet
@@ -83,23 +84,14 @@ def get_attachment_response(filepath: Path, mime_type: str) -> HttpResponse:
     return response
 
 
-def get_download_targets(targets: Dict[str, List], download_option: str,
-                         queryset: QuerySet[SubmissionCompetition or SubmissionClass] or None) -> None:
+def get_download_targets(targets: Dict[str, List],
+                         queryset: QuerySet[SubmissionCompetition or SubmissionClass] or None) -> int:
+    count = 0
 
-    if download_option == 'latest':
-        for username in targets.keys():
-            submission = queryset.filter(username=username).latest('created_time')
+    for username in targets.keys():
+        submission = queryset.filter(username=username, on_leaderboard=True)\
+                        .order_by('-score', '-created_time').first()
+        if not isinstance(submission, NoneType):
             targets[username].append(submission)
-    elif download_option == 'highest':
-        for username in targets.keys():
-            submission = queryset.filter(username=username).order_by('-score', '-created_time').first()
-            targets[username].append(submission)
-    elif download_option == 'leaderboard':
-        for username in targets.keys():
-            submission = queryset.filter(username=username, on_leaderboard=True)\
-                            .order_by('-score', '-created_time').first()
-            targets[username].append(submission)
-    else:
-        for username in targets.keys():
-            submissions = list(queryset.filter(username=username).order_by('-created_time'))
-            targets[username].extend(submissions)
+            count += 1
+    return count
