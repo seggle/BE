@@ -120,6 +120,7 @@ class SubmissionClassView(APIView, EvaluationMixin):
 
 
 class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
+    permission_classes = [IsAdmin | IsClassProfOrTA | IsClassUser]
     pagination_class = BasicPagination
 
     # 05-18 클래스 contest 내 제출 보기
