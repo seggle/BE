@@ -49,9 +49,11 @@ class SubmissionClassView(APIView, EvaluationMixin):
         contest = get_contest(contest_id)
         contest_problem = get_contest_problem(cp_id)
 
+        # 해당 클래스와 contest 요청이 제대로 되었는지 확인
         if (contest_problem.contest_id.id != contest_id) or (contest_problem.contest_id.class_id.id != class_id):
             return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
+        # 시간 체크
         time_check = timezone.now()
         if (contest.start_time > time_check) or (contest.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
@@ -122,6 +124,12 @@ class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
 
     # 05-18 클래스 contest 내 제출 보기
     def get(self, request: Request, class_id: int, contest_id: int, cp_id: int) -> Response:
+        submission_class = get_class(class_id)
+        contest = get_contest(contest_id)
+        prob = get_contest_problem(cp_id)
+
+        if prob.contest_id != contest or contest.class_id != submission_class:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
 
         submissions = SubmissionClass.objects.filter(class_id=class_id, contest_id=contest_id, c_p_id=cp_id) \
             .order_by('-created_time')
@@ -129,9 +137,6 @@ class SubmissionClassPerProblemListView(APIView, PaginationHandlerMixin):
         username = request.GET.get('username', '')
         if username:
             submissions = submissions.filter(username=username)
-
-        if submissions.count() == 0:
-            return Response({'message': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
         outputs = []
 
@@ -240,6 +245,9 @@ class SubmissionCompetitionView(APIView, EvaluationMixin):
         problem = get_competition_problem(comp_p_id)
         # permission check - 대회에 참가한 학생만 제출 가능
 
+        if problem.competition_id != competition:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
         time_check = timezone.now()
         if (competition.start_time > time_check) or (competition.end_time < time_check):
             return Response(msg_time_error, status=status.HTTP_400_BAD_REQUEST)
@@ -313,6 +321,11 @@ class SubmissionCompetitionListView(APIView, PaginationHandlerMixin):
     # 06-07 유저 submission 내역 조회
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:
         competition = get_competition(competition_id)
+        prob = get_competition_problem(comp_p_id)
+
+        if prob.competition_id != competition:
+            return Response(msg_error_invalid_url, status=status.HTTP_400_BAD_REQUEST)
+
         username = request.GET.get('username', '')
 
         submission_competition_list = SubmissionCompetition.objects \
