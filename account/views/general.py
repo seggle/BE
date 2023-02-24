@@ -33,7 +33,7 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-
+from collections import OrderedDict
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -248,7 +248,7 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
                 continue
             obj = {}
             obj["id"] = competition.competition_id.id
-            obj["title"] = competition.competition_id.problem_id.title
+            obj["title"] = competition.competition_id.title
             obj["start_time"] = competition.competition_id.start_time
             obj["end_time"] = competition.competition_id.end_time
             obj["user_total"] = CompetitionUser.objects.filter(
@@ -258,17 +258,25 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
             leaderboard_list = SubmissionCompetition.objects.filter(
                 Q(competition_id=competition.competition_id.id) & Q(on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
-                # 정렬
-                if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score",
-                                                                        "mAP"]:  # 내림차순
-                    leaderboard_list = leaderboard_list.order_by('-score', 'created_time')
-                else:
-                    leaderboard_list = leaderboard_list.order_by('score', 'created_time')
-                temp_list = []
-                for temp in leaderboard_list:
-                    temp_list.append(temp.username.username)
-                obj["rank"] = temp_list.index(username) + 1
-
+                competition_problem_list = CompetitionProblem.objects.filter(competition_id=competition.competition_id.id)
+                problem_rank = {}
+                for comp_p in competition_problem_list:
+                    # comp_p 문제 리더보드
+                    problem_leaderboard_list = leaderboard_list.filter(comp_p_id=comp_p.id)
+                    if problem_leaderboard_list.filter(username=username).count() == 0:
+                        continue
+                    # 정렬
+                    if comp_p.problem_id.evaluation in ["CategorizationAccuracy", "F1-score",
+                                                                            "mAP"]:  # 내림차순
+                        problem_leaderboard_list = problem_leaderboard_list.order_by('-score', 'created_time')
+                    else:
+                        problem_leaderboard_list = problem_leaderboard_list.order_by('score', 'created_time')
+                    temp_list = []
+                    for temp in problem_leaderboard_list:
+                        temp_list.append(temp.username.username)
+                    problem_order = "problem"+str(comp_p.order) # order 이용해 problem1, problem2 형식으로 만들어줌
+                    problem_rank[problem_order] = temp_list.index(username) + 1
+                obj["rank"] = problem_rank
             obj_list.append(obj)
 
         page = self.paginate_queryset(obj_list)

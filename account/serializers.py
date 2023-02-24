@@ -57,7 +57,7 @@ class ContributionsSerializer(serializers.Serializer):
 class UserCompetitionSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     user_total = serializers.IntegerField()
-    rank = serializers.IntegerField()
+    rank = serializers.DictField()
 
     class Meta:
         model = Competition
