@@ -388,7 +388,7 @@ class CompetitionCheckView(APIView):
 
 
 class CompetitionProblemView(APIView):
-    permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsSafeMethod]
+    permission_classes = [IsAdmin | IsCompetitionProfOrTA | IsSafeMethodCompetition]
 
     # 06-13
     def get(self, request: Request, competition_id: int, comp_p_id: int) -> Response:

@@ -78,7 +78,7 @@ class ContestCheckView(APIView):
 
 
 class ContestProblemView(APIView, PaginationHandlerMixin):
-    permission_classes = [IsSafeMethod | IsClassProfOrTA | IsAdmin]
+    permission_classes = [IsSafeMethodClass | IsClassProfOrTA | IsAdmin]
     pagination_class = BasicPagination
 
     # 05-12

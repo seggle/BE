@@ -258,6 +258,40 @@ class IsSafeMethod(permissions.BasePermission):
             return False
 
 
+class IsSafeMethodCompetition(permissions.BasePermission):
+    def has_permission(self, request: Request, view: Any):
+        if isinstance(request.user, AnonymousUser):
+            return False
+
+        competition_id = view.kwargs.get('competition_id', None)
+
+        if not CompetitionUser.objects.filter(username=request.user.username,
+                                              competition_id=competition_id).exists():
+            return False
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            return False
+
+
+class IsSafeMethodClass(permissions.BasePermission):
+    def has_permission(self, request: Request, view: Any):
+        if isinstance(request.user, AnonymousUser):
+            return False
+
+        class_id = view.kwargs.get('class_id', None)
+
+        if not ClassUser.objects.filter(username=request.user.username,
+                                        class_id=class_id).exists():
+            return False
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            return False
+
+
 class IsCPUser(permissions.BasePermission):
 
     def has_permission(self, request: Request, view: Any) -> bool:
