@@ -43,8 +43,7 @@ class UserRegisterView(APIView):
         data = {}
         if serializer.is_valid():
             if request.data.get("password") != request.data.get("password2"):
-                data["error"] = "Passwords must match"
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+                return Response(msg_password_is_not_match, status=status.HTTP_400_BAD_REQUEST)
 
             else:
 
@@ -60,6 +59,7 @@ class UserRegisterView(APIView):
                 data['username'] = user.username
         else:
             data = serializer.errors
+            data["code"] = 400
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
 
@@ -71,7 +71,7 @@ class UserInfoView(APIView):
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
         competition = CompetitionUser.objects.filter(username=user.username)
         classes = ClassUser.objects.filter(username=user.username)
         obj = {"id": user.id,
@@ -103,9 +103,9 @@ class UserInfoView(APIView):
                 user.save()
                 return Response({'success': "비밀번호 변경 완료"}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': "새로운 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(msg_error_new_password_is_not_match, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error': "현재 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_current_password_is_not_correct, status=status.HTTP_400_BAD_REQUEST)
 
     # 01-08 회원탈퇴
     def delete(self, request: Request, username: str) -> Response:
@@ -113,15 +113,15 @@ class UserInfoView(APIView):
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
         # 비밀번호 일치 확인
         current_password = data.get("password", '')
         if check_password(current_password, user.password):
             user.is_active = False
             user.save()
-            return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
+            return Response({'code': 200, 'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': "현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_current_password_is_not_correct, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ClassInfoView(APIView, PaginationHandlerMixin):
@@ -172,7 +172,7 @@ class ClassInfoView(APIView, PaginationHandlerMixin):
             user.is_show = True
             user.save()
         if len(does_not_exist['does_not_exist']) == 0:
-            return Response("Success", status=status.HTTP_200_OK)
+            return Response({"code": 200, "message": "Success"}, status=status.HTTP_200_OK)
         else:
             return Response(does_not_exist, status=status.HTTP_200_OK)
 
@@ -185,7 +185,7 @@ class ContributionsView(APIView, PaginationHandlerMixin):
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_no_permission_user, status=status.HTTP_403_FORBIDDEN)
 
         submission_class = SubmissionClass.objects.filter(username=username)
         submission_competition = SubmissionCompetition.objects.filter(username=username)
@@ -234,12 +234,12 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
 
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_no_permission_user, status=status.HTTP_403_FORBIDDEN)
 
         competition_list = CompetitionUser.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
-            return Response({"count": 0, "next": None, "previous": None}, status=status.HTTP_200_OK)
+            return Response({"code": 400, "message": "참여 중인 대회가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         obj_list = []
         for competition in competition_list:
@@ -289,7 +289,7 @@ class UserClassPrivilege(APIView):
         try:
             privilege = ClassUser.objects.get(class_id=_class, username=username).privilege
         except:
-            privilege = -1
+            return Response(msg_error_not_in_class, status=status.HTTP_400_BAD_REQUEST)
         data = {'privilege': privilege}
 
         return Response(data, status=status.HTTP_200_OK)
