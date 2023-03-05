@@ -16,12 +16,19 @@ msg_error_no_selection = {"code": 400, "message": "대상을 선택해 주세요
 msg_error_url = {"code": 400, "message": "잘못된 URL 입니다."}
 msg_notfound = {"code": 404, "message": "콘텐츠를 찾을 수 없습니다."}
 msg_error_no_permission = {'code': 400, 'message': '권한이 없습니다.'}
+msg_error_no_request = {'code': 400, 'message': '바꿀 항목을 입력해 주세요.'}
 
 msg_success_check_public = {'code': 200, 'message': '성공적으로 공개로 바꾸었습니다.'}
 msg_success_check_private = {'code': 200, 'message': '성공적으로 비공개로 바꾸었습니다.'}
 
 # account
-
+msg_password_is_not_match = {'code': 400, 'message': '비밀번호가 일치하지 않습니다.'}
+msg_success_delete_user = {'code': 200, 'message': '회원 탈퇴 성공'}
+msg_error_delete_user = {'code': 400, 'message': '이미 탈퇴 되었습니다.'}
+msg_error_new_password_is_not_match = {'code': 400, 'message': '새로운 비밀번호가 일치하지 않습니다.'}
+msg_error_current_password_is_not_correct = {'code': 400, 'message': '현재 비밀번호가 일치하지 않습니다.'}
+msg_error_no_permission_user = {"code": 403, "message": "접근 권한이 없습니다."}
+msg_error_not_in_class = {"code": 400, "message": "해당 수업에 속해있지 않습니다."}
 # announcement
 
 # classes
@@ -45,6 +52,7 @@ msg_success_patch_order = {'code': 200, 'message': 'order를 성공적으로 바
 msg_error_invalid_problem = {'code': 400, 'message': '잘못된 메시지 요청입니다.'}
 msg_error_wrong_problem = {'code': 500, 'message': '잘못된 문제 유형입니다.'}
 msg_error_problem_not_found = {'code': 404, 'message': '없는 문제입니다.'}
+msg_error_user_not_found = {"code": 404, "message": "없는 사용자입니다."}
 
 # contest
 
@@ -55,6 +63,7 @@ msg_ExamParticipateView_get_e_2 = {"error": "해당 class에 속하지 않습니
 # faq
 
 # leaderboard
+msg_error_no_on_leaderboard_submission = {'code': 400, "message": "리더보드에 공개된 제출이 없습니다."}
 
 # password
 
@@ -74,7 +83,7 @@ msg_SubmissionCheckView_patch_e_1 = {'code': 400, 'error': '타인의 제출물�
 msg_SubmissionClassView_post_e_1 = {'code': 400, "message": "올바른 csv 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_2 = {'code': 400, "message": "올바른 ipynb 파일을 업로드 해주세요."}
 msg_SubmissionClassView_post_e_3 = {'code': 400, "message": "ip가 중복입니다"}
-msg_SubmissionCompetitionView_post_e_1 = {'code': 402, 'message': "대회에 참가하지 않았습니다."}
+msg_SubmissionCompetitionView_post_e_1 = {'code': 403, 'message': "대회에 참가하지 않았습니다."}
 
 msg_error_no_download_option = {"code": 400, "message": "다운로드 옵션을 명시해 주세요."}
 # uploads

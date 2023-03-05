@@ -40,6 +40,7 @@ class AdminProblemView(APIView, PaginationHandlerMixin):
                 # "data" : data_url,
                 # "solution" : solution_url,
                 "public": problem.public,
+                "type": problem.type
             }
             
             new_problems.append(problem_json)

@@ -6,7 +6,7 @@ class ProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         # fields = "__all__"
-        fields = ["id", "title", "description", "created_time", "created_user", "data", "solution", "data_description", "public", "evaluation", "is_deleted", "professor"]
+        fields = ["id", "title", "description", "created_time", "created_user", "data", "solution", "data_description", "public", "evaluation", "is_deleted", "professor", "type"]
 
 
 class ProblemDetailSerializer(serializers.ModelSerializer):

@@ -62,8 +62,8 @@ class AdminUserInfoView(APIView):
     def delete(self, request: Request, username: str) -> Response:
         user = get_username(username)
         if user.is_active == False:
-            return Response({'error': '이미 탈퇴 되었습니다.'})
+            return Response(msg_error_delete_user, status=status.HTTP_400_BAD_REQUEST)
         else:
             user.is_active = False
             user.save()
-            return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
+            return Response(msg_success_delete_user, status=status.HTTP_200_OK)

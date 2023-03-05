@@ -66,37 +66,6 @@ class ProblemView(APIView, PaginationHandlerMixin):
             serializer = AllProblemSerializer(page, many=True)
         return Response(serializer.data)
 
-    # 03-02 problem 생성
-    def post(self, request):
-        data = request.data.copy()
-
-        if data['data'] == '':
-            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
-        if data['solution'] == '':
-            return Response(msg_ProblemView_post_e_1, status=status.HTTP_400_BAD_REQUEST)
-
-        data_str = data['data'].name.split('.')[-1]
-        solution_str = data['solution'].name.split('.')[-1]
-        if data_str != 'zip':
-            return Response(msg_ProblemView_post_e_2, status=status.HTTP_400_BAD_REQUEST)
-        if solution_str != 'csv':
-            return Response(msg_ProblemView_post_e_3, status=status.HTTP_400_BAD_REQUEST)
-
-        data['created_user'] = request.user
-
-        data['professor'] = data.get('created_user')
-        problem = ProblemSerializer(data=data)
-
-        if problem.is_valid():
-            problem.save()
-            return Response(problem.data, status=status.HTTP_200_OK)
-        else:
-            msg = get_error_msg(problem)
-            return Response(data={
-                "code": status.HTTP_400_BAD_REQUEST,
-                "message": msg
-            }, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ProblemDetailView(APIView):
     permission_classes = [IsProblemOwnerOrReadOnly | IsAdmin]
