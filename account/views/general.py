@@ -1,5 +1,4 @@
 from django.db.models import Q
-from rest_framework.request import Request
 from rest_framework.response import Response
 from django.conf import settings
 from rest_framework.views import APIView
@@ -7,28 +6,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from django.contrib.auth.hashers import check_password
-from rest_framework.pagination import PageNumberPagination
-from utils.pagination import PaginationHandlerMixin
-from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
     UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer, LoginSerializer
-from classes.models import ClassUser
 from classes.serializers import ClassGetSerializer
-from competition.models import CompetitionUser
-from submission.models import SubmissionClass, SubmissionCompetition
-from rest_framework_simplejwt.views import (
-    TokenRefreshView, TokenObtainPairView,
-)
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from django.contrib.auth import authenticate
-from rest_framework.exceptions import ParseError, AuthenticationFailed
+
+from rest_framework.exceptions import AuthenticationFailed
 from utils.get_obj import *
 from utils.get_error import get_error_msg
 from utils.permission import *
 from utils.pagination import BasicPagination, PaginationHandlerMixin
-
-from django.middleware import csrf
-from django.contrib.auth import authenticate
 
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
@@ -368,7 +354,7 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             )
             del response.data['refresh']
             del response.data['access']
-            # response.data["X-CSRFToken"] = csrf.get_token(request)
+
         return super().finalize_response(request, response, *args, **kwargs)
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -390,7 +376,6 @@ class CookieTokenRefreshView(TokenRefreshView):
         else:
             response.data["message"] = "Refresh Failed. Refresh Token Expired"
 
-        # response["X-CSRFToken"] = request.COOKIES.get("csrftoken")
         return super().finalize_response(request, response, *args, **kwargs)
 
 class LogoutView(APIView):
@@ -407,9 +392,7 @@ class LogoutView(APIView):
             }, status=status.HTTP_200_OK)
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
             response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
-            # response.delete_cookie("X-CSRFToken")
-            # response.delete_cookie("csrftoken")
-            # response.data["X-CSRFToken"] = None
+
             return response
 
         except:
