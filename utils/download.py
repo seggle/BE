@@ -2,7 +2,7 @@ import io
 import mimetypes
 import urllib
 from pathlib import Path, PureWindowsPath, PurePosixPath
-from types import NoneType
+# from types import NoneType
 from typing import Any, List, Dict
 
 from django.db.models import QuerySet
@@ -10,6 +10,9 @@ from django.http import HttpResponse
 
 from competition.models import Competition
 from submission.models import SubmissionClass, SubmissionCompetition
+
+# Please deactivate this code if the version of Python is 3.10 or above
+NoneType = type(None)
 
 
 # TODO : Convert these file to respond the convenient pathlib library
