@@ -1,39 +1,35 @@
 from django.db.models import Q
-from rest_framework.request import Request
 from rest_framework.response import Response
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from django.contrib.auth.hashers import check_password
-from rest_framework.pagination import PageNumberPagination
-from utils.pagination import PaginationHandlerMixin
-from ..models import User
 from ..serializers import UserRegisterSerializer, UserInfoClassCompetitionSerializer, ContributionsSerializer, \
-    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer
-from classes.models import ClassUser
+    UserCompetitionSerializer, UserGetClassInfo, TokenObtainResultSerializer, LoginSerializer
 from classes.serializers import ClassGetSerializer
-from competition.models import CompetitionUser
-from submission.models import SubmissionClass, SubmissionCompetition
-from rest_framework_simplejwt.views import (
-    TokenRefreshView, TokenObtainPairView,
-)
-from utils.get_obj import *
 
+from rest_framework.exceptions import AuthenticationFailed
+from utils.get_obj import *
+from utils.get_error import get_error_msg
 from utils.permission import *
 from utils.pagination import BasicPagination, PaginationHandlerMixin
 
-
+from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
+from collections import OrderedDict
 class UserRegisterView(APIView):
     permission_classes = [AllowAny]
 
+    # 01-02 회원 가입
     def post(self, request: Request) -> Response:
         serializer = UserRegisterSerializer(data=request.data)
         data = {}
         if serializer.is_valid():
             if request.data.get("password") != request.data.get("password2"):
-                data["error"] = "Passwords must match"
-                return Response(data, status=status.HTTP_400_BAD_REQUEST)
+                return Response(msg_password_is_not_match, status=status.HTTP_400_BAD_REQUEST)
 
             else:
 
@@ -49,44 +45,19 @@ class UserRegisterView(APIView):
                 data['username'] = user.username
         else:
             data = serializer.errors
+            data["code"] = 400
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
-
-
-class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request: Request) -> Response:
-        try:
-            refresh_token = request.data["refresh"]
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-            return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# class LogoutAllView(APIView):
-#     permission_classes = (IsAuthenticated,)
-#     def post(self, request):
-#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
-#         for token in tokens:
-#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
-#         return Response(status=status.HTTP_205_RESET_CONTENT)
-
-class RefreshView(TokenRefreshView):
-    permission_classes = [AllowAny]
-
 
 class UserInfoView(APIView):
     permission_classes = [IsRightUser]
 
     # 01-07 유저 조회
-    def get(self, request: Request, username: str, format: str=None) -> Response:
+    def get(self, request: Request, username: str, format: str = None) -> Response:
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
         competition = CompetitionUser.objects.filter(username=user.username)
         classes = ClassUser.objects.filter(username=user.username)
         obj = {"id": user.id,
@@ -118,9 +89,9 @@ class UserInfoView(APIView):
                 user.save()
                 return Response({'success': "비밀번호 변경 완료"}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': "새로운 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(msg_error_new_password_is_not_match, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error': "현재 비밀번호 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_current_password_is_not_correct, status=status.HTTP_400_BAD_REQUEST)
 
     # 01-08 회원탈퇴
     def delete(self, request: Request, username: str) -> Response:
@@ -128,15 +99,15 @@ class UserInfoView(APIView):
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "탈퇴권한 없음"}, status=status.HTTP_400_BAD_REQUEST)
         # 비밀번호 일치 확인
         current_password = data.get("password", '')
         if check_password(current_password, user.password):
             user.is_active = False
             user.save()
-            return Response({'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
+            return Response({'code': 200, 'success': '회원 탈퇴 성공'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': "현재 비밀번호가 일치하지 않음"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_current_password_is_not_correct, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ClassInfoView(APIView, PaginationHandlerMixin):
@@ -187,7 +158,7 @@ class ClassInfoView(APIView, PaginationHandlerMixin):
             user.is_show = True
             user.save()
         if len(does_not_exist['does_not_exist']) == 0:
-            return Response("Success", status=status.HTTP_200_OK)
+            return Response({"code": 200, "message": "Success"}, status=status.HTTP_200_OK)
         else:
             return Response(does_not_exist, status=status.HTTP_200_OK)
 
@@ -200,7 +171,7 @@ class ContributionsView(APIView, PaginationHandlerMixin):
         user = get_username(username)
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_no_permission_user, status=status.HTTP_403_FORBIDDEN)
 
         submission_class = SubmissionClass.objects.filter(username=username)
         submission_competition = SubmissionCompetition.objects.filter(username=username)
@@ -234,7 +205,7 @@ class ContributionsView(APIView, PaginationHandlerMixin):
         page = self.paginate_queryset(sort_list)
 
         if page is not None:
-            serializer = self.get_paginated_response(ContributionsSerializer(page,many=True).data)
+            serializer = self.get_paginated_response(ContributionsSerializer(page, many=True).data)
         else:
             serializer = ContributionsSerializer(sort_list, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -249,12 +220,12 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
 
         # permission check
         if request.user.username != user.username:
-            return Response({"error": "접근 권한이 없습니다"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(msg_error_no_permission_user, status=status.HTTP_403_FORBIDDEN)
 
         competition_list = CompetitionUser.objects.filter(username=user.username)
 
         if competition_list.count() == 0:
-            return Response({"count": 0, "next": None, "previous": None}, status=status.HTTP_200_OK)
+            return Response({"code": 400, "message": "참여 중인 대회가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         obj_list = []
         for competition in competition_list:
@@ -263,8 +234,7 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
                 continue
             obj = {}
             obj["id"] = competition.competition_id.id
-            obj["problem_id"] = competition.competition_id.problem_id
-            obj["title"] = competition.competition_id.problem_id.title
+            obj["title"] = competition.competition_id.title
             obj["start_time"] = competition.competition_id.start_time
             obj["end_time"] = competition.competition_id.end_time
             obj["user_total"] = CompetitionUser.objects.filter(
@@ -274,17 +244,25 @@ class UserCompetitionInfoView(APIView, PaginationHandlerMixin):
             leaderboard_list = SubmissionCompetition.objects.filter(
                 Q(competition_id=competition.competition_id.id) & Q(on_leaderboard=True))
             if leaderboard_list.filter(username=username).count() != 0:  # submission 내역이 있다면
-                # 정렬
-                if competition.competition_id.problem_id.evaluation in ["CategorizationAccuracy", "F1-score",
-                                                                        "mAP"]:  # 내림차순
-                    leaderboard_list = leaderboard_list.order_by('-score', 'created_time')
-                else:
-                    leaderboard_list = leaderboard_list.order_by('score', 'created_time')
-                temp_list = []
-                for temp in leaderboard_list:
-                    temp_list.append(temp.username.username)
-                obj["rank"] = temp_list.index(username) + 1
-
+                competition_problem_list = CompetitionProblem.objects.filter(competition_id=competition.competition_id.id)
+                problem_rank = {}
+                for comp_p in competition_problem_list:
+                    # comp_p 문제 리더보드
+                    problem_leaderboard_list = leaderboard_list.filter(comp_p_id=comp_p.id)
+                    if problem_leaderboard_list.filter(username=username).count() == 0:
+                        continue
+                    # 정렬
+                    if comp_p.problem_id.evaluation in ["CategorizationAccuracy", "F1-score",
+                                                                            "mAP"]:  # 내림차순
+                        problem_leaderboard_list = problem_leaderboard_list.order_by('-score', 'created_time')
+                    else:
+                        problem_leaderboard_list = problem_leaderboard_list.order_by('score', 'created_time')
+                    temp_list = []
+                    for temp in problem_leaderboard_list:
+                        temp_list.append(temp.username.username)
+                    problem_order = "problem"+str(comp_p.order) # order 이용해 problem1, problem2 형식으로 만들어줌
+                    problem_rank[problem_order] = temp_list.index(username) + 1
+                obj["rank"] = problem_rank
             obj_list.append(obj)
 
         page = self.paginate_queryset(obj_list)
@@ -305,7 +283,7 @@ class UserClassPrivilege(APIView):
         try:
             privilege = ClassUser.objects.get(class_id=_class, username=username).privilege
         except:
-            privilege = -1
+            return Response(msg_error_not_in_class, status=status.HTTP_400_BAD_REQUEST)
         data = {'privilege': privilege}
 
         return Response(data, status=status.HTTP_200_OK)
@@ -326,8 +304,108 @@ class UserCompetitionPrivilege(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# TokenObtainPairView with username field
-class TokenObtainResultView(TokenObtainPairView):
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+    def validate(self, attrs):
+        attrs['refresh'] = self.context['request'].COOKIES.get('refresh_token')
+        if attrs['refresh']:
+            return super().validate(attrs)
+        else:
+            raise InvalidToken('No valid token found in cookie \'refresh_token\'')
 
+class CookieTokenObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainResultSerializer
-    token_obtain_pair = TokenObtainPairView.as_view()
+    # 01-03 login
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid()
+        except AuthenticationFailed:
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": "ID 혹은 PW 가 틀렸습니다"
+                }, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid() is False:
+            msg = get_error_msg(serializer)
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": msg
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        if response.data.get('refresh'):
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                value=response.data['access'],
+                max_age=3600,  # 1 hour
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
+            response.set_cookie(
+                key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
+                value=response.data['refresh'],
+                max_age=3600*24*14,  # 14 days
+                secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+            )
+            del response.data['refresh']
+            del response.data['access']
+
+        return super().finalize_response(request, response, *args, **kwargs)
+
+class CookieTokenRefreshView(TokenRefreshView):
+    serializer_class = CookieTokenRefreshSerializer
+    # 01-01 login refresh
+    def finalize_response(self, request, response, *args, **kwargs):
+        # set access token
+        response.set_cookie(
+            key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+            value=response.data.get('access'),
+            max_age=3600,  # 1 hour
+            secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+            httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+            samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+        )
+        if response.data.get('access') is not None:
+            del response.data["access"]
+            response.data["message"] = "Refresh Success"
+        else:
+            response.data["message"] = "Refresh Failed. Refresh Token Expired"
+
+        return super().finalize_response(request, response, *args, **kwargs)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    # 01-04 로그아웃
+    def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            response = Response({
+                "message": "Logout success"
+            }, status=status.HTTP_200_OK)
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE'])
+            response.delete_cookie(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+
+            return response
+
+        except:
+            return Response(data={
+                "code": status.HTTP_400_BAD_REQUEST,
+                "message": "Invalid Token"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class LogoutAllView(APIView):
+#     permission_classes = (IsAuthenticated,)
+#     def post(self, request):
+#         tokens = OutstandingToken.objects.filter(user_id=request.user.username)
+#         for token in tokens:
+#             t, _ = BlacklistedToken.objects.get_or_create(token=token)
+#         return Response(status=status.HTTP_205_RESET_CONTENT)

@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 from django.db.models import QuerySet
@@ -9,6 +10,7 @@ from django.http.response import JsonResponse
 from rest_framework.response import Response
 
 
+# Custom Pagination for general purposes
 class PaginationHandlerMixin(object):
     @property
     def paginator(self):
@@ -26,7 +28,7 @@ class PaginationHandlerMixin(object):
         if self.paginator is None:
             return None
         return self.paginator.paginate_queryset(queryset,
-                                                self.request, view=self)
+                self.request, view=self)
 
     def get_paginated_response(self, data):
         assert self.paginator is not None
@@ -35,6 +37,11 @@ class PaginationHandlerMixin(object):
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+    last_page_number = 1
+
+    def paginate_queryset(self, queryset, request, view=None):
+        self.last_page_number = math.ceil(len(queryset) / self.page_size)
+        return super().paginate_queryset(queryset, request, view)
 
     def get_paginated_response(self, data):
         response = OrderedDict([
@@ -42,14 +49,14 @@ class BasicPagination(PageNumberPagination):
             #    ('next', self.get_next_link()),
             #    ('previous', self.get_previous_link()),
             ('current_page', self.page.number),
-            ('last_page', self.page.end_index()),
+            ('last_page', self.last_page_number),
             ('results', data),
         ])
 
         return Response(response)
 
 
-# Pagination for list without serializer
+# Pagination for list without serialization
 # https://stackoverflow.com/questions/38284440/drf-pagination-without-queryset
 class ListPagination:
     def __init__(self, request: Request):
@@ -75,7 +82,7 @@ class ListPagination:
             #   ('next', next_url),
             #   ('previous', previous_url),
             ('current_page', page_number),
-            ('last_page', page.end_index()),
+            ('last_page', paginator.num_pages),
             ('results', page.object_list),
         ])
 

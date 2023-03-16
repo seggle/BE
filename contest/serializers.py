@@ -13,7 +13,7 @@ class ContestSerializer(serializers.ModelSerializer):
 class ContestPatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contest
-        fields = ["name", "start_time", "end_time", "is_exam", "visible"]
+        fields = ["id", "name", "start_time", "end_time", "is_exam", "visible"]
 
 
 class ContestProblemSerializer(serializers.ModelSerializer):
@@ -26,6 +26,15 @@ class ContestProblemPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContestProblem
         fields = ["contest_id", "problem_id", "title", "description", "data_description", "order"]
+
+
+class ContestProblemInfoSerializer(serializers.ModelSerializer):
+    data = serializers.FileField()
+    evaluation = serializers.CharField()
+
+    class Meta:
+        model = ContestProblem
+        fields = ['id', 'order', 'problem_id', 'title', 'description', 'data', 'data_description', 'evaluation']
 
 
 class ContestProblemDesSerializer(serializers.ModelSerializer):

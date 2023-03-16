@@ -1,34 +1,45 @@
 from rest_framework import serializers
-from .models import Competition, CompetitionUser
+from .models import Competition, CompetitionUser, CompetitionProblem
 from problem.serializers import ProblemSerializer, AllProblemSerializer
+
 
 class CompetitionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
-        fields = ['id', 'problem_id', 'start_time', 'end_time']
+        fields = ['id', 'title', 'description', 'start_time', 'end_time', 'created_user', 'visible',
+                  'created_time', 'is_exam']
+
 
 class CompetitionDetailSerializer(serializers.ModelSerializer):
-    problem = ProblemSerializer()
-
     class Meta:
         model = Competition
-        fields = ['problem', 'id', 'start_time', 'end_time']
+        fields = ['id', 'title', 'description', 'start_time', 'end_time', 'created_user', 'created_time']
+
+
+class CompetitionProblemDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetitionProblem
+        fields = '__all__'
+
 
 class CompetitionPutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
         fields = ['start_time', 'end_time']
 
+
 class CompetitionPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Competition
         fields = ['problem_id', 'start_time', 'end_time']
+
 
 class CompetitionListSerializer(serializers.ModelSerializer):
     problem = AllProblemSerializer()
     class Meta:
         model = Competition
         fields = ['problem', 'id', 'start_time', 'end_time']
+
 
 class CompetitionProblemCheckSerializer(serializers.Serializer):
     title = serializers.CharField()
@@ -40,6 +51,7 @@ class CompetitionProblemCheckSerializer(serializers.Serializer):
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
 
+
 class CompetitionUserSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -47,13 +59,41 @@ class CompetitionUserSerializer(serializers.ModelSerializer):
         # fields = "__all__"
         fields = ["id", "competition_id", "username", "is_show", "privilege"]
 
+
 class CompetitionUserGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompetitionUser
         fields = ["username", "privilege"]
+
 
 class CompetitionUserGetInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CompetitionUser
         fields = ["competition_id", "privilege"]
+
+
+class CompetitionProblemSerializer(serializers.ModelSerializer):
+    # period = CompetitionPeriodSerializer()
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+
+    class Meta:
+        model = CompetitionProblem
+        fields = ['order', 'id', 'competition_id', 'problem_id', 'title', 'start_time', 'end_time']
+
+
+class CompetitionProblemInfoSerializer(serializers.ModelSerializer):
+    data = serializers.FileField()
+    evaluation = serializers.CharField()
+
+    class Meta:
+        model = CompetitionProblem
+        fields = ['id', 'order', 'problem_id', 'title', 'description', 'data', 'data_description', 'evaluation']
+
+
+class CompetitionProblemPutSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CompetitionProblem
+        fields = '__all__'

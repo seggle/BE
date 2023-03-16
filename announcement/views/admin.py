@@ -37,11 +37,11 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
     def post(self, request):
         data = request.data
         announcement = {
-            "title" : data['title'],
-            "context" : data['context'],
-            "visible" : data['visible'],
-            "important" : data['important'],
-            "created_user" : request.user
+            "title": data.get('title'),
+            "context": data.get('context'),
+            "visible": data.get('visible'),
+            "important": data.get('important'),
+            "created_user": request.user
         }
         
         serializer = AnnouncementSerializer(data=announcement)
@@ -49,6 +49,7 @@ class AnnouncementAdminView(APIView, PaginationHandlerMixin):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AnnouncementDetailAdminView(APIView):
     permission_classes = [IsAdmin]
@@ -81,6 +82,7 @@ class AnnouncementDetailAdminView(APIView):
         announcement = get_announcement(announcement_id)
         announcement.delete()
         return Response(status=status.HTTP_200_OK)
+
 
 class AnnouncementCheckAdminView(APIView):
     permission_classes = [IsAdmin]

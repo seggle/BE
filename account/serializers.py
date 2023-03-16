@@ -57,11 +57,11 @@ class ContributionsSerializer(serializers.Serializer):
 class UserCompetitionSerializer(serializers.ModelSerializer):
     title = serializers.CharField()
     user_total = serializers.IntegerField()
-    rank = serializers.IntegerField()
+    rank = serializers.DictField()
 
     class Meta:
         model = Competition
-        fields = ['id', "problem_id", "title", "start_time", "end_time", "user_total", "rank"]
+        fields = ['id', "title", "start_time", "end_time", "user_total", "rank"]
 
 
 class UserClassPrivilege(serializers.ModelSerializer):
@@ -81,8 +81,13 @@ class UserGetClassInfo(serializers.Serializer):
 
 class TokenObtainResultSerializer(TokenObtainPairSerializer):
 
-    def validate(self, attrs) -> None:
-        data = super().validate(attrs)
+    def validate(self, attrs):
+        data = super(TokenObtainResultSerializer, self).validate(attrs)
         data['username'] = self.user.username
 
         return data
+
+class LoginSerializer(serializers.Serializer):
+    class Meta:
+        model = User
+        fields = ["username", "password"]
