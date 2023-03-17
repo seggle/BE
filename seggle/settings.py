@@ -62,6 +62,9 @@ INSTALLED_APPS = [
     # cors headers
     'corsheaders',
 
+    # crontab
+    'django_crontab',
+
     # my app
     'account',
     'announcement',
@@ -256,3 +259,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER	 # 응답 메일 관련 설정
 
 # file upload 관련
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+
+# reminder email 관련
+CRONJOBS = [
+    ('0 0 * * *', 'utils.schedule_reminder.send_reminder_emails'),
+]
